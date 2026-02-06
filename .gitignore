@@ -1,0 +1,25 @@
+# Raw traffic data (too large for git)
+traffic_data_smg/
+traffic_data_bdg/
+traffic_data_jkt/
+
+# Log files
+*.log
+error.log
+output.log
+
+# Python cache
+__pycache__/
+*.pyc
+
+# macOS
+.DS_Store
+
+# Jupyter checkpoints
+.ipynb_checkpoints/
+
+# Virtual environment
+venv/
+
+# Cache
+cache/

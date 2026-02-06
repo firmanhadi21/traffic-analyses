@@ -1,0 +1,27 @@
+# Requirements for OSM-based traffic aggregation system
+
+# Core geospatial libraries
+geopandas>=0.10.0
+shapely>=1.8.0
+pyproj>=3.2.0
+
+# OSM data download
+osmnx>=1.2.0
+networkx>=2.6.0
+
+# Data manipulation
+pandas>=1.3.0
+numpy>=1.20.0
+
+# Timezone handling
+pytz>=2021.3
+
+# Progress bars
+tqdm>=4.62.0
+
+# Visualization (for validation)
+matplotlib>=3.4.0
+seaborn>=0.11.0
+
+# File I/O
+fiona>=1.8.20
