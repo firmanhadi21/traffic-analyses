@@ -23,5 +23,8 @@ tqdm>=4.62.0
 matplotlib>=3.4.0
 seaborn>=0.11.0
 
+# Scientific computing (for geostatistical analysis)
+scipy>=1.7.0
+
 # File I/O
 fiona>=1.8.20
