@@ -192,6 +192,84 @@ Traffic data is collected using the [HERE Traffic API](https://developer.here.co
 
 All timestamps are in **GMT+7 (Asia/Bangkok)** to match Indonesian local time (WIB - Western Indonesian Time).
 
+## Geostatistical Analysis
+
+The repository includes comprehensive geostatistical analysis to understand traffic patterns across the three cities.
+
+### Running the Analysis
+
+```bash
+python geostatistical_analysis.py
+```
+
+### Generated Visualizations
+
+All figures are saved to the `figures/` directory:
+
+| Figure | Description |
+|--------|-------------|
+| `*_traffic_maps.png` | Traffic intensity maps for all 8 time periods per city |
+| `*_hotspots_evening_peak.png` | Congestion hotspot analysis during evening peak |
+| `temporal_pattern_comparison.png` | Bar chart comparing traffic across time periods |
+| `congestion_distribution.png` | Histogram of jam factor distribution per city |
+| `peak_vs_offpeak.png` | Scatter plot comparing peak vs off-peak traffic |
+| `variability_analysis.png` | Coefficient of variation analysis by segment |
+| `boxplot_comparison.png` | Boxplot comparison across cities and time periods |
+| `heatmap_summary.png` | Heatmap of traffic patterns (segments × time periods) |
+| `statistics_report.txt` | Detailed statistical analysis report |
+
+### Traffic Maps by Time Period
+
+Each city has a comprehensive map showing traffic intensity across all 8 time periods:
+
+**Semarang Traffic Patterns**
+![Semarang Traffic Maps](figures/smg_traffic_maps.png)
+
+**Bandung Traffic Patterns**
+![Bandung Traffic Maps](figures/bdg_traffic_maps.png)
+
+**Jakarta Traffic Patterns**
+![Jakarta Traffic Maps](figures/jkt_traffic_maps.png)
+
+### Temporal Pattern Comparison
+
+![Temporal Pattern](figures/temporal_pattern_comparison.png)
+
+### Congestion Hotspots (Evening Peak)
+
+**Semarang Hotspots**
+![Semarang Hotspots](figures/smg_hotspots_evening_peak.png)
+
+**Bandung Hotspots**
+![Bandung Hotspots](figures/bdg_hotspots_evening_peak.png)
+
+**Jakarta Hotspots**
+![Jakarta Hotspots](figures/jkt_hotspots_evening_peak.png)
+
+### Statistical Analysis Summary
+
+#### Congestion Classification (Evening Peak)
+
+| City | Free Flow | Light Traffic | Moderate | Heavy | Severe |
+|------|-----------|---------------|----------|-------|--------|
+| Semarang | 0% | 100% | 0% | 0% | 0% |
+| Bandung | 0% | 88.1% | 11.9% | 0% | 0% |
+| Jakarta | 0% | 46.5% | 53.5% | 0% | 0% |
+
+#### Peak Hour Comparison
+
+- **Semarang**: Evening peak jam factor = 1.65
+- **Bandung**: Evening peak jam factor = 1.92
+- **Jakarta**: Evening peak jam factor = 2.01
+
+### Key Findings
+
+1. **Evening Peak is the Most Congested Period** across all three cities
+2. **Jakarta has the highest congestion levels**, with 53.5% of road segments experiencing moderate traffic during evening peak
+3. **Night hours (00:00-06:00)** show the lowest congestion with free-flow conditions
+4. **Bandung shows higher afternoon congestion** compared to Semarang
+5. **Spatial clustering is relatively low**, indicating congestion is distributed across road networks rather than concentrated in specific areas
+
 ## License
 
 This project is for research and educational purposes. Traffic data is subject to HERE API terms of service.
