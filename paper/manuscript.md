@@ -353,12 +353,30 @@ Cross-city comparison reveals scaling relationships (Figure 5):
 | Metric | Jakarta | Bandung | Semarang |
 |--------|---------|---------|----------|
 | Population (million) | 10.5 | 2.5 | 1.8 |
-| Mean Jam Factor | 3.42 | 2.89 | 2.31 |
-| JF per million pop. | 0.33 | 1.16 | 1.28 |
+| Mean Jam Factor | 1.599 | 1.537 | 1.299 |
+| Peak Period Mean | 1.599 | 1.537 | 1.299 |
+| Off-Peak Period Mean | 1.223 | 1.180 | 1.034 |
+| Peak/Off-peak ratio | 1.31x | 1.30x | 1.26x |
+| Peak increase (%) | 30.8% | 30.2% | 25.6% |
 | Hotspot density (/km²) | 4.30 | 3.12 | 0.42 |
-| Peak/Off-peak ratio | 3.94 | 3.90 | 3.75 |
 
-Notably, congestion does not scale linearly with population. Smaller cities show higher jam factors per capita, potentially reflecting less developed transport infrastructure relative to their population size.
+**Table 12.** Peak vs Off-Peak Congestion Analysis
+
+| City | Peak Mean | Off-Peak Mean | Absolute Diff | Ratio | % Increase |
+|------|-----------|---------------|---------------|-------|------------|
+| Jakarta | 1.599 | 1.223 | 0.376 | 1.31x | 30.8% |
+| Bandung | 1.537 | 1.180 | 0.357 | 1.30x | 30.2% |
+| Semarang | 1.299 | 1.034 | 0.265 | 1.26x | 25.6% |
+
+The peak vs off-peak analysis reveals important patterns in congestion dynamics:
+
+1. **Jakarta exhibits the largest peak/off-peak differential** (30.8% increase), indicating that the megacity experiences the most pronounced traffic surges during peak hours. This reflects the massive daily commuter flows into and out of the central business district.
+
+2. **Bandung shows similar peak intensification** (30.2% increase), suggesting comparable commuting dynamics despite its smaller size, likely due to its constrained road network in the highland basin.
+
+3. **Semarang demonstrates the smallest peak/off-peak difference** (25.6% increase), indicating more stable traffic patterns throughout the day. This may reflect its role as a logistics hub with more distributed commercial activities and less concentrated peak-hour commuting.
+
+Notably, congestion does not scale linearly with population. The larger cities show greater absolute congestion levels AND greater peak/off-peak variability, suggesting that urban scale amplifies both baseline congestion and temporal fluctuations.
 
 ---
 
@@ -373,6 +391,16 @@ The dominance of evening peak congestion across all cities reflects common South
 1. More distributed morning departure times as households stagger departures
 2. Concentrated evening activities including shopping and social trips
 3. School dismissal times coinciding with office closing hours
+
+#### 6.1.2 Peak vs Off-Peak Dynamics
+
+A key finding is that **larger cities exhibit greater peak/off-peak differentials**. Jakarta shows a 30.8% congestion increase during peak hours compared to off-peak, while Semarang shows only 25.6%. This pattern suggests that:
+
+1. **Megacities experience more pronounced traffic surges** due to concentrated employment centers and synchronized work schedules
+2. **Smaller cities maintain more stable traffic flows** throughout the day, possibly due to more distributed commercial activities and shorter average commute distances
+3. **Urban scale amplifies temporal variability**, not just absolute congestion levels
+
+This has important implications for traffic management: Jakarta requires more aggressive peak-hour interventions (congestion pricing, staggered work hours), while Semarang may benefit more from general capacity improvements.
 
 #### 6.1.2 Spatial Clustering
 

@@ -231,6 +231,22 @@ def main():
     pdf.add_figure('figures/peak_vs_offpeak.png',
                    'Figure 11. Peak vs off-peak congestion comparison')
 
+    # Peak vs Off-Peak Analysis Table
+    pdf.add_table(
+        ['City', 'Peak Mean', 'Off-Peak', 'Diff', 'Ratio', '% Increase'],
+        [
+            ['Jakarta', '1.599', '1.223', '0.376', '1.31x', '30.8%'],
+            ['Bandung', '1.537', '1.180', '0.357', '1.30x', '30.2%'],
+            ['Semarang', '1.299', '1.034', '0.265', '1.26x', '25.6%']
+        ],
+        'Table 6. Peak vs Off-Peak Congestion Analysis'
+    )
+
+    pdf.body_text("""Key findings from peak vs off-peak analysis:
+1. Jakarta exhibits the LARGEST peak/off-peak differential (30.8% increase), indicating the most pronounced traffic surges during peak hours
+2. Bandung shows similar peak intensification (30.2% increase) due to its constrained highland road network
+3. Semarang demonstrates the SMALLEST difference (25.6% increase), indicating more stable traffic patterns throughout the day""")
+
     pdf.add_page()
     pdf.add_figure('figures/heatmap_summary.png',
                    'Figure 12. Summary heatmap of congestion patterns')
@@ -254,13 +270,23 @@ def main():
     pdf.chapter_title('4. Discussion', 1)
     pdf.body_text("""The dominance of evening peak congestion across all cities reflects common Southeast Asian urban patterns where afternoon activities coincide with return commutes. The asymmetry between morning and evening peaks (evening approximately 20% higher) likely results from more distributed morning departure times and concentrated evening activities.""")
 
+    pdf.chapter_title('4.1 Peak vs Off-Peak Dynamics', 2)
+    pdf.body_text("""A key finding is that LARGER cities exhibit GREATER peak/off-peak differentials. Jakarta shows a 30.8% congestion increase during peak hours compared to off-peak, while Semarang shows only 25.6%. This pattern suggests that:
+
+1. Megacities experience more pronounced traffic surges due to concentrated employment centers
+2. Smaller cities maintain more stable traffic flows throughout the day
+3. Urban scale amplifies temporal variability, not just absolute congestion levels
+
+This has important implications: Jakarta requires more aggressive peak-hour interventions (congestion pricing, staggered work hours), while Semarang may benefit more from general capacity improvements.""")
+
     pdf.body_text("""The strong spatial autocorrelation (Moran's I = 0.67-0.78) indicates that congestion propagates through networks rather than occurring as isolated incidents. This finding aligns with network flow theory suggesting that bottlenecks create upstream queuing affecting adjacent segments.""")
 
-    pdf.chapter_title('4.1 Implications for Traffic Management', 2)
+    pdf.chapter_title('4.2 Implications for Traffic Management', 2)
     pdf.body_text("""Our findings support several practical recommendations:
 1. Temporal targeting: Traffic management resources should prioritize evening peak periods (17:00-20:00)
 2. Spatial prioritization: Identified hotspot clusters warrant infrastructure investment
-3. Network redundancy: The strong centrality-congestion relationship suggests benefits from developing alternative routes""")
+3. Network redundancy: The strong centrality-congestion relationship suggests benefits from developing alternative routes
+4. City-specific strategies: Jakarta needs peak-hour demand management; Semarang needs capacity improvements""")
 
     # Conclusions
     pdf.chapter_title('5. Conclusions', 1)
