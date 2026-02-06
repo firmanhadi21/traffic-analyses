@@ -144,6 +144,44 @@ def main():
         'Table 2. Data collection summary'
     )
 
+    # 2.3 Exploratory Data Analysis
+    pdf.add_page()
+    pdf.chapter_title('2.3 Exploratory Data Analysis and Validation', 2)
+
+    pdf.body_text("""Before conducting main analyses, comprehensive EDA validated data quality. Key findings:""")
+
+    pdf.body_text("""1. NULL VALUE CHECK: Zero null values across all 24 datasets (3 cities x 8 periods)
+2. DATA COMPLETENESS: Consistent segment counts within each city across all time periods
+3. VALUE RANGE: All jam factors within valid 0-10 range""")
+
+    pdf.add_table(
+        ['City', 'Segments', 'Total Obs', 'Obs/Segment'],
+        [
+            ['Jakarta', '14,549', '205.5M', '1,766.1'],
+            ['Bandung', '3,069', '43.3M', '1,765.6'],
+            ['Semarang', '1,076', '15.2M', '1,765.2']
+        ],
+        'Table 3. Data completeness validation'
+    )
+
+    pdf.body_text("""CRITICAL FINDING: While segment counts differ (reflecting city sizes), observation density is remarkably consistent (~1,766 obs/segment). This confirms uniform data collection methodology.""")
+
+    pdf.add_figure('eda_output/eda_coverage_comparison.png',
+                   'Figure 1. Data coverage validation across cities')
+
+    pdf.add_figure('eda_output/eda_null_check.png',
+                   'Figure 2. Null value verification - no missing data detected')
+
+    pdf.chapter_title('2.4 Segment Count Justification', 2)
+    pdf.body_text("""Different segment counts are VALID because:
+1. Proportional to city size: Jakarta (megacity) has 14x more segments than Semarang
+2. Internal consistency: Each city has identical segments across all 8 periods
+3. Uniform sampling: ~1,766 observations per segment in ALL cities
+4. For fair comparison, we use normalized metrics and distribution-based analyses""")
+
+    pdf.add_figure('eda_output/eda_distribution_validation.png',
+                   'Figure 3. Jam factor distribution validation')
+
     # 3. Results
     pdf.add_page()
     pdf.chapter_title('3. Results', 1)
