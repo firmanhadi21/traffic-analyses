@@ -4,6 +4,7 @@
 [![CI](https://github.com/firmanhadi21/traffic-analyses/actions/workflows/test.yml/badge.svg)](https://github.com/firmanhadi21/traffic-analyses/actions/workflows/test.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python 3.9+](https://img.shields.io/badge/python-3.9%2B-blue.svg)](https://www.python.org/)
+[![Docs](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://firmanhadi21.github.io/traffic-analyses/)
 
 An **open-source, installable Python pipeline** for spatiotemporal traffic congestion analysis, integrating the HERE Traffic API, OSMnx, and PySAL. Designed for reproducible urban analytics across Indonesian metropolitan cities (**Semarang**, **Bandung**, **Jakarta**).
 
