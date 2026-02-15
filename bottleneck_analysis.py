@@ -140,10 +140,38 @@ def get_road_capacity_attributes(city_code):
     # Capacity score = lanes * road_score
     edges['capacity_score'] = edges['estimated_lanes'] * edges['road_score']
 
-    print(f"    Road segments: {len(edges)}")
-    print(f"    Lane count coverage: {edges['lane_count'].notna().mean()*100:.1f}%")
+    print(f"    Road segments (all): {len(edges)}")
 
-    return edges, G
+    # Filter to road types that HERE Traffic typically monitors
+    # HERE covers motorways, trunks, primaries, secondaries, and their links.
+    # It rarely covers tertiary, residential, service, or living streets.
+    here_monitored_types = {
+        'motorway', 'motorway_link',
+        'trunk', 'trunk_link',
+        'primary', 'primary_link',
+        'secondary', 'secondary_link',
+        'tertiary', 'tertiary_link',
+    }
+
+    def get_highway_str(highway):
+        if isinstance(highway, list):
+            return highway[0]
+        return highway
+
+    edges['highway_str'] = edges['highway'].apply(get_highway_str)
+    edges_filtered = edges[edges['highway_str'].isin(here_monitored_types)].copy()
+
+    # Also create a filtered subgraph for capacity drop detection
+    filtered_edge_ids = set(edges_filtered.index)
+    G_filtered = G.edge_subgraph(
+        [(u, v, k) for u, v, k in G.edges(keys=True) if (u, v, k) in filtered_edge_ids]
+    ).copy()
+
+    print(f"    Road segments (HERE-comparable): {len(edges_filtered)} ({len(edges_filtered)/len(edges)*100:.1f}%)")
+    print(f"    Filtered out: {len(edges) - len(edges_filtered)} residential/service/unclassified segments")
+    print(f"    Lane count coverage: {edges_filtered['lane_count'].notna().mean()*100:.1f}%")
+
+    return edges_filtered, G_filtered
 
 
 def detect_capacity_drops(G, edges):
@@ -398,8 +426,13 @@ def spatial_join_traffic_roads(traffic_gdf, roads_gdf, max_distance=0.002):
         result.loc[valid_mask, attr] = roads_gdf.iloc[indices[valid_mask]][attr].values
 
     result['matched'] = valid_mask
+    result['match_distance'] = distances
 
     print(f"    Matched: {valid_mask.sum()} / {len(traffic_gdf)} ({valid_mask.mean()*100:.1f}%)")
+    if valid_mask.any():
+        matched_dists = distances[valid_mask]
+        print(f"    Match distance (matched): median={np.median(matched_dists):.5f}°, "
+              f"mean={np.mean(matched_dists):.5f}°, max={np.max(matched_dists):.5f}°")
 
     return result
 
