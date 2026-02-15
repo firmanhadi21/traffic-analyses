@@ -1,6 +1,6 @@
 # Fdb version 4
-["pdflatex"] 1771172737 "/Users/macbook/Dropbox/GitHub/traffic-analyses/paper/manuscript.tex" "manuscript.pdf" "manuscript" 1771172746 0
-  "/Users/macbook/Dropbox/GitHub/traffic-analyses/paper/manuscript.tex" 1771172729 108338 53df94e94005b7498a6443ee15b12a8b ""
+["pdflatex"] 1771178506 "/Users/macbook/Dropbox/GitHub/traffic-analyses/paper/manuscript.tex" "manuscript.pdf" "manuscript" 1771178513 0
+  "/Users/macbook/Dropbox/GitHub/traffic-analyses/paper/manuscript.tex" 1771176687 108886 47390d3d74bd24bd0282c2aa89f7905b ""
   "/usr/local/texlive/2023/texmf-dist/fonts/enc/dvips/cm-super/cm-super-t1.enc" 1136849721 2971 def0b6c1f0b107b3b936def894055589 ""
   "/usr/local/texlive/2023/texmf-dist/fonts/enc/dvips/cm-super/cm-super-ts1.enc" 1136849721 2900 1537cc8184ad1792082cd229ecc269f4 ""
   "/usr/local/texlive/2023/texmf-dist/fonts/map/fontname/texfonts.map" 1577235249 3524 cb3e574dea2d1052e39280babc910dc8 ""
@@ -143,9 +143,9 @@
   "figures/street_orientation_polar.png" 1770455037 1074481 a63091414827f51c2d843be09295ba24 ""
   "figures/temporal_pattern_comparison.png" 1770436354 96358 58c5bb18ec300152f1406adec16df91b ""
   "figures/temporal_vs_spatial_effect_size.png" 1771145113 84368 41a4651f3c9c73d6988c900db94ec448 ""
-  "manuscript.aux" 1771172745 20330 11b0962f8ba1b9e6d257fc345bc3cf90 "pdflatex"
-  "manuscript.out" 1771172745 18225 2f3cccb574bcaf0a5befe961d3520dd3 "pdflatex"
-  "manuscript.tex" 1771172729 108338 53df94e94005b7498a6443ee15b12a8b ""
+  "manuscript.aux" 1771178513 20330 11b0962f8ba1b9e6d257fc345bc3cf90 "pdflatex"
+  "manuscript.out" 1771178513 18225 2f3cccb574bcaf0a5befe961d3520dd3 "pdflatex"
+  "manuscript.tex" 1771176687 108886 47390d3d74bd24bd0282c2aa89f7905b ""
   (generated)
   "manuscript.aux"
   "manuscript.log"
