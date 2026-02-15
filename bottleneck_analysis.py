@@ -312,9 +312,16 @@ def analyze_bottlenecks(city_code):
     road_type_stats = matched.groupby('road_score')['jam_factor_mean'].agg(['mean', 'count'])
     road_type_stats = road_type_stats.sort_index(ascending=False)
 
-    road_names = {6: 'Motorway', 5: 'Trunk', 4: 'Primary', 3: 'Secondary', 2: 'Tertiary', 1: 'Residential'}
+    road_names = {
+        6: 'Motorway', 5.5: 'Motorway Link',
+        5: 'Trunk', 4.5: 'Trunk Link',
+        4: 'Primary', 3.5: 'Primary Link',
+        3: 'Secondary', 2.5: 'Secondary Link',
+        2: 'Tertiary', 1.5: 'Tertiary Link',
+        1: 'Residential', 0.5: 'Living Street/Service'
+    }
     for score, row in road_type_stats.iterrows():
-        name = road_names.get(int(score), f'Score {score}')
+        name = road_names.get(score, f'Score {score}')
         print(f"      {name}: JF = {row['mean']:.3f} (n={int(row['count'])})")
 
     return matched, results
