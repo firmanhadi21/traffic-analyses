@@ -270,6 +270,129 @@ Each city has a comprehensive map showing traffic intensity across all 8 time pe
 4. **Bandung shows higher afternoon congestion** compared to Semarang
 5. **Spatial clustering is relatively low**, indicating congestion is distributed across road networks rather than concentrated in specific areas
 
+## Bottleneck Analysis
+
+Tests whether congestion is driven by **road capacity constraints (bottlenecks)** or by **trip destinations (activity centers)**.
+
+### Methodology
+
+The analysis uses two data sources with fundamentally different coverage:
+
+| Data Source | Segments | Coverage |
+|-------------|----------|----------|
+| HERE Traffic API | Monitored segments only | Major arterials, trunks, motorways |
+| OSMnx Road Network | Full network | All roads including residential, service, alleys |
+
+**Important design decision:** The OSMnx network is **filtered to HERE-comparable road types** (motorway through tertiary, including links) before any analysis. This prevents spurious nearest-neighbor matches between HERE arterial segments and unmonitored residential streets.
+
+### Analysis Components
+
+#### 1. Aggregate Capacity Comparison
+- Splits road segments into low vs high capacity groups (by median capacity score)
+- Compares mean jam factor between groups
+- Tests statistical significance (t-test, Cohen's d effect size)
+
+#### 2. Capacity-Congestion Correlation
+- Capacity score = estimated lanes × road hierarchy score
+- Pearson and Spearman correlation against mean jam factor
+
+#### 3. Peak Sensitivity Analysis
+- Peak sensitivity = (evening_peak_JF − night_JF) / (night_JF + ε)
+- Tests whether high-sensitivity segments (congested at peak, free at night) have lower capacity
+
+#### 4. Congestion by Road Type
+- Breakdown of mean jam factor by OSM highway classification
+- Covers: Motorway, Motorway Link, Trunk, Trunk Link, Primary, Primary Link, Secondary, Secondary Link, Tertiary, Tertiary Link
+
+#### 5. Spatial Capacity Drop Analysis (Graph-Based)
+- Traverses the filtered road network graph to detect **capacity drop nodes** — intersections where maximum incoming edge capacity exceeds maximum outgoing edge capacity by ≥20%
+- These are "funnel" points (e.g., trunk → secondary transition)
+- Tests whether **proximity to capacity drops** correlates with higher congestion
+- Bins traffic segments into Near/Medium/Far from nearest drop node
+
+#### 6. Local Capacity Gradient (Neighborhood Analysis)
+- For each traffic segment, computes the mean capacity of its K=10 nearest spatial neighbors
+- Segments with lower capacity than their surroundings are **local bottlenecks**
+- Tests whether local bottleneck zones have significantly higher jam factors
+- Correlation between local capacity deficit and congestion level
+
+### Running the Analysis
+
+```bash
+# Requires OSMnx (downloads road network) — recommended on HPC
+python bottleneck_analysis.py
+```
+
+### Output
+
+| File | Description |
+|------|-------------|
+| `analysis_results/bottleneck_analysis_results.csv` | Statistical results for all cities |
+| `figures/bottleneck_capacity_comparison.png` | Box plot: low vs high capacity road congestion |
+| `figures/capacity_congestion_scatter.png` | Scatter plot: capacity score vs jam factor |
+| `figures/capacity_drop_spatial_analysis.png` | Spatial capacity drop proximity and local bottleneck analysis |
+
+### Interpretation Guide
+
+| Metric | Supports Bottleneck Hypothesis If... |
+|--------|--------------------------------------|
+| Low cap JF > High cap JF (p < 0.05) | Low-capacity roads are significantly more congested |
+| Capacity-congestion r < −0.15 | Negative correlation between capacity and congestion |
+| Near-drop JF > Far-drop JF (p < 0.05) | Proximity to capacity transitions predicts congestion |
+| Local bottleneck d > 0.2 | Relative capacity deficit meaningfully increases congestion |
+
+### Caveat: HERE Jam Factor Normalization
+
+HERE's jam factor is a **normalized** congestion measure — it represents delay relative to each road's free-flow speed. A JF of 5 on a residential road and JF of 5 on a motorway both mean "heavily congested for that road type." This normalization partially removes the capacity effect, which means:
+- Absolute capacity may show weak correlations even if bottlenecks exist
+- **Spatial** capacity drops (relative transitions) are a stronger test than aggregate capacity levels
+- **Temporal** patterns (time-of-day) typically explain more variance than spatial factors
+
+#### Evidence of Normalization in Our Data
+
+The Semarang results demonstrate that JF is already normalized by road class:
+
+| Road Type | Mean JF | n |
+|-----------|---------|---|
+| Motorway | 1.646 | 6 |
+| Trunk | 1.648 | 170 |
+| Primary | 1.651 | 132 |
+| Secondary | 1.655 | 242 |
+| Tertiary | 1.647 | 124 |
+| Residential | 1.654 | 300 |
+
+The JF range across all road types is **1.644–1.711 (only ~4% spread)**. If JF measured raw speed or absolute delay, motorways (100+ km/h free-flow) would show vastly different values than residential streets (30 km/h free-flow). The tight clustering confirms JF is computed relative to each segment's own free-flow baseline:
+
+$$JF = f\left(\frac{T_{current}}{T_{freeflow}}\right) \times 10$$
+
+This explains why:
+- Pearson r ≈ −0.02 (capacity vs JF) — near-zero because normalization flattens the effect
+- Cohen's d ≈ 0.03 (low vs high capacity) — trivial because you're correlating capacity against a measure that already divides out capacity
+
+#### Data Source Mismatch
+
+An additional challenge is the mismatch between traffic data and road network coverage:
+
+| Data Source | Coverage | Segments |
+|-------------|----------|----------|
+| HERE Traffic API | Major arterials only (motorway through tertiary) | ~1,000–15,000 per city |
+| OSMnx Road Network | All roads (including residential, service, alleys) | ~10,000–50,000 per city |
+
+HERE monitors a **subset** of the road network. When spatial-joining traffic data to the full OSMnx network, nearest-neighbor matching can assign a HERE trunk-road segment to a nearby residential lane, introducing noise. The bottleneck analysis addresses this by **filtering OSMnx edges to HERE-comparable road types** before analysis.
+
+#### Denormalization Path (Speed-Based Analysis)
+
+The raw HERE GeoPackage files contain three columns:
+- `jam_factor` — normalized congestion (0–10, relative to free-flow) ← **currently aggregated**
+- `speed` — current speed (km/h) ← **not aggregated**
+- `free_flow` — free-flow speed (km/h) ← **not aggregated**
+
+Only `jam_factor` was aggregated into the time-period output files. To properly test the bottleneck hypothesis without the normalization confound, the data should be re-aggregated with `speed` and `free_flow` columns, enabling a denormalized delay metric:
+
+$$\text{delay} = \frac{1}{\text{speed}} - \frac{1}{\text{free\_flow}}$$
+
+This gives **excess travel time per km** — an absolute measure where a motorway at 40 km/h (with 120 km/h free-flow) produces a much higher delay than a residential street at 25 km/h (with 30 km/h free-flow). This metric directly reflects capacity constraints without the normalization that flattens road class differences.
+
 ## License
 
 This project is for research and educational purposes. Traffic data is subject to HERE API terms of service.

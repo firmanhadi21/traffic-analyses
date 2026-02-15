@@ -21,6 +21,7 @@ This document describes the procedure for running advanced spatial analyses on H
 | Analysis | Script | Reason |
 |----------|--------|--------|
 | Centrality-Congestion Correlations | `compute_centrality_correlations.py` | Jakarta network has ~45,000 nodes; betweenness centrality is O(VE) complexity |
+| Bottleneck Analysis | `bottleneck_analysis.py` | Downloads OSMnx road network for 3 cities; graph-based capacity drop detection |
 
 ---
 
@@ -46,7 +47,8 @@ tar -xzvf traffic_hpc.tar.gz
 ### Extracted Contents
 ```
 traffic_hpc/
-├── compute_centrality_correlations.py   # Main script to run
+├── compute_centrality_correlations.py   # Centrality analysis script
+├── bottleneck_analysis.py               # Bottleneck analysis script
 ├── advanced_spatial_analysis.py         # Already completed analyses
 ├── requirements_hpc.txt                 # Python dependencies
 ├── run_hpc.sh                           # SLURM job script
@@ -133,6 +135,79 @@ With columns:
 - `pearson_p`: Pearson p-value
 - `spearman_r`: Spearman correlation coefficient
 - `spearman_p`: Spearman p-value
+
+---
+
+## Step 3b: Run Bottleneck Analysis
+
+This analysis tests whether congestion concentrates at capacity-constrained road segments (bottlenecks) vs. activity centers.
+
+### Key Design Decision: Network Filtering
+
+HERE Traffic covers only major roads (motorways through tertiary). The OSMnx network is **filtered to HERE-comparable road types** before analysis to prevent matching errors between HERE arterial data and unmonitored residential streets.
+
+### Running the Analysis
+
+```bash
+# Interactive session
+srun --time=02:00:00 --mem=16G --cpus-per-task=2 --pty bash
+source venv/bin/activate
+
+python bottleneck_analysis.py
+```
+
+### What It Does
+
+1. **Downloads OSMnx road network** for each city (cached after first download)
+2. **Filters** to motorway through tertiary roads (+ link types)
+3. **Spatial joins** HERE traffic segments to filtered OSMnx edges (nearest-neighbor, max 0.002°)
+4. **Aggregate capacity test**: Low vs high capacity road congestion comparison
+5. **Graph-based capacity drop detection**: Finds nodes where incoming capacity > outgoing capacity (≥20% reduction)
+6. **Proximity to capacity drops**: Tests if segments near drop nodes are more congested
+7. **Local capacity gradient**: Identifies segments with lower capacity than K=10 nearest neighbors (local bottlenecks)
+
+### Expected Runtime
+| City | Estimated Time |
+|------|----------------|
+| Semarang | 1-2 minutes |
+| Bandung | 2-5 minutes |
+| Jakarta | 5-15 minutes |
+| **Total** | **~20 minutes** |
+
+### Expected Output
+
+**CSV results:**
+```
+analysis_results/bottleneck_analysis_results.csv
+```
+
+Key columns:
+- `city`: City name
+- `low_cap_jf`, `high_cap_jf`: Mean JF for low/high capacity roads
+- `cap_p_value`, `cap_effect_size`: Statistical significance of capacity effect
+- `n_capacity_drops`: Number of capacity drop nodes detected
+- `near_drop_jf`, `far_drop_jf`: JF near vs far from capacity drops
+- `drop_prox_p_value`: Significance of proximity-to-drop effect
+- `local_bn_effect_size`: Cohen's d for local bottleneck effect
+- `local_drop_pearson_r`: Correlation between local capacity deficit and congestion
+
+**Figures:**
+```
+figures/bottleneck_capacity_comparison.png      # Box plot: low vs high capacity
+figures/capacity_congestion_scatter.png         # Scatter: capacity vs JF
+figures/capacity_drop_spatial_analysis.png      # Capacity drop proximity + local bottleneck
+```
+
+### Interpreting the Results
+
+| Result | Meaning |
+|--------|---------|
+| Near-drop JF > Far-drop JF (p < 0.05) | Spatial bottleneck hypothesis **supported** |
+| Local bottleneck d > 0.2 | Relative capacity deficit predicts congestion |
+| All tests non-significant | Congestion is **temporal/demand-driven**, not capacity-constrained |
+| Weak r but significant local d | **Relative** capacity matters more than **absolute** capacity |
+
+**Note on HERE jam factor normalization:** JF is normalized to each road's free-flow speed, which partially removes capacity effects. Spatial capacity transitions (relative measures) are stronger tests than aggregate capacity levels.
 
 ---
 
@@ -251,11 +326,15 @@ traffic-analyses/
 │   ├── lisa_results.csv           # ✅ LISA clusters
 │   ├── anova_results.csv          # ✅ ANOVA + Tukey
 │   ├── centrality_correlations.csv # 🔄 From HPC
+│   ├── bottleneck_analysis_results.csv # 🔄 From HPC
 │   └── advanced_analysis_results.txt
 ├── figures/
 │   ├── smg_lisa_clusters.png      # ✅ LISA maps
 │   ├── bdg_lisa_clusters.png
 │   ├── jkt_lisa_clusters.png
+│   ├── bottleneck_capacity_comparison.png  # 🔄 From HPC
+│   ├── capacity_congestion_scatter.png     # 🔄 From HPC
+│   ├── capacity_drop_spatial_analysis.png  # 🔄 From HPC
 │   └── ... (other figures)
 └── HPC_WORKFLOW.md                # This document
 ```
