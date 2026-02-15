@@ -203,6 +203,8 @@ Our analytical framework integrates three complementary approaches (Figure 1):
 2. **Geostatistical analysis** of spatial congestion clustering
 3. **Network analysis** examining topology-congestion relationships
 
+![**Figure 1.** Analytical framework integrating temporal analysis, geostatistical methods, and network topology assessment](../figures/analytical_framework.png)
+
 ### 4.2 Temporal Pattern Analysis
 
 Temporal patterns were analyzed by computing summary statistics for each defined period across all road segments. Analysis of variance (ANOVA) was employed to test for significant differences between periods, with post-hoc Tukey HSD tests identifying specific period pairs with significant differences.
@@ -290,6 +292,8 @@ Jakarta exhibits the highest average congestion levels, consistent with its stat
 
 Figure 2 presents mean jam factors by temporal period for each city.
 
+![**Figure 2.** Mean jam factor by temporal period across three cities](../figures/temporal_pattern_comparison.png)
+
 **Table 6.** Mean jam factor by temporal period
 
 | Period | Jakarta | Bandung | Semarang |
@@ -356,6 +360,12 @@ Local Moran's I analysis identified distinct congestion hotspots (Table 8).
 - Siliwangi road (northern coast)
 - Majapahit corridor (eastern approach)
 
+![**Figure 3a.** Spatial distribution of congestion hotspots — Jakarta](../figures/jkt_hotspots_evening_peak.png)
+
+![**Figure 3b.** Spatial distribution of congestion hotspots — Bandung](../figures/bdg_hotspots_evening_peak.png)
+
+![**Figure 3c.** Spatial distribution of congestion hotspots — Semarang](../figures/smg_hotspots_evening_peak.png)
+
 #### 5.3.3 Coefficient of Variation
 
 CV analysis reveals spatial patterns of congestion predictability:
@@ -386,6 +396,12 @@ Correlation analysis reveals moderate positive relationships between edge betwee
 
 Edges with betweenness centrality in the top decile exhibit mean jam factors 1.8-2.1 times higher than the network average, confirming that topologically critical routes experience disproportionate congestion.
 
+![**Figure 4a.** Edge betweenness centrality — Jakarta](../figures/jkt_traffic_maps.png)
+
+![**Figure 4b.** Edge betweenness centrality — Bandung](../figures/bdg_traffic_maps.png)
+
+![**Figure 4c.** Edge betweenness centrality — Semarang](../figures/smg_traffic_maps.png)
+
 #### 5.4.2 Street Orientation Analysis
 
 Street orientation analysis reveals distinct patterns:
@@ -394,9 +410,13 @@ Street orientation analysis reveals distinct patterns:
 - **Bandung:** North-south bias corresponding to mountain-constrained development corridors
 - **Semarang:** East-west orientation along coastal areas, with more varied patterns in hilly southern zones
 
+![**Figure 6.** Street orientation polar histograms for each city](../figures/street_orientation_polar.png)
+
 ### 5.5 Comparative City Analysis
 
 Cross-city comparison reveals scaling relationships (Figure 5):
+
+![**Figure 5.** Cross-city comparison of congestion metrics](../figures/boxplot_comparison.png)
 
 **Table 11.** Comparative metrics
 
@@ -570,22 +590,6 @@ TomTom. (2023). *TomTom Traffic Index 2023*. Amsterdam: TomTom International.
 Wang, Y., Gu, Y., Dou, M., & Qiao, M. (2016). Using spatial semantics and interactions to identify urban functional regions. *ISPRS International Journal of Geo-Information*, 7(4), 130.
 
 Zhang, K., Batterman, S., & Dion, F. (2014). Vehicle emissions in congestion: Comparison of work zone, rush hour and free-flow conditions. *Atmospheric Environment*, 45(11), 1929-1939.
-
----
-
-## Figures
-
-**Figure 1.** Analytical framework integrating temporal analysis, geostatistical methods, and network topology assessment
-
-**Figure 2.** Mean jam factor by temporal period across three cities
-
-**Figure 3.** Spatial distribution of congestion hotspots (LISA classification) for (a) Jakarta, (b) Bandung, (c) Semarang
-
-**Figure 4.** Edge betweenness centrality maps showing critical network corridors
-
-**Figure 5.** Scatter plot of population vs. mean jam factor with fitted regression line
-
-**Figure 6.** Street orientation polar histograms for each city
 
 ---
 
