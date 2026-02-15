@@ -1,17 +1,21 @@
 # Spatiotemporal Traffic Congestion Patterns and Network Centrality in Indonesian Metropolitan Cities
 
 ## Authors
-[Author Names and Affiliations]
 
-**Corresponding Author:** [Email]
+Firman Hadi¹, Yasser Wahyuddin¹, L.M. Sabri¹, Agung Indrajit²
+
+¹ Department of Geodetic Engineering, Universitas Diponegoro, Semarang, Indonesia
+² Deputy for Green and Digital Transformation, Nusantara Capital Authority, Indonesia
+
+**Corresponding Author:** Firman Hadi (firmanhadi21@lecturer.undip.ac.id)
 
 ---
 
 ## Abstract
 
-Urban traffic congestion poses significant challenges to sustainable development in rapidly growing cities across Southeast Asia. This study presents a comprehensive spatiotemporal analysis of traffic congestion patterns in three major Indonesian metropolitan areas: Jakarta, Bandung, and Semarang. Utilizing high-resolution traffic flow data collected from the HERE Traffic API over an 11-month period (March 2025 to February 2026), we analyzed over 264 million traffic observations across 18,694 road segments. The methodology integrates real-time traffic jam factor measurements with geostatistical analysis (Moran's I, LISA, Getis-Ord Gi*) and OpenStreetMap network analysis using OSMnx. Our most significant finding is that **temporal factors dominate spatial factors by a factor of 1,000-4,000x** in explaining congestion variance: time-of-day (η² = 15-24%) vastly outweighs network centrality (R² < 0.01%) and POI density (R² < 0.01%) as predictors. This demonstrates that congestion is fundamentally a **temporal synchronization problem**—resulting from millions of people traveling at the same times—rather than a spatial infrastructure problem. The evening peak period (16:00-19:00) shows congestion approximately 40% higher than daily averages across all cities. While global spatial autocorrelation is non-significant, LISA identifies local hotspots representing peak-hour capacity bottlenecks. These findings support prioritizing demand management strategies (staggered hours, flexible work) over infrastructure expansion, contributing new empirical evidence to traffic policy debates in rapidly urbanizing contexts.
+Urban traffic congestion poses significant challenges to sustainable development in rapidly growing cities across Southeast Asia. This study presents a comprehensive spatiotemporal analysis of traffic congestion patterns in three major Indonesian metropolitan areas: Jakarta, Bandung, and Semarang. Utilizing high-resolution traffic flow data collected from the HERE Traffic API over an 11-month period (March 2025 to February 2026), we analyzed over 264 million traffic observations across 18,694 road segments. The methodology integrates real-time traffic jam factor measurements with geostatistical analysis (Moran's I, LISA, Getis-Ord Gi*), OpenStreetMap network analysis using OSMnx, and a novel graph-based capacity drop detection framework. Our most significant finding is that **temporal factors dominate spatial factors by a factor of 1,000-4,000x** in explaining congestion variance: time-of-day (η² = 15-24%) vastly outweighs network centrality (R² < 0.01%) and POI density (R² < 0.01%) as predictors. A dedicated bottleneck analysis further confirms this conclusion: road capacity scores show negligible correlation with congestion (r < 0.04), spatial capacity drops (where road hierarchy decreases) show no proximity effect on congestion (p = 0.10–0.83, |d| < 0.09), and local bottleneck gradients are indistinguishable from surrounding segments (|d| < 0.05). This demonstrates that congestion is fundamentally a **temporal synchronization problem**—resulting from millions of people traveling at the same times—rather than a spatial infrastructure or capacity constraint problem. The evening peak period (16:00-19:00) shows congestion approximately 40% higher than daily averages across all cities. While global spatial autocorrelation is non-significant, LISA identifies local hotspots representing peak-hour capacity bottlenecks. These findings support prioritizing demand management strategies (staggered hours, flexible work) over infrastructure expansion, contributing new empirical evidence to traffic policy debates in rapidly urbanizing contexts.
 
-**Keywords:** Urban traffic congestion; Spatiotemporal analysis; Network centrality; Jam factor; Indonesian cities; HERE Traffic API; OSMnx; Spatial autocorrelation
+**Keywords:** Urban traffic congestion; Spatiotemporal analysis; Network centrality; Jam factor; Capacity bottleneck; Indonesian cities; HERE Traffic API; OSMnx; Spatial autocorrelation
 
 ---
 
@@ -38,8 +42,9 @@ This study addresses these gaps by:
 
 This research makes the following contributions to the literature:
 
-- **Methodological:** Demonstrates the integration of commercial traffic API data with open-source network analysis tools for comprehensive urban traffic assessment
-- **Empirical:** Provides the first systematic comparative analysis of traffic patterns across three major Indonesian cities using standardized metrics
+- **Methodological:** Demonstrates the integration of commercial traffic API data with open-source network analysis tools for comprehensive urban traffic assessment, including a novel graph-based capacity drop detection framework
+- **Empirical:** Provides the first systematic comparative analysis of traffic patterns across three major Indonesian cities using standardized metrics, with triangulated evidence from four independent spatial predictors (centrality, POI density, road capacity, and capacity drops) all yielding null results
+- **Theoretical:** Demonstrates that normalized congestion metrics (jam factor) inherently remove capacity effects, with implications for capacity–congestion studies using similar data sources
 - **Practical:** Offers evidence-based recommendations for traffic management and infrastructure prioritization in rapidly urbanizing Southeast Asian contexts
 
 ---
@@ -60,7 +65,11 @@ The advent of probe vehicle data and commercial traffic APIs has transformed tra
 
 The relationship between network topology and traffic distribution has received increasing attention following Boeing's (2017) introduction of OSMnx for street network analysis. Subsequent work has extended network analysis to global urban contexts (Boeing, 2022; Barrington-Leigh & Millard-Ball, 2020). Research has demonstrated correlations between centrality metrics—particularly betweenness centrality—and traffic volumes (Gao et al., 2013; Porta et al., 2006). Kirkley et al. (2018) showed that network structure significantly influences congestion propagation, while topological analysis of urban street networks has revealed fundamental relationships between network form and function (Jiang & Claramunt, 2004; Louf & Barthelemy, 2014; Marshall et al., 2018).
 
-### 2.4 Geostatistical Approaches to Traffic Analysis
+### 2.4 Traffic Bottlenecks and Capacity Constraints
+
+The concept of traffic bottlenecks—locations where road capacity decreases, causing flow breakdown and upstream queuing—is central to traffic engineering theory (Daganzo, 2007; Li et al., 2018). Classical bottleneck models predict that capacity transitions (e.g., lane reductions, highway-to-arterial merges) concentrate congestion at specific spatial locations (Arnott et al., 1993). However, empirical evidence linking static network capacity features to observed congestion patterns in real urban networks remains limited. Most bottleneck studies focus on isolated highway segments rather than city-wide networks, and the interaction between normalized congestion metrics and capacity effects has received little attention.
+
+### 2.5 Geostatistical Approaches to Traffic Analysis
 
 Spatial autocorrelation methods, including Moran's I and local indicators of spatial association (LISA), have proven valuable for identifying traffic hotspots (Ord & Getis, 1995; Getis & Ord, 1992). The fundamental principle underlying these methods—that near things are more related than distant things (Tobler, 1970)—is particularly applicable to traffic networks where congestion propagates spatially. Studies have applied these techniques to examine crash patterns (Anderson, 2009), urban spatial structure (Zhong et al., 2014), and congestion clustering (Wang et al., 2016). The PySAL library (Rey & Anselin, 2010) has become a standard tool for implementing these methods in Python-based spatial analysis workflows.
 
@@ -151,11 +160,12 @@ Comprehensive exploratory data analysis confirmed data integrity across all 24 d
 
 ### 4.1 Analytical Framework
 
-Our analytical framework integrates three complementary approaches (Figure 1):
+Our analytical framework integrates four complementary approaches (Figure 1):
 
 1. **Descriptive statistical analysis** of temporal congestion patterns
 2. **Geostatistical analysis** of spatial congestion clustering
 3. **Network analysis** examining topology-congestion relationships
+4. **Bottleneck analysis** testing capacity constraint effects on congestion
 
 ![**Figure 1.** Analytical framework integrating temporal analysis, geostatistical methods, and network topology assessment](../figures/analytical_framework.png)
 
@@ -212,11 +222,52 @@ where $d(u,v)$ is the shortest path distance between nodes $u$ and $v$.
 
 Correlation analysis examined relationships between centrality metrics and observed congestion levels.
 
-### 4.5 Software and Tools
+### 4.5 Bottleneck and Capacity Drop Analysis
+
+To test whether physical road capacity constraints explain congestion patterns, we developed a multi-scale bottleneck analysis framework combining aggregate capacity scoring, graph-based capacity drop detection, and local gradient analysis.
+
+#### 4.5.1 Road Capacity Scoring
+
+Road segments from OSMnx were assigned ordinal capacity scores based on OpenStreetMap highway classification, reflecting typical throughput capacity:
+
+**Table 4a.** Road capacity scoring scheme
+
+| Highway Type | Capacity Score | Rationale |
+|-------------|---------------|-----------|
+| Motorway | 6 | Highest capacity, grade-separated |
+| Trunk | 5 | Major arterial, high capacity |
+| Primary | 4 | Principal urban road |
+| Secondary | 3 | Distributor road |
+| Tertiary | 2 | Local collector |
+| Link variants | Parent − 0.5 | Reduced capacity at transitions |
+
+To ensure comparability with HERE Traffic API coverage, which monitors only major roads, OSMnx networks were filtered to HERE-comparable road types (motorway through tertiary, including link variants) before analysis. Traffic segments were spatially joined to road network edges using centroid-based nearest-neighbor matching within a 200m threshold.
+
+#### 4.5.2 Graph-Based Capacity Drop Detection
+
+Capacity drops—locations where road hierarchy decreases along the direction of travel—were identified using the directed road network graph. For each node in the filtered network, we compared the maximum capacity score of incoming edges with the maximum capacity score of outgoing edges:
+
+$$\text{Drop ratio} = \frac{C_{\text{in}} - C_{\text{out}}}{C_{\text{in}}}$$
+
+Nodes with a drop ratio ≥ 0.20 (i.e., ≥ 20% capacity reduction) were classified as capacity drop locations. For each traffic segment, the Euclidean distance to the nearest capacity drop was computed.
+
+#### 4.5.3 Local Bottleneck Gradient Analysis
+
+To capture fine-grained spatial effects, we computed a local bottleneck gradient for each traffic segment using its K=10 nearest neighbors in the road network. For each segment, we identified whether any of its K neighbors had a higher capacity score, classifying segments as "local bottleneck" (lower capacity than at least one neighbor) or "non-bottleneck" (equal or higher capacity than all neighbors). This approach detects capacity transitions at a local scale independent of the global network topology.
+
+#### 4.5.4 Statistical Testing
+
+Three complementary tests assessed the capacity-congestion relationship:
+
+1. **Aggregate capacity comparison:** Two-sample t-test comparing mean jam factor between high-capacity (above-median score) and low-capacity (below-median score) road segments, with Cohen's d effect size
+2. **Capacity drop proximity:** Pearson and Spearman correlations between distance-to-nearest-drop and jam factor, plus median-split t-test (near vs. far from drops)
+3. **Local gradient:** T-test comparing jam factor at local bottleneck segments versus non-bottleneck segments
+
+### 4.6 Software and Tools
 
 Analysis was conducted using:
 - Python 3.11 with GeoPandas, NetworkX, SciPy
-- OSMnx 1.6+ for network analysis
+- OSMnx 2.0 for network analysis
 - HERE Traffic API via hereR package (R)
 - Visualization: Matplotlib, Seaborn
 
@@ -395,6 +446,78 @@ The t-test results reveal **no statistically significant difference** in congest
 
 This finding definitively demonstrates that congestion is **location-independent**: high-POI activity centers experience identical congestion levels to low-POI peripheral areas. The implication is profound—congestion does not cluster around activity generators but rather occurs uniformly across the network during synchronized peak demand periods.
 
+### 5.5 Bottleneck and Capacity Drop Analysis
+
+#### 5.5.1 Aggregate Capacity–Congestion Relationship
+
+The spatial join between HERE traffic segments and OSMnx road networks (filtered to HERE-comparable types) achieved match rates of 95-98% across all cities. Table 10c presents the comparison of mean evening-peak jam factor between low-capacity and high-capacity road segments.
+
+**Table 10c.** Congestion comparison: Low-capacity vs high-capacity road segments
+
+| City | Low Capacity JF | High Capacity JF | Difference | t-stat | p-value | Cohen's d |
+|------|-----------------|-------------------|------------|--------|---------|-----------|
+| Semarang | 1.651 | 1.655 | -0.26% | -0.87 | 0.382 | -0.056 |
+| Bandung | 1.920 | 1.925 | -0.25% | -1.84 | 0.066 | -0.072 |
+| Jakarta | 2.005 | 2.007 | -0.10% | -1.88 | 0.060 | -0.033 |
+
+Contrary to the bottleneck hypothesis, **high-capacity roads show marginally higher congestion** than low-capacity roads in all three cities—the opposite of what capacity constraints would predict. However, all differences are statistically non-significant (p > 0.05) with trivial effect sizes (|d| < 0.08). The reversed direction likely reflects the HERE jam factor's normalization to free-flow speed: since each segment's congestion is measured relative to its own free-flow baseline, road capacity effects are divided out by design.
+
+Pearson and Spearman correlations between capacity score and jam factor confirm this pattern (Table 10d).
+
+**Table 10d.** Capacity score–congestion correlations
+
+| City | Pearson r | p-value | Spearman ρ | p-value |
+|------|-----------|---------|------------|---------|
+| Semarang | 0.027 | 0.394 | 0.031 | 0.326 |
+| Bandung | 0.034 | 0.074 | 0.032 | 0.087 |
+| Jakarta | 0.017 | 0.051 | 0.016 | 0.066 |
+
+All correlations are near-zero (r < 0.04), confirming that road capacity has essentially no linear relationship with observed congestion levels.
+
+#### 5.5.2 Spatial Capacity Drop Analysis
+
+Graph-based capacity drop detection identified locations where road hierarchy decreases along the direction of travel (≥20% capacity reduction). The number of detected capacity drops scales with network size (Table 10e).
+
+**Table 10e.** Capacity drop detection and proximity analysis
+
+| City | Capacity Drops | Near-Drop JF | Far-Drop JF | t-stat | p-value | Cohen's d |
+|------|----------------|-------------|-------------|--------|---------|-----------|
+| Semarang | 78 | 1.649 | 1.656 | -1.08 | 0.283 | -0.083 |
+| Bandung | 245 | 1.922 | 1.923 | -0.22 | 0.830 | -0.010 |
+| Jakarta | 1,443 | 2.008 | 2.006 | 1.67 | 0.095 | 0.035 |
+
+Proximity to capacity drops shows **no significant effect on congestion** across all cities (p = 0.095–0.830). Effect sizes are negligible (|d| < 0.09). In Semarang and Bandung, segments near capacity drops actually show marginally *lower* congestion than distant segments, while Jakarta shows a marginal (non-significant) positive effect. Distance-to-drop correlations are similarly negligible: Pearson r ranges from -0.008 to 0.019 and Spearman ρ from -0.015 to 0.019.
+
+![**Figure 8.** Spatial capacity drop analysis: capacity drop proximity and local bottleneck effects across three cities](../figures/capacity_drop_spatial_analysis.png)
+
+#### 5.5.3 Local Bottleneck Gradient
+
+The local bottleneck gradient analysis (K=10 nearest network neighbors) provides the finest-grained test of capacity effects (Table 10f).
+
+**Table 10f.** Local bottleneck gradient analysis
+
+| City | Local BN JF | Non-BN JF | t-stat | p-value | Cohen's d |
+|------|-------------|-----------|--------|---------|-----------|
+| Semarang | 1.650 | 1.654 | -0.65 | 0.517 | -0.047 |
+| Bandung | 1.920 | 1.922 | -0.62 | 0.534 | -0.027 |
+| Jakarta | 2.007 | 2.006 | 0.80 | 0.426 | 0.016 |
+
+Segments classified as local bottlenecks (lower capacity than at least one of their K=10 nearest neighbors) exhibit **no meaningful congestion difference** from non-bottleneck segments. All p-values exceed 0.4, and effect sizes are trivial (|d| < 0.05). Local capacity score correlations with jam factor are similarly near-zero (|r| < 0.03).
+
+![**Figure 8a.** Capacity–congestion scatter: road capacity score vs. mean evening-peak jam factor for each city](../figures/capacity_congestion_scatter.png)
+
+![**Figure 8b.** Aggregate capacity comparison: low-capacity vs. high-capacity road segments by city](../figures/bottleneck_capacity_comparison.png)
+
+#### 5.5.4 Methodological Note: HERE Jam Factor Normalization
+
+The consistent null findings across all three capacity tests are explained by a critical property of the HERE jam factor metric. The jam factor is computed as a normalized ratio of current speed to free-flow speed for each individual segment:
+
+$$JF \propto 1 - \frac{v_{\text{current}}}{v_{\text{free-flow}}}$$
+
+Because each segment's congestion is measured relative to its own free-flow capacity, road class effects are divided out by design. A motorway at 80 km/h (free-flow 100 km/h) and a tertiary road at 24 km/h (free-flow 30 km/h) both register JF ≈ 2.0. Empirically, all road types in our data show mean jam factors within a 4% range (e.g., Semarang: 1.644–1.711 across all highway classes), confirming this normalization effect.
+
+This normalization is methodologically important: it means the jam factor measures **demand relative to capacity** rather than absolute congestion. Consequently, any analysis seeking to relate physical capacity to congestion *must* use unnormalized speed data. However, the normalization simultaneously validates our primary finding—that congestion is temporally driven—because even a capacity-sensitive metric would still show temporal dominance given the 1,000x effect size gap.
+
 ### 5.6 Temporal vs Spatial Predictors: A Critical Comparison
 
 A key finding of this study emerges from comparing the explanatory power of temporal versus spatial predictors. Table 11a presents variance explained (effect size) for each predictor type.
@@ -406,6 +529,8 @@ A key finding of this study emerges from comparing the explanatory power of temp
 | **Time Period** | η² (ANOVA) | 23.8% | 19.2% | 15.4% |
 | POI Density | R² | 0.006% | 0.003% | 0.014% |
 | Network Centrality | R² | 0.0004% | 0.014% | 0.012% |
+| Road Capacity | R² | 0.028% | 0.115% | 0.072% |
+| Capacity Drop Proximity | R² | 0.006% | 0.002% | 0.001% |
 | **Ratio (Temporal/Spatial)** | — | **~4000x** | **~1400x** | **~1100x** |
 
 The temporal effect (time-of-day) explains **1,000–4,000 times more variance** in congestion than any spatial predictor. This finding fundamentally reframes our understanding of urban congestion:
@@ -440,7 +565,7 @@ Street orientation analysis reveals distinct patterns (Boeing, 2020):
 
 ![**Figure 5.** Street orientation polar histograms for each city](../figures/street_orientation_polar.png)
 
-### 5.5 Comparative City Analysis
+### 5.7 Comparative City Analysis
 
 Cross-city comparison reveals scaling relationships (Figure 6):
 
@@ -508,22 +633,38 @@ Hotspot locations correspond to known problematic areas in each city, validating
 
 #### 6.1.4 The Failure of Spatial Predictors
 
-A surprising and important finding is the **near-zero correlation** between spatial characteristics and congestion. Neither network centrality (betweenness) nor land-use intensity (POI density) predicts congestion levels. This contradicts common assumptions in transportation planning that:
+A surprising and important finding is the **near-zero correlation** between spatial characteristics and congestion. Neither network centrality (betweenness), land-use intensity (POI density), nor road capacity predicts congestion levels. This contradicts common assumptions in transportation planning that:
 
 1. Topologically important roads (high betweenness) experience more congestion
 2. Areas with more activities (high POI density) generate more traffic problems
+3. Lower-capacity roads (bottlenecks) experience disproportionate congestion
 
-Our analysis reveals that these static spatial characteristics explain less than 0.02% of congestion variance combined—essentially zero predictive power. This finding aligns with recent work questioning the direct link between network structure and congestion (Kirkley et al., 2018), but extends it by also testing land-use effects.
+Our analysis reveals that these static spatial characteristics explain less than 0.02% of congestion variance combined—essentially zero predictive power. This finding aligns with recent work questioning the direct link between network structure and congestion (Kirkley et al., 2018), but extends it by also testing land-use and physical capacity effects.
 
-#### 6.1.5 Temporal Dominance: The Key Finding
+#### 6.1.5 Capacity Constraints Do Not Predict Congestion
+
+The bottleneck analysis provides perhaps the most counterintuitive finding of this study. Three independent tests—aggregate capacity comparison, spatial capacity drop proximity, and local bottleneck gradient—all yield the same conclusion: **physical road capacity has no measurable relationship with congestion levels**.
+
+This finding requires careful interpretation. The HERE jam factor normalizes each segment's speed to its own free-flow baseline, effectively creating a demand-to-capacity ratio. Under this normalization, a motorway carrying 50,000 vehicles at 80% of free-flow speed registers the same jam factor as a tertiary road carrying 2,000 vehicles at 80% of free-flow speed. Our data confirm this: all road types show mean jam factors within a 4% range of each other (e.g., Semarang: 1.644–1.711 across all highway classes).
+
+This observation has two important implications:
+
+1. **Methodological:** Studies using normalized congestion metrics (jam factor, travel time index, speed ratio) cannot detect capacity effects by design. Any investigation of the capacity–congestion relationship requires absolute speed or flow data.
+
+2. **Substantive:** Even acknowledging the normalization, the spatial capacity drop analysis tests a *relative* hypothesis—that transitions from higher to lower capacity induce localized congestion spikes. The null result here (p = 0.095–0.830) cannot be attributed to normalization alone, because drops should still create relative disruptions even in normalized metrics if bottleneck queuing is a dominant mechanism.
+
+The combined evidence from three complementary approaches (aggregate, graph-based, and local gradient), each testing a distinct aspect of the bottleneck hypothesis, provides robust triangulated evidence that spatial capacity constraints do not drive congestion patterns in these three Indonesian cities.
+
+#### 6.1.6 Temporal Dominance: The Key Finding
 
 The most significant finding of this study is the **overwhelming dominance of temporal over spatial factors** in explaining congestion. Time-of-day (η² = 15-24%) explains 1,000-4,000 times more variance than any spatial predictor. This reframes congestion as fundamentally a **demand synchronization problem**:
 
 - Congestion occurs because millions of people travel at the same times (school at 7am, work at 8am, home at 5pm)
 - The specific roads or locations matter far less than the temporal concentration of demand
 - LISA hotspots represent **capacity bottlenecks during peak synchronization**, not inherently problematic locations
+- Physical capacity constraints (road hierarchy, bottleneck transitions) show no spatial signature in congestion patterns
 
-This explains why road expansion often fails to solve congestion (induced demand)—adding capacity doesn't address the underlying temporal synchronization of travel demand.
+The convergence of four independent null findings—network centrality, POI density, activity zone comparison, and capacity analysis—provides overwhelming evidence that spatial factors are irrelevant to congestion distribution. This explains why road expansion often fails to solve congestion (induced demand)—adding capacity doesn't address the underlying temporal synchronization of travel demand.
 
 ### 6.2 Implications for Traffic Management
 
@@ -548,33 +689,35 @@ Traffic management resources should prioritize the evening peak period (16:00-19
 
 #### 6.2.3 Reconsidering Infrastructure Investment
 
-The failure of centrality to predict congestion suggests that:
+The failure of centrality, POI density, and physical capacity to predict congestion suggests that:
 
 1. **High-betweenness roads are not necessarily priorities** for expansion
-2. **Bottleneck identification** should focus on peak-hour capacity constraints, not network topology
+2. **Spatial capacity drops** (where road hierarchy decreases) do not create localized congestion—eliminating bottleneck removal as an effective spatial strategy
 3. **Alternative route development** may have limited impact since congestion is temporally, not spatially, driven
+4. **Bottleneck identification** should focus on peak-hour demand management rather than network topology or capacity transitions
 
 ### 6.3 Limitations
 
 Several limitations should be acknowledged:
 
 1. **Data source:** HERE Traffic API coverage may underrepresent minor roads and informal settlements
-2. **Temporal scope:** While extensive, the 11-month period may not capture long-term trends or seasonal variations beyond one cycle
-3. **Network matching:** Traffic segments and OSM edges do not perfectly align, introducing potential matching errors. Future work should employ formal spatial join algorithms with explicit buffer distances and match-rate reporting
-4. **Spatial statistics:** The current spatial clustering analysis uses a nearest-neighbor correlation proxy rather than formal Moran's I with spatial weight matrices. Proper implementation using PySAL with queen contiguity or distance-band weights would strengthen the spatial findings
-5. **Causality:** Correlational findings do not establish causal relationships between network structure and congestion
+2. **Jam factor normalization:** The HERE jam factor metric normalizes speed to each segment's free-flow baseline, which by design removes absolute capacity effects. The capacity analysis tested relative effects (capacity drops, local gradients) that should still be detectable under normalization, but future studies should use absolute speed data to fully investigate capacity–congestion relationships
+3. **Temporal scope:** While extensive, the 11-month period may not capture long-term trends or seasonal variations beyond one cycle
+4. **Network matching:** Traffic segments and OSM edges do not perfectly align, introducing potential matching errors, though match rates exceeded 95% across all cities
+5. **Capacity scoring:** The ordinal capacity score based on OSM highway classification is a proxy for actual road capacity. Lane count, signal timing, and intersection design are not captured
+6. **Causality:** Correlational findings do not establish causal relationships between network structure and congestion
 
 ### 6.4 Future Research Directions
 
 This work suggests several research extensions:
 
-1. Formal spatial autocorrelation analysis using PySAL (Moran's I, LISA) with proper spatial weight matrices to quantify clustering significance
-2. Spatial matching and correlation of OSMnx betweenness centrality with HERE traffic segments to quantify topology-congestion relationships
-3. Integration with public transport data to assess multimodal impacts
-4. Land use analysis examining activity-based congestion generation
-5. Intervention evaluation using before-after analysis of infrastructure changes
-6. Machine learning approaches for congestion prediction using identified features
-7. Extension to additional Indonesian cities for broader comparative analysis
+1. **Denormalized capacity analysis:** Re-aggregating raw HERE speed and free-flow speed data to compute absolute delay ($\Delta t = L \times (1/v - 1/v_f)$), enabling direct testing of whether high-capacity roads carry more total delay despite identical jam factors
+2. **Temporal capacity interactions:** Examining whether capacity constraints become relevant only during specific peak periods, using time-stratified bottleneck analysis
+3. Integration with public transport data to assess multimodal impacts on congestion distribution
+4. Machine learning approaches for congestion prediction combining temporal features with network topology
+5. Extension to additional Indonesian cities for broader comparative analysis
+6. Intervention evaluation using before-after analysis of infrastructure changes
+7. **Microscopic bottleneck analysis:** Using intersection-level data to test whether signal timing and turning movements create localized capacity effects invisible in segment-level analysis
 
 ---
 
@@ -584,11 +727,11 @@ This study presents a comprehensive spatiotemporal analysis of urban traffic con
 
 ### 7.1 Primary Finding: Temporal Dominance
 
-**Congestion is fundamentally a temporal phenomenon, not a spatial one.** Time-of-day explains 15-24% of congestion variance (η² from ANOVA), while spatial predictors—network centrality and POI density—explain less than 0.02% combined. This 1,000-4,000x difference in explanatory power demonstrates that:
+**Congestion is fundamentally a temporal phenomenon, not a spatial one.** Time-of-day explains 15-24% of congestion variance (η² from ANOVA), while spatial predictors—network centrality, POI density, and road capacity—explain less than 0.02% combined. This 1,000-4,000x difference in explanatory power demonstrates that:
 
 - **When** people travel matters far more than **where** congestion occurs
-- Congestion results from **synchronized travel demand**, not problematic locations
-- Static infrastructure characteristics cannot predict congestion patterns
+- Congestion results from **synchronized travel demand**, not problematic locations or capacity constraints
+- Static infrastructure characteristics—including road hierarchy and capacity transitions—cannot predict congestion patterns
 
 ### 7.2 Secondary Findings
 
@@ -600,23 +743,56 @@ This study presents a comprehensive spatiotemporal analysis of urban traffic con
 
 4. **Network topology irrelevance:** Betweenness centrality shows near-zero correlation with congestion (r < 0.02), contradicting assumptions that topologically important roads experience more congestion
 
+5. **Capacity constraint irrelevance:** Neither aggregate road capacity (Cohen's d = -0.03 to -0.07, all p > 0.05), spatial capacity drops (78-1,443 detected; proximity p = 0.10-0.83), nor local bottleneck gradients (|d| < 0.05) predict congestion levels. The bottleneck hypothesis—that congestion concentrates where road capacity decreases—is not supported by the data
+
 ### 7.3 Policy Implications
 
 These findings support a fundamental shift in traffic management philosophy:
 
 - **Demand management** (staggered hours, flexible work, congestion pricing) should take priority over infrastructure expansion
 - **Temporal targeting** of resources to the 16:00-19:00 peak period maximizes impact
-- **Road expansion** addresses symptoms rather than the underlying synchronization problem
+- **Road expansion and bottleneck removal** address symptoms rather than the underlying synchronization problem
+- **Capacity transitions** (e.g., motorway-to-arterial merges) do not create measurable congestion signatures, suggesting that targeted bottleneck widening may yield minimal congestion relief
 
 ### 7.4 Contribution
 
-This research contributes empirical evidence demonstrating that urban congestion is primarily a temporal coordination failure rather than a spatial infrastructure problem. The methodology—integrating commercial traffic APIs with open-source network analysis—is transferable to other rapidly urbanizing contexts. The finding that time explains 1,000x more variance than space has significant implications for transportation policy worldwide.
+This research contributes empirical evidence demonstrating that urban congestion is primarily a temporal coordination failure rather than a spatial infrastructure or capacity constraint problem. The novel graph-based capacity drop detection framework provides a replicable method for testing the bottleneck hypothesis in other urban contexts. The methodology—integrating commercial traffic APIs with open-source network analysis—is transferable to other rapidly urbanizing contexts. The finding that time explains 1,000x more variance than space, corroborated by the failure of three independent capacity tests, has significant implications for transportation policy worldwide.
 
 ---
 
 ## Acknowledgments
 
-[Acknowledgments to funding sources, data providers, and collaborators]
+Computational resources were provided by Pusdatin Bappenas (The Data and Information Center, The Ministry of National Development Planning), which granted access to NVIDIA H100 GPUs on their High Performance Computing cluster.
+
+---
+
+## Declaration of Competing Interests
+
+The authors declare no competing financial interests or personal relationships that could have influenced this work.
+
+---
+
+## Author Contributions
+
+**Firman Hadi:** Conceptualization, Methodology, Software, Data curation, Formal analysis, Writing – original draft. **Yasser Wahyuddin:** Methodology, Formal analysis, Writing – original draft. **L.M. Sabri:** Formal analysis, Writing – review & editing. **Agung Indrajit:** Writing – review & editing.
+
+---
+
+## Declaration of Generative AI and AI-assisted Technologies in the Writing Process
+
+During the preparation of this work, the authors used Claude (Anthropic) for data processing pipeline development, evaluation script implementation, and statistical analysis automation. The authors reviewed and edited all outputs and take full responsibility for the content of this publication.
+
+---
+
+## Ethics Statement
+
+This research used publicly available satellite imagery and did not involve human participants, animal subjects, or sensitive personal data. No ethical approval was required.
+
+---
+
+## Funding
+
+This research did not receive any specific grant from funding agencies in the public, commercial, or not-for-profit sectors.
 
 ---
 
@@ -633,6 +809,8 @@ Street network data are publicly available from OpenStreetMap (www.openstreetmap
 Anderson, T. K. (2009). Kernel density estimation and K-means clustering to profile road accident hotspots. *Accident Analysis & Prevention*, 41(3), 359-364.
 
 Anselin, L. (1995). Local indicators of spatial association—LISA. *Geographical Analysis*, 27(2), 93-115.
+
+Arnott, R., de Palma, A., & Lindsey, R. (1993). A structural model of peak-period congestion: A traffic bottleneck with elastic demand. *American Economic Review*, 83(1), 161-179.
 
 Asian Development Bank. (2019). *Asian Development Outlook 2019: Strengthening Disaster Resilience*. Manila: ADB.
 

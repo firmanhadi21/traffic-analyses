@@ -1,4 +1,4 @@
-\begin{thebibliography}{19}
+\begin{thebibliography}{37}
 \expandafter\ifx\csname natexlab\endcsname\relax\def\natexlab#1{#1}\fi
 \providecommand{\url}[1]{\texttt{#1}}
 \providecommand{\href}[2]{#2}
@@ -14,97 +14,289 @@
 %Type = Article
 \bibitem[{Anderson(2009)}]{Anderson2009}
 \bibinfo{author}{Anderson, T.K.}, \bibinfo{year}{2009}.
-\newblock \bibinfo{title}{Kernel density estimation and k-means clustering to profile road accident hotspots}.
-\newblock \bibinfo{journal}{Accident Analysis \& Prevention} \bibinfo{volume}{41}, \bibinfo{pages}{359--364}.
+\newblock \bibinfo{title}{Kernel density estimation and k-means clustering to
+  profile road accident hotspots}.
+\newblock \bibinfo{journal}{Accident Analysis \& Prevention}
+  \bibinfo{volume}{41}, \bibinfo{pages}{359--364}.
 %Type = Article
 \bibitem[{Anselin(1995)}]{Anselin1995}
 \bibinfo{author}{Anselin, L.}, \bibinfo{year}{1995}.
 \newblock \bibinfo{title}{Local indicators of spatial association—lisa}.
-\newblock \bibinfo{journal}{Geographical Analysis} \bibinfo{volume}{27}, \bibinfo{pages}{93--115}.
+\newblock \bibinfo{journal}{Geographical Analysis} \bibinfo{volume}{27},
+  \bibinfo{pages}{93--115}.
+%Type = Article
+\bibitem[{Arnott et~al.(1993)Arnott, de~Palma and Lindsey}]{Arnott1993}
+\bibinfo{author}{Arnott, R.}, \bibinfo{author}{de~Palma, A.},
+  \bibinfo{author}{Lindsey, R.}, \bibinfo{year}{1993}.
+\newblock \bibinfo{title}{A structural model of peak-period congestion: A
+  traffic bottleneck with elastic demand}.
+\newblock \bibinfo{journal}{American Economic Review} \bibinfo{volume}{83},
+  \bibinfo{pages}{161--179}.
 %Type = Techreport
 \bibitem[{{Asian Development Bank}(2019)}]{ADB2019}
 \bibinfo{author}{{Asian Development Bank}}, \bibinfo{year}{2019}.
-\newblock \bibinfo{title}{Asian Development Outlook 2019: Strengthening Disaster Resilience}.
-\newblock \bibinfo{type}{Technical Report}. Asian Development Bank. \bibinfo{address}{Manila}.
+\newblock \bibinfo{title}{Asian Development Outlook 2019: Strengthening
+  Disaster Resilience}.
+\newblock \bibinfo{type}{Technical Report}. Asian Development Bank.
+  \bibinfo{address}{Manila}.
+%Type = Article
+\bibitem[{Barrington-Leigh and Millard-Ball(2020)}]{BarringtonLeigh2020}
+\bibinfo{author}{Barrington-Leigh, C.}, \bibinfo{author}{Millard-Ball, A.},
+  \bibinfo{year}{2020}.
+\newblock \bibinfo{title}{Global trends of urban expansion and sprawl through
+  the lens of street networks}.
+\newblock \bibinfo{journal}{Computers, Environment and Urban Systems}
+  \bibinfo{volume}{80}, \bibinfo{pages}{101429}.
+%Type = Article
+\bibitem[{Batty(2013)}]{Batty2013}
+\bibinfo{author}{Batty, M.}, \bibinfo{year}{2013}.
+\newblock \bibinfo{title}{Big data, smart cities and city planning}.
+\newblock \bibinfo{journal}{Dialogues in Human Geography} \bibinfo{volume}{3},
+  \bibinfo{pages}{274--279}.
 %Type = Article
 \bibitem[{Boeing(2017)}]{Boeing2017}
 \bibinfo{author}{Boeing, G.}, \bibinfo{year}{2017}.
-\newblock \bibinfo{title}{{OSMnx}: New methods for acquiring, constructing, analyzing, and visualizing complex street networks}.
-\newblock \bibinfo{journal}{Computers, Environment and Urban Systems} \bibinfo{volume}{65}, \bibinfo{pages}{126--139}.
+\newblock \bibinfo{title}{{OSMnx}: New methods for acquiring, constructing,
+  analyzing, and visualizing complex street networks}.
+\newblock \bibinfo{journal}{Computers, Environment and Urban Systems}
+  \bibinfo{volume}{65}, \bibinfo{pages}{126--139}.
+%Type = Article
+\bibitem[{Boeing(2020)}]{Boeing2020}
+\bibinfo{author}{Boeing, G.}, \bibinfo{year}{2020}.
+\newblock \bibinfo{title}{Urban spatial order: Street network orientation,
+  configuration, and entropy}.
+\newblock \bibinfo{journal}{Applied Network Science} \bibinfo{volume}{5},
+  \bibinfo{pages}{1--19}.
+%Type = Article
+\bibitem[{Boeing(2022)}]{Boeing2019}
+\bibinfo{author}{Boeing, G.}, \bibinfo{year}{2022}.
+\newblock \bibinfo{title}{Street network models and indicators for every urban
+  area in the world}.
+\newblock \bibinfo{journal}{Geographical Analysis} \bibinfo{volume}{54},
+  \bibinfo{pages}{519--535}.
 %Type = Article
 \bibitem[{Cervero(2013)}]{Cervero2013}
 \bibinfo{author}{Cervero, R.}, \bibinfo{year}{2013}.
-\newblock \bibinfo{title}{Linking urban transport and land use in developing countries}.
-\newblock \bibinfo{journal}{Journal of Transport and Land Use} \bibinfo{volume}{6}, \bibinfo{pages}{7--24}.
+\newblock \bibinfo{title}{Linking urban transport and land use in developing
+  countries}.
+\newblock \bibinfo{journal}{Journal of Transport and Land Use}
+  \bibinfo{volume}{6}, \bibinfo{pages}{7--24}.
 %Type = Article
 \bibitem[{Daganzo(2007)}]{Daganzo2007}
 \bibinfo{author}{Daganzo, C.F.}, \bibinfo{year}{2007}.
-\newblock \bibinfo{title}{Urban gridlock: Macroscopic modeling and mitigation approaches}.
-\newblock \bibinfo{journal}{Transportation Research Part B: Methodological} \bibinfo{volume}{41}, \bibinfo{pages}{49--62}.
+\newblock \bibinfo{title}{Urban gridlock: Macroscopic modeling and mitigation
+  approaches}.
+\newblock \bibinfo{journal}{Transportation Research Part B: Methodological}
+  \bibinfo{volume}{41}, \bibinfo{pages}{49--62}.
+%Type = Article
+\bibitem[{Ermagun and Levinson(2018)}]{Ermagun2018}
+\bibinfo{author}{Ermagun, A.}, \bibinfo{author}{Levinson, D.},
+  \bibinfo{year}{2018}.
+\newblock \bibinfo{title}{Spatiotemporal traffic speed patterns in urban
+  networks}.
+\newblock \bibinfo{journal}{Transportation Research Part C: Emerging
+  Technologies} \bibinfo{volume}{91}, \bibinfo{pages}{82--96}.
 %Type = Article
 \bibitem[{Gakenheimer(1999)}]{Gakenheimer1999}
 \bibinfo{author}{Gakenheimer, R.}, \bibinfo{year}{1999}.
 \newblock \bibinfo{title}{Urban mobility in the developing world}.
-\newblock \bibinfo{journal}{Transportation Research Part A: Policy and Practice} \bibinfo{volume}{33}, \bibinfo{pages}{671--689}.
+\newblock \bibinfo{journal}{Transportation Research Part A: Policy and
+  Practice} \bibinfo{volume}{33}, \bibinfo{pages}{671--689}.
 %Type = Article
 \bibitem[{Gao et~al.(2013)Gao, Wang, Gao and Liu}]{Gao2013}
-\bibinfo{author}{Gao, S.}, \bibinfo{author}{Wang, Y.}, \bibinfo{author}{Gao, Y.}, \bibinfo{author}{Liu, Y.}, \bibinfo{year}{2013}.
-\newblock \bibinfo{title}{Understanding urban traffic-flow characteristics: A rethinking of betweenness centrality}.
-\newblock \bibinfo{journal}{Environment and Planning B: Planning and Design} \bibinfo{volume}{40}, \bibinfo{pages}{135--153}.
+\bibinfo{author}{Gao, S.}, \bibinfo{author}{Wang, Y.}, \bibinfo{author}{Gao,
+  Y.}, \bibinfo{author}{Liu, Y.}, \bibinfo{year}{2013}.
+\newblock \bibinfo{title}{Understanding urban traffic-flow characteristics: A
+  rethinking of betweenness centrality}.
+\newblock \bibinfo{journal}{Environment and Planning B: Planning and Design}
+  \bibinfo{volume}{40}, \bibinfo{pages}{135--153}.
+%Type = Article
+\bibitem[{Getis and Ord(1992)}]{Getis1992}
+\bibinfo{author}{Getis, A.}, \bibinfo{author}{Ord, J.K.}, \bibinfo{year}{1992}.
+\newblock \bibinfo{title}{The analysis of spatial association by use of
+  distance statistics}.
+\newblock \bibinfo{journal}{Geographical Analysis} \bibinfo{volume}{24},
+  \bibinfo{pages}{189--206}.
+%Type = Misc
+\bibitem[{{HERE Technologies}(2023)}]{HERE2023}
+\bibinfo{author}{{HERE Technologies}}, \bibinfo{year}{2023}.
+\newblock \bibinfo{title}{{HERE Traffic API} developer guide}.
+\newblock \bibinfo{howpublished}{\url{https://developer.here.com}}.
+%Type = Article
+\bibitem[{Jenelius and Koutsopoulos(2015)}]{Jenelius2015}
+\bibinfo{author}{Jenelius, E.}, \bibinfo{author}{Koutsopoulos, H.N.},
+  \bibinfo{year}{2015}.
+\newblock \bibinfo{title}{Travel time estimation for urban road networks using
+  low frequency probe vehicle data}.
+\newblock \bibinfo{journal}{Transportation Research Part B: Methodological}
+  \bibinfo{volume}{78}, \bibinfo{pages}{211--230}.
+%Type = Article
+\bibitem[{Jiang and Claramunt(2004)}]{Jiang2004}
+\bibinfo{author}{Jiang, B.}, \bibinfo{author}{Claramunt, C.},
+  \bibinfo{year}{2004}.
+\newblock \bibinfo{title}{Topological analysis of urban street networks}.
+\newblock \bibinfo{journal}{Environment and Planning B: Planning and Design}
+  \bibinfo{volume}{31}, \bibinfo{pages}{151--162}.
 %Type = Article
 \bibitem[{Joewono and Kubota(2008)}]{Joewono2008}
-\bibinfo{author}{Joewono, T.B.}, \bibinfo{author}{Kubota, H.}, \bibinfo{year}{2008}.
-\newblock \bibinfo{title}{Paratransit service in indonesia: User satisfaction and future choice}.
-\newblock \bibinfo{journal}{Transportation Planning and Technology} \bibinfo{volume}{31}, \bibinfo{pages}{325--345}.
+\bibinfo{author}{Joewono, T.B.}, \bibinfo{author}{Kubota, H.},
+  \bibinfo{year}{2008}.
+\newblock \bibinfo{title}{Paratransit service in indonesia: User satisfaction
+  and future choice}.
+\newblock \bibinfo{journal}{Transportation Planning and Technology}
+  \bibinfo{volume}{31}, \bibinfo{pages}{325--345}.
 %Type = Article
-\bibitem[{Kirkley et~al.(2018)Kirkley, Barbosa, Barthelemy and Ghoshal}]{Kirkley2018}
-\bibinfo{author}{Kirkley, A.}, \bibinfo{author}{Barbosa, H.}, \bibinfo{author}{Barthelemy, M.}, \bibinfo{author}{Ghoshal, G.}, \bibinfo{year}{2018}.
-\newblock \bibinfo{title}{From the betweenness centrality in street networks to structural invariants in random planar graphs}.
-\newblock \bibinfo{journal}{Nature Communications} \bibinfo{volume}{9}, \bibinfo{pages}{2501}.
+\bibitem[{Kirkley et~al.(2018)Kirkley, Barbosa, Barthelemy and
+  Ghoshal}]{Kirkley2018}
+\bibinfo{author}{Kirkley, A.}, \bibinfo{author}{Barbosa, H.},
+  \bibinfo{author}{Barthelemy, M.}, \bibinfo{author}{Ghoshal, G.},
+  \bibinfo{year}{2018}.
+\newblock \bibinfo{title}{From the betweenness centrality in street networks to
+  structural invariants in random planar graphs}.
+\newblock \bibinfo{journal}{Nature Communications} \bibinfo{volume}{9},
+  \bibinfo{pages}{2501}.
 %Type = Techreport
 \bibitem[{Leduc(2008)}]{Leduc2008}
 \bibinfo{author}{Leduc, G.}, \bibinfo{year}{2008}.
-\newblock \bibinfo{title}{Road traffic data: Collection methods and applications}.
-\newblock \bibinfo{type}{JRC Technical Notes}. Joint Research Centre, European Commission.
+\newblock \bibinfo{title}{Road traffic data: Collection methods and
+  applications}.
+\newblock \bibinfo{type}{JRC Technical Notes}. Joint Research Centre, European
+  Commission.
 %Type = Article
 \bibitem[{Li et~al.(2018)Li, Cui, An and Parsafard}]{Li2018}
-\bibinfo{author}{Li, X.}, \bibinfo{author}{Cui, J.}, \bibinfo{author}{An, S.}, \bibinfo{author}{Parsafard, M.}, \bibinfo{year}{2018}.
-\newblock \bibinfo{title}{Stop-and-go traffic analysis: Theoretical properties, environmental impacts and oscillation mitigation}.
-\newblock \bibinfo{journal}{Transportation Research Part B: Methodological} \bibinfo{volume}{70}, \bibinfo{pages}{319--339}.
+\bibinfo{author}{Li, X.}, \bibinfo{author}{Cui, J.}, \bibinfo{author}{An, S.},
+  \bibinfo{author}{Parsafard, M.}, \bibinfo{year}{2018}.
+\newblock \bibinfo{title}{Stop-and-go traffic analysis: Theoretical properties,
+  environmental impacts and oscillation mitigation}.
+\newblock \bibinfo{journal}{Transportation Research Part B: Methodological}
+  \bibinfo{volume}{70}, \bibinfo{pages}{319--339}.
+%Type = Article
+\bibitem[{Louail et~al.(2015)Louail, Lenormand, Picornell, Cant{\'u}~Ros,
+  Herranz, Frias-Martinez, Ramasco and Barthelemy}]{Louail2015}
+\bibinfo{author}{Louail, T.}, \bibinfo{author}{Lenormand, M.},
+  \bibinfo{author}{Picornell, M.}, \bibinfo{author}{Cant{\'u}~Ros, O.G.},
+  \bibinfo{author}{Herranz, R.}, \bibinfo{author}{Frias-Martinez, E.},
+  \bibinfo{author}{Ramasco, J.J.}, \bibinfo{author}{Barthelemy, M.},
+  \bibinfo{year}{2015}.
+\newblock \bibinfo{title}{Uncovering the spatial structure of mobility
+  networks}.
+\newblock \bibinfo{journal}{Nature Communications} \bibinfo{volume}{6},
+  \bibinfo{pages}{6007}.
+%Type = Article
+\bibitem[{Louf and Barthelemy(2014)}]{Louf2014}
+\bibinfo{author}{Louf, R.}, \bibinfo{author}{Barthelemy, M.},
+  \bibinfo{year}{2014}.
+\newblock \bibinfo{title}{A typology of street patterns}.
+\newblock \bibinfo{journal}{Journal of The Royal Society Interface}
+  \bibinfo{volume}{11}, \bibinfo{pages}{20140924}.
+%Type = Article
+\bibitem[{Marshall et~al.(2018)Marshall, Gil, Kropf, Tomko and
+  Figueiredo}]{Marshall2018}
+\bibinfo{author}{Marshall, S.}, \bibinfo{author}{Gil, J.},
+  \bibinfo{author}{Kropf, K.}, \bibinfo{author}{Tomko, M.},
+  \bibinfo{author}{Figueiredo, L.}, \bibinfo{year}{2018}.
+\newblock \bibinfo{title}{Street network studies: From networks to models and
+  their representations}.
+\newblock \bibinfo{journal}{Networks and Spatial Economics}
+  \bibinfo{volume}{18}, \bibinfo{pages}{735--749}.
 %Type = Article
 \bibitem[{Moran(1950)}]{Moran1950}
 \bibinfo{author}{Moran, P.A.P.}, \bibinfo{year}{1950}.
 \newblock \bibinfo{title}{Notes on continuous stochastic phenomena}.
-\newblock \bibinfo{journal}{Biometrika} \bibinfo{volume}{37}, \bibinfo{pages}{17--23}.
+\newblock \bibinfo{journal}{Biometrika} \bibinfo{volume}{37},
+  \bibinfo{pages}{17--23}.
 %Type = Article
 \bibitem[{Ord and Getis(1995)}]{Ord1995}
 \bibinfo{author}{Ord, J.K.}, \bibinfo{author}{Getis, A.}, \bibinfo{year}{1995}.
-\newblock \bibinfo{title}{Local spatial autocorrelation statistics: Distributional issues and an application}.
-\newblock \bibinfo{journal}{Geographical Analysis} \bibinfo{volume}{27}, \bibinfo{pages}{286--306}.
+\newblock \bibinfo{title}{Local spatial autocorrelation statistics:
+  Distributional issues and an application}.
+\newblock \bibinfo{journal}{Geographical Analysis} \bibinfo{volume}{27},
+  \bibinfo{pages}{286--306}.
 %Type = Article
 \bibitem[{Pojani and Stead(2015)}]{Pojani2015}
-\bibinfo{author}{Pojani, D.}, \bibinfo{author}{Stead, D.}, \bibinfo{year}{2015}.
-\newblock \bibinfo{title}{Sustainable urban transport in the developing world: Beyond megacities}.
-\newblock \bibinfo{journal}{Sustainability} \bibinfo{volume}{7}, \bibinfo{pages}{7784--7805}.
+\bibinfo{author}{Pojani, D.}, \bibinfo{author}{Stead, D.},
+  \bibinfo{year}{2015}.
+\newblock \bibinfo{title}{Sustainable urban transport in the developing world:
+  Beyond megacities}.
+\newblock \bibinfo{journal}{Sustainability} \bibinfo{volume}{7},
+  \bibinfo{pages}{7784--7805}.
+%Type = Article
+\bibitem[{Porta et~al.(2006)Porta, Crucitti and Latora}]{Porta2006}
+\bibinfo{author}{Porta, S.}, \bibinfo{author}{Crucitti, P.},
+  \bibinfo{author}{Latora, V.}, \bibinfo{year}{2006}.
+\newblock \bibinfo{title}{The network analysis of urban streets: A dual
+  approach}.
+\newblock \bibinfo{journal}{Physica A: Statistical Mechanics and its
+  Applications} \bibinfo{volume}{369}, \bibinfo{pages}{853--866}.
 %Type = Article
 \bibitem[{Rempe et~al.(2016)Rempe, Huber and Bogenberger}]{Rempe2016}
-\bibinfo{author}{Rempe, F.}, \bibinfo{author}{Huber, G.}, \bibinfo{author}{Bogenberger, K.}, \bibinfo{year}{2016}.
-\newblock \bibinfo{title}{Spatio-temporal congestion patterns in urban traffic networks}.
-\newblock \bibinfo{journal}{Transportation Research Procedia} \bibinfo{volume}{15}, \bibinfo{pages}{513--524}.
+\bibinfo{author}{Rempe, F.}, \bibinfo{author}{Huber, G.},
+  \bibinfo{author}{Bogenberger, K.}, \bibinfo{year}{2016}.
+\newblock \bibinfo{title}{Spatio-temporal congestion patterns in urban traffic
+  networks}.
+\newblock \bibinfo{journal}{Transportation Research Procedia}
+  \bibinfo{volume}{15}, \bibinfo{pages}{513--524}.
 %Type = Article
-\bibitem[{Susilo et~al.(2007)Susilo, Joewono, Santosa and Parikesit}]{Susilo2007}
-\bibinfo{author}{Susilo, Y.O.}, \bibinfo{author}{Joewono, T.B.}, \bibinfo{author}{Santosa, W.}, \bibinfo{author}{Parikesit, D.}, \bibinfo{year}{2007}.
-\newblock \bibinfo{title}{A reflection of motorization and public transport in {Jakarta} metropolitan area}.
-\newblock \bibinfo{journal}{IATSS Research} \bibinfo{volume}{31}, \bibinfo{pages}{59--68}.
+\bibitem[{Rey and Anselin(2010)}]{Rey2010}
+\bibinfo{author}{Rey, S.J.}, \bibinfo{author}{Anselin, L.},
+  \bibinfo{year}{2010}.
+\newblock \bibinfo{title}{{PySAL}: A {Python} library of spatial analytical
+  methods}.
+\newblock \bibinfo{journal}{Review of Regional Studies} \bibinfo{volume}{39},
+  \bibinfo{pages}{5--27}.
+%Type = Article
+\bibitem[{Saberi et~al.(2020)Saberi, Hamedmoghadam, Ashfaq, Hosseini, Gu,
+  Shafiei, Nair, Dixit, Gardner, Waller and Gonz{\'a}lez}]{Saberi2020}
+\bibinfo{author}{Saberi, M.}, \bibinfo{author}{Hamedmoghadam, H.},
+  \bibinfo{author}{Ashfaq, M.}, \bibinfo{author}{Hosseini, S.A.},
+  \bibinfo{author}{Gu, Z.}, \bibinfo{author}{Shafiei, S.},
+  \bibinfo{author}{Nair, D.J.}, \bibinfo{author}{Dixit, V.},
+  \bibinfo{author}{Gardner, L.}, \bibinfo{author}{Waller, S.T.},
+  \bibinfo{author}{Gonz{\'a}lez, M.C.}, \bibinfo{year}{2020}.
+\newblock \bibinfo{title}{A simple contagion process describes spreading of
+  traffic jams in urban networks}.
+\newblock \bibinfo{journal}{Nature Communications} \bibinfo{volume}{11},
+  \bibinfo{pages}{1616}.
+%Type = Article
+\bibitem[{Susilo et~al.(2007)Susilo, Joewono, Santosa and
+  Parikesit}]{Susilo2007}
+\bibinfo{author}{Susilo, Y.O.}, \bibinfo{author}{Joewono, T.B.},
+  \bibinfo{author}{Santosa, W.}, \bibinfo{author}{Parikesit, D.},
+  \bibinfo{year}{2007}.
+\newblock \bibinfo{title}{A reflection of motorization and public transport in
+  {Jakarta} metropolitan area}.
+\newblock \bibinfo{journal}{IATSS Research} \bibinfo{volume}{31},
+  \bibinfo{pages}{59--68}.
+%Type = Article
+\bibitem[{Tobler(1970)}]{Tobler1970}
+\bibinfo{author}{Tobler, W.R.}, \bibinfo{year}{1970}.
+\newblock \bibinfo{title}{A computer movie simulating urban growth in the
+  {Detroit} region}.
+\newblock \bibinfo{journal}{Economic Geography} \bibinfo{volume}{46},
+  \bibinfo{pages}{234--240}.
 %Type = Techreport
 \bibitem[{{TomTom}(2023)}]{TomTom2023}
 \bibinfo{author}{{TomTom}}, \bibinfo{year}{2023}.
 \newblock \bibinfo{title}{{TomTom Traffic Index 2023}}.
-\newblock \bibinfo{type}{Technical Report}. TomTom International. \bibinfo{address}{Amsterdam}.
+\newblock \bibinfo{type}{Technical Report}. TomTom International.
+  \bibinfo{address}{Amsterdam}.
 %Type = Article
 \bibitem[{Wang et~al.(2016)Wang, Gu, Dou and Qiao}]{Wang2016}
-\bibinfo{author}{Wang, Y.}, \bibinfo{author}{Gu, Y.}, \bibinfo{author}{Dou, M.}, \bibinfo{author}{Qiao, M.}, \bibinfo{year}{2016}.
-\newblock \bibinfo{title}{Using spatial semantics and interactions to identify urban functional regions}.
-\newblock \bibinfo{journal}{ISPRS International Journal of Geo-Information} \bibinfo{volume}{7}, \bibinfo{pages}{130}.
+\bibinfo{author}{Wang, Y.}, \bibinfo{author}{Gu, Y.}, \bibinfo{author}{Dou,
+  M.}, \bibinfo{author}{Qiao, M.}, \bibinfo{year}{2016}.
+\newblock \bibinfo{title}{Using spatial semantics and interactions to identify
+  urban functional regions}.
+\newblock \bibinfo{journal}{ISPRS International Journal of Geo-Information}
+  \bibinfo{volume}{7}, \bibinfo{pages}{130}.
+%Type = Article
+\bibitem[{Zhong et~al.(2014)Zhong, Arisona, Huang, Batty and
+  Schmitt}]{Zhong2014}
+\bibinfo{author}{Zhong, C.}, \bibinfo{author}{Arisona, S.M.},
+  \bibinfo{author}{Huang, X.}, \bibinfo{author}{Batty, M.},
+  \bibinfo{author}{Schmitt, G.}, \bibinfo{year}{2014}.
+\newblock \bibinfo{title}{Detecting the dynamics of urban structure through
+  spatial network analysis}.
+\newblock \bibinfo{journal}{International Journal of Geographical Information
+  Science} \bibinfo{volume}{28}, \bibinfo{pages}{2178--2199}.
 
 \end{thebibliography}
