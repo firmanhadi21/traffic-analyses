@@ -9,8 +9,10 @@ it never loads all data into RAM at once — safe for Jakarta's 206M rows.
 Outputs: {period}_{city}_speed.gpkg  (e.g. evening_peak_jkt_speed.gpkg)
 These are distinct from the jam-factor-only files ({period}_{city}.gpkg).
 
-Segment matching uses geometry hashing (MD5 of WKB) for order-independent
-fid assignment, consistent with the existing jam-factor aggregation.
+Segment matching uses spatial join (sjoin_nearest) against existing
+aggregated GeoPackages to guarantee canonical fid consistency. The mapping
+is cached by geometry WKB hash so the spatial join only runs for the first
+file per city; subsequent files are instant hash lookups.
 
 Usage:
     python run_speed_aggregation.py                    # all 3 cities
@@ -40,16 +42,19 @@ CITIES = {
     'smg': {
         'name': 'Semarang',
         'raw_folder': 'traffic_data_smg',
+        'ref_folder': 'traffic_smg_output',
         'output_folder': 'traffic_smg_speed_output',
     },
     'bdg': {
         'name': 'Bandung',
         'raw_folder': 'traffic_data_bdg',
+        'ref_folder': 'traffic_bdg_output',
         'output_folder': 'traffic_bdg_speed_output',
     },
     'jkt': {
         'name': 'Jakarta',
         'raw_folder': 'traffic_data_jkt',
+        'ref_folder': 'traffic_jkt_output',
         'output_folder': 'traffic_jkt_speed_output',
     },
 }
@@ -96,9 +101,64 @@ def get_time_period(hour):
         return 'late_night'
 
 
-def make_geom_id(geom):
-    """Create a stable hash from geometry WKB for order-independent matching."""
-    return hashlib.md5(geom.wkb).hexdigest()
+def build_geom_cache(raw_gdf, ref_gdf):
+    """
+    Build a geometry WKB-hash → canonical ref_fid mapping via spatial join.
+
+    Uses geopandas.sjoin_nearest so each raw segment is matched to the
+    closest reference segment by distance. The result is cached by
+    MD5(WKB) so subsequent files skip the spatial join entirely.
+    """
+    ref_for_join = ref_gdf[['fid', 'geometry']].copy()
+    ref_for_join = ref_for_join.rename(columns={'fid': 'ref_fid'})
+
+    # Ensure matching CRS
+    if raw_gdf.crs and ref_for_join.crs and raw_gdf.crs != ref_for_join.crs:
+        raw_gdf = raw_gdf.to_crs(ref_for_join.crs)
+
+    joined = gpd.sjoin_nearest(raw_gdf, ref_for_join, how='left')
+
+    cache = {}
+    for _, row in joined.iterrows():
+        ref_fid = row.get('ref_fid')
+        if pd.notna(ref_fid):
+            h = hashlib.md5(row.geometry.wkb).hexdigest()
+            cache[h] = int(ref_fid)
+    return cache
+
+
+def assign_ref_fids(gdf, geom_cache, ref_gdf):
+    """
+    Assign canonical reference fids to a raw GeoDataFrame.
+
+    Looks up each segment's geometry hash in the cache (O(1) per segment).
+    Any uncached geometries are resolved via sjoin_nearest and added to
+    the cache for future files.
+    """
+    gdf = gdf.copy()
+    hashes = [hashlib.md5(g.wkb).hexdigest() for g in gdf.geometry]
+    gdf['_geom_hash'] = hashes
+    gdf['fid'] = gdf['_geom_hash'].map(geom_cache)
+
+    # Handle any uncached geometries via spatial join fallback
+    uncached = gdf[gdf['fid'].isna()]
+    if len(uncached) > 0:
+        ref_for_join = ref_gdf[['fid', 'geometry']].copy()
+        ref_for_join = ref_for_join.rename(columns={'fid': 'ref_fid'})
+        joined = gpd.sjoin_nearest(
+            uncached[['geometry', '_geom_hash']].copy(),
+            ref_for_join,
+            how='left',
+        )
+        for _, row in joined.iterrows():
+            if pd.notna(row['ref_fid']):
+                ref_fid = int(row['ref_fid'])
+                geom_cache[row['_geom_hash']] = ref_fid
+        # Re-map after updating cache
+        gdf['fid'] = gdf['_geom_hash'].map(geom_cache)
+
+    gdf = gdf.drop(columns=['_geom_hash'])
+    return gdf
 
 
 def detect_columns(gdf):
@@ -349,17 +409,25 @@ def aggregate_city(city_code, config):
 
     t0 = time.time()
 
-    # ---- Step 1: Build geometry reference + detect columns ----
-    ref_gdf = gpd.read_file(gpkg_files[0])
-    ref_gdf['geom_id'] = ref_gdf.geometry.apply(make_geom_id)
-    if 'fid' not in ref_gdf.columns:
-        ref_gdf['fid'] = range(1, len(ref_gdf) + 1)
+    # ---- Step 1: Load reference geometry from aggregated GPKG ----
+    ref_folder = config['ref_folder']
+    ref_files = sorted(glob.glob(os.path.join(ref_folder, '*.gpkg')))
+    if not ref_files:
+        print(f"  No reference files found in {ref_folder}")
+        return None
 
-    geom_to_fid = dict(zip(ref_gdf['geom_id'], ref_gdf['fid']))
+    ref_gdf = gpd.read_file(ref_files[0])
     ref_geom = ref_gdf[['fid', 'geometry']].copy()
-    print(f"  Segments: {len(ref_geom)}")
+    print(f"  Reference: {os.path.basename(ref_files[0])} "
+          f"({len(ref_geom)} segments)")
 
-    col_mapping = detect_columns(ref_gdf)
+    # Build geometry → fid cache from first raw file via spatial join
+    first_raw = gpd.read_file(gpkg_files[0])
+    geom_cache = build_geom_cache(first_raw, ref_geom)
+    print(f"  Initial cache: {len(geom_cache)} geometry→fid mappings")
+
+    # Detect traffic columns from the first raw file
+    col_mapping = detect_columns(first_raw)
     print(f"  Detected columns: {col_mapping}")
     if not col_mapping:
         print("  ERROR: No traffic columns found!")
@@ -411,9 +479,8 @@ def aggregate_city(city_code, config):
 
         period = get_time_period(ts.hour)
 
-        # Match segments via geometry hash
-        gdf['geom_id'] = gdf.geometry.apply(make_geom_id)
-        gdf['fid'] = gdf['geom_id'].map(geom_to_fid)
+        # Match segments to canonical fids via spatial-join cache
+        gdf = assign_ref_fids(gdf, geom_cache, ref_geom)
         gdf = gdf.dropna(subset=['fid'])
         if len(gdf) == 0:
             skipped += 1
