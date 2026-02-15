@@ -48,7 +48,7 @@
 %% ============================================================
 %% Title and Authors
 %% ============================================================
-\title{Spatiotemporal Traffic Congestion Patterns and Network Centrality in Indonesian Metropolitan Cities}
+\title{An Open-Source Pipeline for Spatiotemporal Traffic Congestion Analysis: Integrating HERE API, OSMnx, and PySAL Across Indonesian Metropolitan Cities}
 
 \author{%
   Firman Hadi\textsuperscript{1,*} \and
@@ -73,10 +73,10 @@
 %% Abstract
 %% ============================================================
 \begin{abstract}
-Urban traffic congestion poses significant challenges to sustainable development in rapidly growing cities across Southeast Asia. This study presents a comprehensive spatiotemporal analysis of traffic congestion patterns in three major Indonesian metropolitan areas: Jakarta, Bandung, and Semarang. Utilizing high-resolution traffic flow data collected from the HERE Traffic API over an 11-month period (March 2025 to February 2026), we analyzed over 264 million traffic observations across 18,694 road segments. The methodology integrates real-time traffic jam factor measurements with geostatistical analysis (Moran's I, LISA, Getis-Ord Gi*), OpenStreetMap network analysis using OSMnx, and a novel graph-based capacity drop detection framework. Our most significant finding is that \textbf{temporal factors dominate spatial factors by a factor of 1,000-4,000x} in explaining variance in relative congestion (jam factor): time-of-day ($\eta^2$ = 15-24\%) vastly outweighs network centrality ($R^2$ < 0.01\%) and POI density ($R^2$ < 0.01\%) as predictors. Because the HERE jam factor normalizes speed to each segment's free-flow baseline, these findings characterize relative congestion (demand-to-capacity ratio) rather than absolute delay; absolute delay analysis remains an important direction for future work. A dedicated bottleneck analysis further confirms this conclusion: road capacity scores show negligible correlation with congestion (r < 0.04), spatial capacity drops (where road hierarchy decreases) show no proximity effect on congestion (p = 0.10--0.83, | d| < 0.09), and local bottleneck gradients are indistinguishable from surrounding segments (| d| < 0.05). This demonstrates that congestion is fundamentally a \textbf{temporal synchronization problem}---resulting from millions of people traveling at the same times---rather than a spatial infrastructure or capacity constraint problem. The evening peak period (16:00-19:00) shows congestion approximately 40\% higher than daily averages across all cities. While global spatial autocorrelation is non-significant, LISA identifies local hotspots representing peak-hour capacity bottlenecks. These findings support prioritizing demand management strategies (staggered hours, flexible work) over infrastructure expansion, contributing new empirical evidence to traffic policy debates in rapidly urbanizing contexts.
+Understanding urban traffic congestion requires integrating heterogeneous data sources---commercial traffic APIs, open street network data, and spatial statistical methods---yet no open, reproducible pipeline exists for this multi-source analysis workflow. This paper presents an open-source pipeline that integrates the HERE Traffic API, OSMnx for OpenStreetMap network analysis, and PySAL for geostatistical computation into a unified, city-agnostic framework for spatiotemporal traffic congestion analysis. The pipeline automates data collection (via R/hereR), temporal aggregation, spatial joining of traffic segments to network edges, geostatistical analysis (Moran's I, Local Indicators of Spatial Association [LISA], Getis-Ord Gi*), centrality--congestion correlation, Point of Interest [POI] density analysis, and a novel graph-based capacity drop detection module. We demonstrate the pipeline across three Indonesian metropolitan cities---Jakarta, Bandung, and Semarang---analyzing 264 million traffic observations over 11 months (March 2025--February 2026) across 18,694 road segments. The pipeline's modular design requires only a bounding box and API key to replicate the full analysis for any city worldwide. Empirically, the pipeline reveals that \textbf{temporal factors dominate spatial factors by 1,000--4,000x} in explaining jam factor variance: time-of-day ($\eta^2$ = 15--24\%) vastly outweighs network centrality ($R^2$ < 0.01\%), POI density ($R^2$ < 0.01\%), and road capacity ($R^2$ < 0.12\%). A graph-based capacity drop analysis confirms that physical bottlenecks show no proximity effect on congestion (p = 0.10--0.83). These results demonstrate that relative congestion is fundamentally a temporal synchronization problem. The evening peak (16:00--19:00) shows congestion approximately 40\% above daily averages across all cities. All source code, analysis scripts, and aggregated datasets are released as open-source software at \url{https://github.com/firmanhadi21/traffic-analyses}, enabling researchers and practitioners to replicate and extend this analysis to other cities.
 \end{abstract}
 
-\noindent\textbf{Keywords:} Urban traffic congestion; Spatiotemporal analysis; Network centrality; Jam factor; Capacity bottleneck; Indonesian cities; HERE Traffic API; OSMnx; Spatial autocorrelation
+\noindent\textbf{Keywords:} Open-source pipeline; Reproducible urban analytics; Traffic congestion; HERE Traffic API; OSMnx; PySAL; Spatiotemporal analysis; Network centrality; Capacity bottleneck; Indonesian cities
 
 \newpage
 
@@ -89,11 +89,13 @@ Urban traffic congestion poses significant challenges to sustainable development
 
 Urban traffic congestion has emerged as one of the most pressing challenges facing rapidly urbanizing cities in developing countries (Pojani \& Stead, 2015). In Southeast Asia, where urbanization rates exceed global averages, traffic congestion imposes substantial economic costs estimated at 2-5\% of GDP annually (Asian Development Bank, 2019). Indonesia, as the world's fourth most populous nation with over 270 million inhabitants, exemplifies these challenges, with its major metropolitan areas experiencing severe and worsening congestion conditions.
 
+Despite recent advances in open urban data science---including OSMnx for street network analysis (Boeing, 2017), PySAL for spatial statistics (Rey \& Anselin, 2010), and commercial traffic APIs providing real-time flow data---no integrated, open-source pipeline exists that combines these tools into a reproducible workflow for multi-city traffic congestion analysis. Existing studies typically rely on ad hoc scripts, proprietary software, or non-reproducible workflows, limiting their transferability to new urban contexts.
+
 The three cities examined in this study---Jakarta, Bandung, and Semarang---represent distinct urban typologies within the Indonesian context. Jakarta, the national capital with a metropolitan population exceeding 34 million, consistently ranks among the world's most congested cities (TomTom Traffic Index, 2023). Bandung, with approximately 2.5 million residents, serves as Java's second-largest city and a major educational and industrial center. Semarang, home to 1.8 million people, functions as Central Java's capital and a key logistics hub connecting Java's northern coast.
 
 \subsection{Research Gap and Objectives}
 
-While previous studies have examined traffic congestion in Indonesian cities using aggregate or survey-based approaches (Susilo et al., 2007; Joewono \& Kubota, 2008), limited research has employed high-resolution, real-time traffic data for systematic spatiotemporal analysis. Furthermore, the integration of network topology metrics with traffic flow data remains underexplored in the Indonesian context.
+While previous studies have examined traffic congestion in Indonesian cities using aggregate or survey-based approaches (Susilo et al., 2007; Joewono \& Kubota, 2008), limited research has employed high-resolution, real-time traffic data for systematic spatiotemporal analysis. Furthermore, the integration of network topology metrics with traffic flow data remains underexplored in the Indonesian context. Critically, existing urban traffic studies rarely release reproducible analysis pipelines, limiting the ability of researchers and practitioners in other cities to replicate or extend findings.
 
 This study addresses these gaps by:
 
@@ -101,29 +103,31 @@ This study addresses these gaps by:
 \def\labelenumi{\arabic{enumi}.}
 
 \item
-  Analyzing traffic congestion patterns using continuous high-frequency traffic flow data over an extended temporal period
+  Developing an open-source, city-agnostic pipeline that integrates HERE Traffic API data collection, OSMnx network analysis, and PySAL geostatistics into a reproducible workflow
 \item
-  Applying geostatistical methods to identify spatial clustering and hotspot patterns
+  Demonstrating the pipeline across three cities of varying scales and urban morphologies to validate its transferability
 \item
-  Integrating OpenStreetMap network analysis to examine relationships between network centrality and congestion distribution
+  Applying geostatistical methods, network centrality analysis, and a novel graph-based capacity drop detection framework to characterize spatiotemporal congestion patterns
 \item
-  Providing comparative insights across cities of varying scales and urban morphologies
+  Releasing all source code, analysis scripts, and aggregated datasets as open-source software to enable replication in other cities worldwide
 \end{enumerate}
 
 \subsection{Contributions}
 
-This research makes the following contributions to the literature:
+This research makes the following contributions:
 
 \begin{itemize}
 
 \item
-  \textbf{Methodological:} Demonstrates the integration of commercial traffic API data with open-source network analysis tools for comprehensive urban traffic assessment, including a novel graph-based capacity drop detection framework
+  \textbf{Open-source pipeline:} We release a complete, modular, open-source pipeline (\url{https://github.com/firmanhadi21/traffic-analyses}) that integrates HERE Traffic API data collection (R/hereR), temporal aggregation (Python/GeoPandas), OSMnx network analysis, PySAL geostatistics, and graph-based capacity drop detection. The pipeline requires only a bounding box and API key to replicate the full analysis for any city with HERE API coverage, making it directly transferable to other urban contexts worldwide
 \item
-  \textbf{Empirical:} Provides the first systematic comparative analysis of traffic patterns across three major Indonesian cities using standardized metrics, with triangulated evidence from four independent spatial predictors (centrality, POI density, road capacity, and capacity drops) all yielding null results
+  \textbf{Novel analytical module:} We introduce a graph-based capacity drop detection framework that uses the directed OSMnx road network to identify locations where road hierarchy decreases, enabling systematic testing of the bottleneck hypothesis at city scale
 \item
-  \textbf{Theoretical:} Demonstrates that normalized congestion metrics (jam factor) inherently remove capacity effects, with implications for capacity--congestion studies using similar data sources
+  \textbf{Empirical:} We provide the first systematic comparative analysis of traffic patterns across three major Indonesian cities using standardized metrics, with triangulated evidence from four independent spatial predictors (centrality, POI density, road capacity, and capacity drops) all yielding null results
 \item
-  \textbf{Practical:} Offers evidence-based recommendations for traffic management and infrastructure prioritization in rapidly urbanizing Southeast Asian contexts
+  \textbf{Theoretical:} We demonstrate that normalized congestion metrics (jam factor) inherently remove capacity effects, with implications for capacity--congestion studies using similar data sources
+\item
+  \textbf{Practical:} We offer evidence-based recommendations for traffic management and infrastructure prioritization in rapidly urbanizing Southeast Asian contexts
 \end{itemize}
 
 
@@ -151,6 +155,10 @@ The concept of traffic bottlenecks---locations where road capacity decreases, ca
 \subsection{Geostatistical Approaches to Traffic Analysis}
 
 Spatial autocorrelation methods, including Moran's I and local indicators of spatial association (LISA), have proven valuable for identifying traffic hotspots (Ord \& Getis, 1995; Getis \& Ord, 1992). The fundamental principle underlying these methods---that near things are more related than distant things (Tobler, 1970)---is particularly applicable to traffic networks where congestion propagates spatially. Studies have applied these techniques to examine crash patterns (Anderson, 2009), urban spatial structure (Zhong et al., 2014), and congestion clustering (Wang et al., 2016). The PySAL library (Rey \& Anselin, 2010) has become a standard tool for implementing these methods in Python-based spatial analysis workflows.
+
+\subsection{Open Urban Data Science and Reproducibility}
+
+The open urban data science movement has produced powerful individual tools---OSMnx for street network analysis (Boeing, 2017, 2022), PySAL for spatial statistics (Rey \& Anselin, 2010), and GeoPandas for geospatial data manipulation---but integrated pipelines combining these tools with commercial traffic data remain rare. Fleischmann et al.~(2022) demonstrated the value of combining open geospatial tools for urban morphology analysis, while Boeing (2020) showed how standardized computational workflows enable cross-city comparisons at scale. However, no existing open-source pipeline integrates real-time traffic API data with network analysis and spatial statistics in a reproducible, city-agnostic workflow. This gap limits the ability of researchers in data-scarce contexts---particularly in developing countries---to replicate sophisticated traffic analyses without building custom toolchains from scratch. Our pipeline addresses this gap by combining data collection, aggregation, network analysis, geostatistics, and bottleneck detection into a modular, open-source framework.
 
 
 
@@ -197,7 +205,8 @@ Semarang & 1.8 & 373 & 1,076 & Medium City, Provincial Capital \\
 
 \subsection{Data Collection}
 
-Traffic flow data were collected via the HERE Traffic API using bounding box queries at 30-minute intervals from March 1, 2025, to February 6, 2026, yielding approximately 14,100 collection cycles per city (Table 2).
+Traffic flow data were collected via the HERE Traffic API using bounding box queries at 15-minute intervals from March 1, 2025, to February 6, 2026. The collection schedule targeted approximately 14,100 collection cycles per city (Table 2). However, data collection was not continuous due to periodic disruptions from electricity outages and internet connectivity failures, which are common in Indonesian urban infrastructure. Despite these interruptions, the total observation count (264.9 million records across all three cities) remained substantial, and temporal distribution analysis confirmed that gaps were randomly distributed across hours and days rather than concentrated in specific periods, minimizing systematic bias in temporal patterns. Collection resumption protocols automatically restarted data collection within 15 minutes of service restoration.
+
 
 \textbf{Table 2.} Data collection summary
 
@@ -413,9 +422,44 @@ Three complementary tests assessed the capacity-congestion relationship:
   \textbf{Local gradient:} T-test comparing jam factor at local bottleneck segments versus non-bottleneck segments
 \end{enumerate}
 
-\subsection{Software and Tools}
+\subsection{Pipeline Architecture and Implementation}
 
-Analysis was conducted using: - Python 3.11 with GeoPandas, NetworkX, SciPy - OSMnx 2.0 for network analysis - HERE Traffic API via hereR package (R) - Visualization: Matplotlib, Seaborn
+A key contribution of this work is the open-source analysis pipeline, designed for reproducibility and transferability to other cities. The pipeline comprises five modular stages, each implemented as standalone scripts that can be executed independently or orchestrated end-to-end (Figure~\ref{fig:pipeline}).
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{figures/analytical_framework.png}
+\caption{Pipeline architecture: five modular stages from data collection to policy-relevant outputs. Each stage is implemented as independent scripts with standardized input/output formats (GeoPackage, CSV).}
+\label{fig:pipeline}
+\end{figure}
+
+\subsubsection{Stage 1: Automated Data Collection (R/hereR)}
+
+Traffic flow data are collected via the \texttt{hereR} R package, which provides a programmatic interface to the HERE Traffic API. A scheduler (cron) triggers \texttt{traffic\_collector.R} at 15-minute intervals, querying the API with city-specific bounding boxes. Each response is saved as a GeoPackage (.gpkg) file with a timestamped filename. To replicate for a new city, the user need only specify a new bounding box coordinate set and a valid HERE API key.
+
+\subsubsection{Stage 2: Temporal Aggregation (Python/GeoPandas)}
+
+City-specific aggregation scripts (\texttt{run\_*\_aggregation.py}) read all GeoPackage files for a city, merge them into a unified GeoDataFrame, and compute per-segment summary statistics (mean, standard deviation, min, max, count) for each of the eight predefined temporal periods. The output is a set of period-specific GeoPackage files used by all downstream analyses. This stage handles data quality validation, null detection, and temporal gap assessment.
+
+\subsubsection{Stage 3: Geostatistical Analysis (PySAL)}
+
+The \texttt{geostatistical\_analysis.py} module computes global Moran's I, LISA, and Getis-Ord Gi* statistics using PySAL's \texttt{esda} and \texttt{libpysal} subpackages. Spatial weights are constructed using K-nearest neighbors (configurable k). The module supports multiple weight specifications for sensitivity analysis and applies Benjamini-Hochberg FDR correction for multiple testing. Outputs include per-segment cluster classifications and summary statistics.
+
+\subsubsection{Stage 4: Network Analysis (OSMnx/NetworkX)}
+
+The \texttt{exploratory\_data\_analysis.py} and \texttt{bottleneck\_analysis.py} modules retrieve street networks via OSMnx (Boeing, 2017), compute edge betweenness and closeness centrality via NetworkX, and perform spatial joins between HERE traffic segments and OSMnx edges using centroid-based nearest-neighbor matching. The bottleneck module implements the novel graph-based capacity drop detection algorithm on the directed network, identifying nodes where incoming road hierarchy exceeds outgoing hierarchy. The \texttt{poi\_congestion\_analysis.py} module computes network-distance-based POI density using OSMnx walking networks.
+
+\subsubsection{Stage 5: Synthesis and Visualization}
+
+The \texttt{temporal\_vs\_spatial\_comparison.py} module integrates results from all preceding stages, computing the temporal--spatial effect size comparison and generating publication-ready figures via Matplotlib and Seaborn.
+
+\subsubsection{City-Agnostic Design}
+
+The pipeline's city-agnostic architecture is achieved through a centralized configuration module (\texttt{config.py}) that stores city-specific parameters (bounding box, file paths, temporal period definitions). Adding a new city requires only: (1) specifying the bounding box in the configuration, (2) providing a HERE API key, and (3) running the collection and analysis scripts. All spatial operations use standard GeoPackage format (OGC standard) and WGS84 coordinate reference system, ensuring interoperability.
+
+\subsubsection{Environment and Dependencies}
+
+The pipeline runs on Python 3.11 with the following key dependencies: GeoPandas, NetworkX, SciPy, OSMnx 2.0, PySAL (libpysal, esda, spreg), Matplotlib, and Seaborn. The data collection stage requires R with the \texttt{hereR} package. All dependencies are specified in \texttt{requirements.txt} for reproducible environment setup. Computationally intensive analyses (large-city network centrality) can be offloaded to HPC environments using the provided \texttt{run\_hpc.sh} script and \texttt{requirements\_hpc.txt}.
 
 
 
@@ -1389,6 +1433,32 @@ Several limitations should be acknowledged:
   \textbf{Normalized metric scope:} All findings in this study characterize \emph{relative} congestion (jam factor). Absolute delay analysis using raw speed and volume data would be needed to determine whether high-capacity roads carry disproportionately more total delay despite similar jam factor levels. This is an important avenue for future research
 \end{enumerate}
 
+\subsection{Pipeline Reproducibility, Transferability, and Open Science}
+
+A central goal of this work is to provide a reproducible, transferable pipeline that other researchers and practitioners can directly apply to their own cities. Several design decisions support this goal:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+
+\item
+  \textbf{City-agnostic design:} The pipeline requires only a geographic bounding box and a HERE API key to initiate data collection and analysis for any city with HERE Traffic API coverage. All city-specific parameters are isolated in a single configuration file (\texttt{config.py}), requiring no changes to the analysis modules themselves.
+
+\item
+  \textbf{Open data dependencies:} Apart from the HERE Traffic API (which offers a free tier with 250,000 requests/month), all other data sources are fully open: OpenStreetMap via OSMnx for street networks and POI data, and all spatial statistical methods are implemented using open-source libraries (PySAL, GeoPandas, NetworkX).
+
+\item
+  \textbf{Standardized data formats:} All intermediate and output data use GeoPackage (OGC standard) and CSV formats, ensuring interoperability with any GIS or data science toolchain. The WGS84 coordinate reference system is used throughout.
+
+\item
+  \textbf{Modular architecture:} Each pipeline stage (collection, aggregation, geostatistics, network analysis, synthesis) operates independently with well-defined inputs and outputs, enabling researchers to use individual modules without running the entire pipeline.
+
+\item
+  \textbf{Code and data availability:} All source code, analysis scripts, configuration files, and aggregated datasets are released at \url{https://github.com/firmanhadi21/traffic-analyses} under an open-source license. The repository includes dependency specifications (\texttt{requirements.txt}, \texttt{requirements\_hpc.txt}) and HPC job scripts for large-scale analyses.
+
+\end{enumerate}
+
+To illustrate transferability, the pipeline was applied without modification to three cities spanning a 20x population range (1.8--34 million metropolitan) and distinct urban morphologies (coastal megacity, highland basin, coastal--hillside hybrid). The consistent analytical outputs across these diverse contexts suggest that the pipeline is robust to varying city characteristics. Researchers studying traffic in other Southeast Asian, African, or Latin American cities---where similar challenges of rapid urbanization and limited traffic monitoring infrastructure exist---can adopt this pipeline to generate comparable analyses with minimal setup effort.
+
 \subsection{Future Research Directions}
 
 This work suggests several research extensions:
@@ -1416,9 +1486,26 @@ This work suggests several research extensions:
 
 \section{Conclusions}
 
-This study presents a comprehensive spatiotemporal analysis of urban traffic congestion in three Indonesian metropolitan areas using high-resolution traffic flow data spanning 11 months and 264 million observations. The key findings fundamentally reframe our understanding of urban congestion:
+This study presents an open-source pipeline for spatiotemporal traffic congestion analysis that integrates HERE Traffic API data collection, OSMnx network analysis, and PySAL geostatistics into a reproducible, city-agnostic framework. We demonstrate the pipeline across three Indonesian metropolitan areas using high-resolution traffic flow data spanning 11 months and 264 million observations.
 
-\subsection{Primary Finding: Temporal Dominance in Relative Congestion}
+\subsection{Pipeline Contribution}
+
+The primary contribution is the \textbf{open-source analysis pipeline} itself (\url{https://github.com/firmanhadi21/traffic-analyses}), which:
+
+\begin{itemize}
+\item
+  Automates the full workflow from data collection through publication-ready outputs
+\item
+  Requires only a bounding box and API key to replicate for any city with HERE API coverage
+\item
+  Combines commercial traffic data with open geospatial tools (OSMnx, PySAL, GeoPandas) in a modular, extensible architecture
+\item
+  Introduces a novel graph-based capacity drop detection module for systematic bottleneck analysis
+\item
+  Is validated across three cities spanning a 20x population range and distinct urban morphologies
+\end{itemize}
+
+\subsection{Primary Empirical Finding: Temporal Dominance}
 
 \textbf{Relative congestion (jam factor) is fundamentally a temporal phenomenon, not a spatial one.} Time-of-day explains 15-24\% of jam factor variance ($\eta^2$ from ANOVA), while spatial predictors---network centrality, POI density, and road capacity---explain less than 0.02\% combined. This 1,000-4,000x difference in explanatory power demonstrates that:
 
@@ -1468,7 +1555,7 @@ These findings suggest important considerations for traffic management, with the
 
 \subsection{Contribution}
 
-This research contributes empirical evidence demonstrating that urban congestion is primarily a temporal coordination failure rather than a spatial infrastructure or capacity constraint problem. The novel graph-based capacity drop detection framework provides a replicable method for testing the bottleneck hypothesis in other urban contexts. The methodology---integrating commercial traffic APIs with open-source network analysis---is transferable to other rapidly urbanizing contexts. The finding that time explains 1,000x more variance than space, corroborated by the failure of three independent capacity tests, has significant implications for transportation policy worldwide.
+This research contributes both a reusable open-source pipeline and novel empirical evidence demonstrating that urban congestion is primarily a temporal coordination failure rather than a spatial infrastructure or capacity constraint problem. The pipeline's city-agnostic design---requiring only a bounding box and API key---enables researchers and practitioners in any city with HERE API coverage to replicate and extend this analysis. The novel graph-based capacity drop detection framework provides a replicable method for testing the bottleneck hypothesis in other urban contexts. The finding that time explains 1,000x more variance than space, corroborated by the failure of three independent capacity tests, has significant implications for transportation policy worldwide. All source code, analysis scripts, and aggregated datasets are available at \url{https://github.com/firmanhadi21/traffic-analyses}.
 
 
 
@@ -1508,11 +1595,23 @@ This research did not receive any specific grant from funding agencies in the pu
 
 
 
-\section*{Data Availability}
+\section*{Data and Software Availability}
 
-Traffic flow data were obtained from the HERE Traffic API. Aggregated datasets and analysis code are available at: https://github.com/firmanhadi21/traffic-analyses
+The complete analysis pipeline, including all source code, configuration files, analysis scripts, and aggregated datasets, is available as open-source software at: \url{https://github.com/firmanhadi21/traffic-analyses}. The repository includes:
 
-Street network data are publicly available from OpenStreetMap (www.openstreetmap.org).
+\begin{itemize}
+\item \texttt{traffic\_collector.R}: Automated HERE API data collection script
+\item \texttt{run\_*\_aggregation.py}: City-specific temporal aggregation scripts
+\item \texttt{geostatistical\_analysis.py}: PySAL-based spatial statistics module
+\item \texttt{bottleneck\_analysis.py}: Graph-based capacity drop detection module
+\item \texttt{poi\_congestion\_analysis.py}: Network-distance POI density analysis
+\item \texttt{temporal\_vs\_spatial\_comparison.py}: Effect size synthesis module
+\item \texttt{config.py}: Centralized city configuration
+\item \texttt{requirements.txt} and \texttt{requirements\_hpc.txt}: Dependency specifications
+\item \texttt{run\_hpc.sh}: HPC job submission script
+\end{itemize}
+
+Raw traffic flow data were obtained from the HERE Traffic API. Street network data are publicly available from OpenStreetMap (www.openstreetmap.org) via OSMnx.
 
 
 
@@ -1543,6 +1642,8 @@ Cervero, R. (2013). Linking urban transport and land use in developing countries
 Duranton, G., \& Turner, M. A. (2011). The fundamental law of road congestion: Evidence from US cities. \emph{American Economic Review}, 101(6), 2616-2652.
 
 Ermagun, A., \& Levinson, D. (2018). Spatiotemporal traffic forecasting: Review and proposed directions. \emph{Transport Reviews}, 38(6), 786-814.
+
+Fleischmann, M., Feliciotti, A., Romice, O., \& Porta, S. (2022). Methodological foundation of a numerical taxonomy of urban form. \emph{Environment and Planning B: Urban Analytics and City Science}, 49(4), 1283-1299.
 
 Daganzo, C. F. (2007). Urban gridlock: Macroscopic modeling and mitigation approaches. \emph{Transportation Research Part B}, 41(1), 49-62.
 
