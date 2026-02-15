@@ -1,0 +1,59 @@
+================================================================================
+ADVANCED SPATIAL ANALYSIS RESULTS
+================================================================================
+
+1. GLOBAL MORAN'S I (Spatial Autocorrelation)
+------------------------------------------------------------
+City            Moran I    Z-score      p-value Interpretation
+------------------------------------------------------------
+Semarang        -0.0039      -0.21     8.36e-01 Random
+Bandung          0.0075       0.93     3.53e-01 Random
+Jakarta          0.0026       0.69     4.92e-01 Random
+
+2. LISA CLUSTER ANALYSIS (Local Moran's I)
+------------------------------------------------------------
+
+Semarang:
+  Total segments: 1076
+  Significant clusters (p<0.05): 78
+    NS: 998
+    LL: 23
+    HH: 19
+    HL: 19
+    LH: 17
+
+Bandung:
+  Total segments: 3069
+  Significant clusters (p<0.05): 320
+    NS: 2749
+    LH: 92
+    HH: 86
+    LL: 73
+    HL: 69
+
+Jakarta:
+  Total segments: 14549
+  Significant clusters (p<0.05): 1535
+    NS: 13014
+    HH: 438
+    LH: 416
+    LL: 347
+    HL: 334
+
+3. CENTRALITY-CONGESTION CORRELATIONS
+------------------------------------------------------------
+City                n    Pearson r      p-value   Spearman r      p-value
+------------------------------------------------------------------------
+Semarang          N/A          N/A          N/A          N/A          N/A
+Bandung           N/A          N/A          N/A          N/A          N/A
+Jakarta           N/A          N/A          N/A          N/A          N/A
+
+4. ANOVA RESULTS (Temporal Period Differences)
+------------------------------------------------------------
+City          F-statistic         p-value   Sig. pairs
+-------------------------------------------------------
+Semarang         45863.33        0.00e+00           28
+Bandung         224445.67        0.00e+00           28
+Jakarta        1191699.66        0.00e+00           28
+
+================================================================================
