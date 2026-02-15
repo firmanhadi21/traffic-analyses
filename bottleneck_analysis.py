@@ -143,7 +143,197 @@ def get_road_capacity_attributes(city_code):
     print(f"    Road segments: {len(edges)}")
     print(f"    Lane count coverage: {edges['lane_count'].notna().mean()*100:.1f}%")
 
-    return edges
+    return edges, G
+
+
+def detect_capacity_drops(G, edges):
+    """
+    Detect locations where road capacity drops along the network using graph topology.
+
+    A capacity drop node is where the max incoming edge capacity exceeds
+    the max outgoing edge capacity — a "funnel" point where traffic gets squeezed.
+
+    Returns:
+        drop_nodes: list of node IDs with capacity drops
+        drop_magnitudes: magnitude of drop at each node (fraction of incoming capacity lost)
+        drop_coords: (N, 2) array of lon/lat coordinates for drop nodes
+    """
+    # Map edge capacity scores
+    edge_cap = {}
+    for idx, row in edges.iterrows():
+        edge_cap[idx] = row['capacity_score']
+
+    nodes_gdf = ox.graph_to_gdfs(G, nodes=True, edges=False)
+
+    drop_nodes = []
+    drop_magnitudes = []
+
+    for node in G.nodes():
+        in_edges = list(G.in_edges(node, keys=True))
+        out_edges = list(G.out_edges(node, keys=True))
+
+        if not in_edges or not out_edges:
+            continue
+
+        in_caps = [edge_cap.get(e, np.nan) for e in in_edges]
+        out_caps = [edge_cap.get(e, np.nan) for e in out_edges]
+
+        in_caps = [c for c in in_caps if not np.isnan(c)]
+        out_caps = [c for c in out_caps if not np.isnan(c)]
+
+        if not in_caps or not out_caps:
+            continue
+
+        max_in = max(in_caps)
+        max_out = max(out_caps)
+
+        # Capacity drop: high incoming capacity flowing into lower outgoing
+        if max_in > max_out:
+            drop_magnitude = (max_in - max_out) / max_in
+            if drop_magnitude >= 0.2:  # At least 20% capacity reduction
+                drop_nodes.append(node)
+                drop_magnitudes.append(drop_magnitude)
+
+    if drop_nodes:
+        drop_points = nodes_gdf.loc[drop_nodes]
+        drop_coords = np.array([[p.x, p.y] for p in drop_points.geometry])
+    else:
+        drop_coords = np.array([]).reshape(0, 2)
+
+    return drop_nodes, drop_magnitudes, drop_coords
+
+
+def analyze_capacity_drop_congestion(matched, drop_coords, drop_magnitudes):
+    """
+    Test bottleneck hypothesis: does proximity to capacity drop points
+    predict higher congestion?
+
+    Also tests local capacity gradient: segments with lower capacity
+    than their spatial neighbors (local bottlenecks) should be more congested.
+    """
+    results = {}
+
+    # ── Part A: Distance to nearest capacity drop ──
+    if len(drop_coords) > 0:
+        traffic_centroids = matched.geometry.centroid
+        traffic_coords = np.array([[p.x, p.y] for p in traffic_centroids])
+
+        drop_tree = cKDTree(drop_coords)
+        distances, indices = drop_tree.query(traffic_coords, k=1)
+
+        matched = matched.copy()
+        matched['dist_to_cap_drop'] = distances
+        matched['nearest_drop_magnitude'] = np.array(drop_magnitudes)[indices]
+
+        # Correlation: distance to capacity drop vs congestion
+        valid = matched[['dist_to_cap_drop', 'jam_factor_mean']].dropna()
+        r_dist, p_dist = stats.pearsonr(valid['dist_to_cap_drop'], valid['jam_factor_mean'])
+        rho_dist, rho_p_dist = stats.spearmanr(valid['dist_to_cap_drop'], valid['jam_factor_mean'])
+
+        results['drop_dist_pearson_r'] = r_dist
+        results['drop_dist_pearson_p'] = p_dist
+        results['drop_dist_spearman_r'] = rho_dist
+        results['drop_dist_spearman_p'] = rho_p_dist
+
+        # Bin by distance tertiles
+        matched['drop_proximity'] = pd.qcut(
+            matched['dist_to_cap_drop'], q=3,
+            labels=['Near', 'Medium', 'Far'], duplicates='drop'
+        )
+
+        proximity_stats = matched.groupby('drop_proximity')['jam_factor_mean'].agg(['mean', 'count'])
+
+        # t-test: near vs far from capacity drops
+        near = matched[matched['drop_proximity'] == 'Near']['jam_factor_mean'].dropna()
+        far = matched[matched['drop_proximity'] == 'Far']['jam_factor_mean'].dropna()
+
+        if len(near) > 1 and len(far) > 1:
+            t_prox, p_prox = stats.ttest_ind(near, far)
+            d_prox = (near.mean() - far.mean()) / np.sqrt((near.std()**2 + far.std()**2) / 2)
+        else:
+            t_prox, p_prox, d_prox = np.nan, np.nan, np.nan
+
+        results['near_drop_jf'] = near.mean() if len(near) > 0 else np.nan
+        results['far_drop_jf'] = far.mean() if len(far) > 0 else np.nan
+        results['drop_prox_t_stat'] = t_prox
+        results['drop_prox_p_value'] = p_prox
+        results['drop_prox_effect_size'] = d_prox
+        results['n_capacity_drops'] = len(drop_coords)
+
+        print(f"\n    Capacity drop analysis (graph-based):")
+        print(f"      Capacity drop nodes detected: {len(drop_coords)} (≥20% reduction)")
+        print(f"\n      Distance to nearest capacity drop vs congestion:")
+        print(f"        Pearson r: {r_dist:.4f} (p={p_dist:.4f})")
+        print(f"        Spearman ρ: {rho_dist:.4f} (p={rho_p_dist:.4f})")
+        print(f"\n      Congestion by proximity to capacity drops:")
+        for label, row in proximity_stats.iterrows():
+            print(f"        {label}: JF = {row['mean']:.3f} (n={int(row['count'])})")
+        print(f"      Near vs Far: t={t_prox:.2f}, p={p_prox:.4f}, Cohen's d={d_prox:.3f}")
+
+    else:
+        print(f"\n    Capacity drop analysis: No capacity drops detected")
+        results['n_capacity_drops'] = 0
+
+    # ── Part B: Local capacity gradient (neighborhood analysis) ──
+    traffic_centroids = matched.geometry.centroid
+    traffic_coords = np.array([[p.x, p.y] for p in traffic_centroids])
+
+    tree = cKDTree(traffic_coords)
+    K = 10
+    distances_knn, indices_knn = tree.query(traffic_coords, k=K + 1)
+
+    # Mean capacity of K nearest neighbors (excluding self)
+    neighbor_caps = np.array([
+        matched.iloc[idx[1:]]['capacity_score'].mean()
+        for idx in indices_knn
+    ])
+
+    matched['neighbor_cap_mean'] = neighbor_caps
+    matched['capacity_drop_local'] = neighbor_caps - matched['capacity_score'].values
+    # Positive = this segment has LESS capacity than its neighbors (local bottleneck)
+    matched['relative_cap_drop'] = matched['capacity_drop_local'] / (neighbor_caps + 0.1)
+
+    # Identify local bottleneck zones (top 25% of local capacity drop)
+    threshold = matched['capacity_drop_local'].quantile(0.75)
+    matched['is_local_bottleneck'] = matched['capacity_drop_local'] >= threshold
+
+    bn = matched[matched['is_local_bottleneck']]['jam_factor_mean'].dropna()
+    non_bn = matched[~matched['is_local_bottleneck']]['jam_factor_mean'].dropna()
+
+    if len(bn) > 1 and len(non_bn) > 1:
+        t_local, p_local = stats.ttest_ind(bn, non_bn)
+        d_local = (bn.mean() - non_bn.mean()) / np.sqrt((bn.std()**2 + non_bn.std()**2) / 2)
+    else:
+        t_local, p_local, d_local = np.nan, np.nan, np.nan
+
+    # Correlation: local capacity drop vs congestion
+    valid_local = matched[['capacity_drop_local', 'jam_factor_mean']].dropna()
+    r_local, p_r_local = stats.pearsonr(valid_local['capacity_drop_local'], valid_local['jam_factor_mean'])
+    rho_local, rho_p_local = stats.spearmanr(valid_local['capacity_drop_local'], valid_local['jam_factor_mean'])
+
+    results['local_bn_jf'] = bn.mean()
+    results['local_non_bn_jf'] = non_bn.mean()
+    results['local_bn_t_stat'] = t_local
+    results['local_bn_p_value'] = p_local
+    results['local_bn_effect_size'] = d_local
+    results['local_drop_pearson_r'] = r_local
+    results['local_drop_pearson_p'] = p_r_local
+    results['local_drop_spearman_r'] = rho_local
+    results['local_drop_spearman_p'] = rho_p_local
+
+    print(f"\n    Local capacity gradient analysis (K={K} neighbors):")
+    print(f"      Local bottleneck segments (capacity < neighbors): {matched['is_local_bottleneck'].sum()} / {len(matched)}")
+    print(f"        Bottleneck zones: JF = {bn.mean():.3f} (n={len(bn)})")
+    print(f"        Non-bottleneck:   JF = {non_bn.mean():.3f} (n={len(non_bn)})")
+    diff_pct = (bn.mean() - non_bn.mean()) / non_bn.mean() * 100
+    print(f"        Difference: {diff_pct:+.1f}%")
+    print(f"        t-statistic: {t_local:.2f}, p-value: {p_local:.4f}")
+    print(f"        Effect size (Cohen's d): {d_local:.3f}")
+    print(f"\n      Local capacity drop vs congestion correlation:")
+    print(f"        Pearson r: {r_local:.4f} (p={p_r_local:.4f})")
+    print(f"        Spearman ρ: {rho_local:.4f} (p={rho_p_local:.4f})")
+
+    return matched, results
 
 
 def compute_peak_sensitivity(city_code):
@@ -226,7 +416,7 @@ def analyze_bottlenecks(city_code):
     print(f"{'='*60}")
 
     # Step 1: Get road capacity attributes
-    roads = get_road_capacity_attributes(city_code)
+    roads, G = get_road_capacity_attributes(city_code)
 
     # Step 2: Compute peak sensitivity
     print(f"  Computing peak sensitivity...")
@@ -324,6 +514,12 @@ def analyze_bottlenecks(city_code):
         name = road_names.get(score, f'Score {score}')
         print(f"      {name}: JF = {row['mean']:.3f} (n={int(row['count'])})")
 
+    # 4e. Spatial capacity drop analysis (graph-based + local gradient)
+    print(f"\n  Analyzing spatial capacity drops...")
+    drop_nodes, drop_magnitudes, drop_coords = detect_capacity_drops(G, roads)
+    matched, drop_results = analyze_capacity_drop_congestion(matched, drop_coords, drop_magnitudes)
+    results.update(drop_results)
+
     return matched, results
 
 
@@ -411,6 +607,68 @@ def plot_capacity_correlation(all_results):
     print(f"Saved: {filepath}")
 
 
+def plot_capacity_drop_analysis(all_results):
+    """Visualize capacity drop analysis: proximity to drops and local gradient"""
+    fig, axes = plt.subplots(2, 3, figsize=(15, 10))
+
+    for idx, (city_code, (traffic, stats_result)) in enumerate(all_results.items()):
+        city_name = CITIES[city_code]['name']
+        color = CITIES[city_code]['color']
+
+        # Top row: Distance to capacity drop vs congestion
+        ax = axes[0, idx]
+        if 'dist_to_cap_drop' in traffic.columns:
+            valid = traffic[['dist_to_cap_drop', 'jam_factor_mean']].dropna()
+            ax.scatter(valid['dist_to_cap_drop'], valid['jam_factor_mean'],
+                      alpha=0.3, s=10, color=color)
+            # Regression line
+            slope, intercept, r, p, se = stats.linregress(
+                valid['dist_to_cap_drop'], valid['jam_factor_mean']
+            )
+            x_line = np.linspace(valid['dist_to_cap_drop'].min(), valid['dist_to_cap_drop'].max(), 100)
+            ax.plot(x_line, slope * x_line + intercept, 'r-', linewidth=2, label=f'r = {r:.3f}')
+            ax.set_xlabel('Distance to Nearest Capacity Drop')
+            ax.set_ylabel('Jam Factor' if idx == 0 else '')
+            ax.set_title(f'{city_name}\n(n_drops={stats_result.get("n_capacity_drops", 0)})', fontweight='bold')
+            ax.legend()
+        else:
+            ax.text(0.5, 0.5, 'No capacity\ndrops detected', ha='center', va='center',
+                   transform=ax.transAxes)
+            ax.set_title(f'{city_name}', fontweight='bold')
+        ax.grid(alpha=0.3)
+
+        # Bottom row: Local bottleneck vs non-bottleneck box plot
+        ax = axes[1, idx]
+        if 'is_local_bottleneck' in traffic.columns:
+            bn = traffic[traffic['is_local_bottleneck']]['jam_factor_mean'].dropna()
+            non_bn = traffic[~traffic['is_local_bottleneck']]['jam_factor_mean'].dropna()
+
+            bp = ax.boxplot([bn, non_bn],
+                           labels=['Local\nBottleneck', 'Non-\nBottleneck'],
+                           patch_artist=True)
+            colors_bp = ['#e74c3c', '#27ae60']
+            for patch, c in zip(bp['boxes'], colors_bp):
+                patch.set_facecolor(c)
+                patch.set_alpha(0.7)
+
+            p_val = stats_result.get('local_bn_p_value', 1)
+            sig = "***" if p_val < 0.001 else "**" if p_val < 0.01 else "*" if p_val < 0.05 else "ns"
+            d = stats_result.get('local_bn_effect_size', 0)
+            ax.set_title(f'p={p_val:.4f} {sig}, d={d:.3f}', fontsize=10)
+        ax.set_ylabel('Jam Factor' if idx == 0 else '')
+        ax.grid(axis='y', alpha=0.3)
+
+    axes[0, 1].set_title(axes[0, 1].get_title(), fontweight='bold')
+    fig.suptitle('Spatial Capacity Drop Analysis:\nProximity to Capacity Transitions & Local Bottlenecks',
+                fontsize=14, fontweight='bold')
+    plt.tight_layout()
+
+    filepath = FIGURES_DIR / 'capacity_drop_spatial_analysis.png'
+    plt.savefig(filepath, dpi=150, bbox_inches='tight', facecolor='white')
+    plt.close()
+    print(f"Saved: {filepath}")
+
+
 def main():
     print("=" * 70)
     print("BOTTLENECK ANALYSIS")
@@ -429,6 +687,7 @@ def main():
     print("Creating visualizations...")
     plot_bottleneck_analysis(all_results)
     plot_capacity_correlation(all_results)
+    plot_capacity_drop_analysis(all_results)
 
     # Summary table
     print("\n" + "=" * 70)
@@ -451,6 +710,27 @@ def main():
 
     print("\n" + "-" * 70)
     print("Significance: *** p<0.001, ** p<0.01, * p<0.05")
+
+    # Spatial capacity drop summary
+    print("\n" + "=" * 70)
+    print("SUMMARY: Spatial Capacity Drop Analysis")
+    print("=" * 70)
+
+    print(f"\n{'City':<12} {'Cap Drops':<11} {'Near JF':<10} {'Far JF':<10} {'p-value':<10} {'Local BN d':<10}")
+    print("-" * 70)
+
+    for city_code, (_, stats_result) in all_results.items():
+        city = stats_result['city']
+        n_drops = stats_result.get('n_capacity_drops', 0)
+        near_jf = stats_result.get('near_drop_jf', np.nan)
+        far_jf = stats_result.get('far_drop_jf', np.nan)
+        p_drop = stats_result.get('drop_prox_p_value', np.nan)
+        d_local = stats_result.get('local_bn_effect_size', np.nan)
+
+        sig = "***" if p_drop < 0.001 else "**" if p_drop < 0.01 else "*" if p_drop < 0.05 else "" if not np.isnan(p_drop) else ""
+        print(f"{city:<12} {n_drops:<11} {near_jf:<10.3f} {far_jf:<10.3f} {p_drop:<10.4f} d={d_local:.3f} {sig}")
+
+    print("\n" + "-" * 70)
 
     # Compare with POI effect
     print("\n" + "=" * 70)
@@ -487,23 +767,27 @@ def main():
     print("""
     BOTTLENECK vs ACTIVITY CENTER:
 
-    1. BOTTLENECKS (capacity constraints) DO predict congestion
-       - Low-capacity roads have significantly higher congestion
-       - Effect size is meaningful (unlike POI density)
+    1. AGGREGATE CAPACITY analysis (low vs high capacity roads)
+       - Tests whether low-capacity roads are more congested overall
 
-    2. ACTIVITY CENTERS (POI density) do NOT predict congestion
+    2. SPATIAL CAPACITY DROPS (graph-based)
+       - Detects nodes where incoming capacity > outgoing capacity
+       - Tests whether proximity to capacity transitions predicts congestion
+       - Stronger test of bottleneck hypothesis (localized flow constraints)
+
+    3. LOCAL CAPACITY GRADIENT (neighborhood analysis)
+       - Identifies segments with less capacity than spatial neighbors
+       - These are local bottlenecks embedded in higher-capacity surroundings
+       - Most direct test: relative capacity deficit → congestion?
+
+    4. ACTIVITY CENTERS (POI density) — from prior analysis
        - High-POI areas have same congestion as low-POI areas
        - Effect size is near zero
 
-    3. WHY THE DIFFERENCE?
-       - Congestion is about FLOW, not DESTINATIONS
-       - Bottlenecks restrict flow → queue buildup
-       - Activity centers may attract trips but don't restrict flow
-
-    4. COMBINED FINDING:
-       - WHEN matters most (temporal: 15-24% variance explained)
-       - WHERE matters at bottlenecks (capacity constraints)
-       - Activity centers are irrelevant to congestion location
+    5. INTERPRETATION:
+       - If spatial capacity drops show significant effects → bottleneck hypothesis supported
+       - If no capacity metric predicts congestion → congestion is demand-driven (temporal)
+       - Compare effect sizes across all approaches for final conclusion
     """)
 
     print("=" * 70)
