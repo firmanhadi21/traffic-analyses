@@ -445,7 +445,8 @@ def spatial_regression_analysis(all_city_data):
             traffic_c, osm_c[['geometry', 'betweenness']],
             how='left', distance_col='match_dist'
         )
-        # Filter by 200m threshold
+        joined = joined[~joined.index.duplicated(keep='first')]
+	# Filter by 200m threshold
         max_dist = 0.002
         joined.loc[joined['match_dist'] > max_dist, 'betweenness'] = np.nan
 

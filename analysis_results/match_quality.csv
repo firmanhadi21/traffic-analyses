@@ -1,0 +1,4 @@
+city,n_segments,mean_dist_m,median_dist_m,p25_dist_m,p75_dist_m,pct_within_50m,pct_within_100m,pct_within_150m,pct_within_200m
+Semarang,1539,42.7,19.6,9.3,35.2,85.2,94.6,97.1,97.9
+Bandung,4382,31.9,19.6,8.6,36.1,86.3,96.4,98.3,98.9
+Jakarta,20954,27.9,17.8,7.9,31.6,89.3,97.7,98.8,99.3
