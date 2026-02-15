@@ -47,6 +47,14 @@ Open-source pipeline \sep Reproducible urban analytics \sep Traffic congestion \
 
 \end{frontmatter}
 
+\begin{highlights}
+\item Open-source Python pipeline integrating HERE Traffic API, OSMnx, and PySAL for reproducible multi-city traffic analysis
+\item Time-of-day explains 1,000--4,000$\times$ more congestion variance than any spatial predictor across three Indonesian cities
+\item Four independent spatial tests (centrality, POI density, capacity, bottleneck) converge on null results
+\item Novel graph-based capacity drop detection module using directed OSMnx networks
+\item Pipeline requires only a bounding box and API key; installable via PyPI for any city worldwide
+\end{highlights}
+
 %% ============================================================
 \section{Introduction}
 \label{sec:intro}
@@ -401,7 +409,7 @@ The most significant finding is the overwhelming dominance of temporal over spat
 
 The convergence of four independent null spatial findings---centrality, POI density, activity zone comparison, and three-tier capacity analysis---provides robust evidence. This is consistent with induced demand theory \citep{Duranton2011}, though our study does not directly test causal mechanisms.
 
-Because the jam factor normalizes speed to free-flow conditions, this finding characterizes \emph{relative} congestion. Whether temporal dominance also holds for absolute delay metrics remains an open question requiring raw speed and volume data.
+Because the jam factor normalizes speed to free-flow conditions, this finding directly characterizes \emph{relative} congestion. However, the mathematical relationship between jam factor and absolute speed---$\text{JF} = 10 \times (1 - v/v_f)$, where $v$ is current speed and $v_f$ is free-flow speed---implies that temporal dominance likely extends to absolute metrics. If jam factor variance is overwhelmingly temporal and free-flow speed $v_f$ is a time-invariant segment property, then $\text{Var}(v) \approx v_f^2 \cdot \text{Var}(\text{JF})/100$, and the temporal component of absolute speed variance inherits the same dominance. Full empirical confirmation with raw speed data is an important direction for future work.
 
 \subsection{Failure of spatial predictors}
 
