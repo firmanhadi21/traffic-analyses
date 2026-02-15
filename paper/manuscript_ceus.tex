@@ -196,6 +196,21 @@ A key contribution is the open-source pipeline, designed for reproducibility and
 
 Adding a new city requires only: (1) specifying the bounding box in the configuration, (2) providing a HERE API key, and (3) running the pipeline. The package is installable via \texttt{pip install traffic-congestion-pipeline} and provides a CLI with sub-commands for each stage. All data use GeoPackage format (OGC standard) and WGS84 coordinates.
 
+\subsection{Reproducibility}
+\label{sec:reproducibility}
+
+All results in this paper can be reproduced from the archived dataset using four shell commands:
+
+\begin{verbatim}
+pip install "traffic-congestion-pipeline[all]"
+traffic-pipeline geostatistics          # Moran's I, LISA, Gi*
+traffic-pipeline bottleneck             # capacity drop analysis
+traffic-pipeline poi                    # POI density correlations
+traffic-pipeline synthesis              # effect-size comparison
+\end{verbatim}
+
+\noindent Each command reads the aggregated GeoPackage files, performs the corresponding analysis, and writes both CSV result tables and publication-ready figures to a local output directory. The pipeline pins all dependency versions via \texttt{requirements.txt} and specifies Python $\geq$3.9. Aggregated datasets are archived on Zenodo (DOI: \href{https://doi.org/10.5281/zenodo.18650759}{10.5281/zenodo.18650759}), and the full source code, commit history, and CI configuration are available on GitHub (\url{https://github.com/firmanhadi21/traffic-analyses}). API documentation generated with MkDocs is hosted at \url{https://firmanhadi21.github.io/traffic-analyses/}. To extend the analysis to a new city, a researcher supplies only a bounding box and HERE API key in \texttt{config.py}; the pipeline handles data collection scheduling, temporal aggregation, spatial joining, and all downstream analyses without code modification.
+
 
 %% ============================================================
 \section{Results}
