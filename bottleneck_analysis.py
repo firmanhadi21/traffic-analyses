@@ -76,18 +76,21 @@ def get_road_capacity_attributes(city_code):
     # Extract capacity-related attributes
     def get_lanes(x):
         """Extract lane count, handling various formats"""
-        if pd.isna(x):
+        if isinstance(x, list):
+            try:
+                return float(x[0])
+            except (ValueError, IndexError):
+                return np.nan
+        try:
+            if pd.isna(x):
+                return np.nan
+        except (ValueError, TypeError):
             return np.nan
         if isinstance(x, (int, float)):
             return float(x)
         if isinstance(x, str):
             try:
                 return float(x.split(';')[0])  # Take first value if multiple
-            except:
-                return np.nan
-        if isinstance(x, list):
-            try:
-                return float(x[0])
             except:
                 return np.nan
         return np.nan
