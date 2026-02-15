@@ -25,17 +25,17 @@ OUTPUT_DIR.mkdir(exist_ok=True)
 CITIES = {
     'smg': {
         'name': 'Semarang',
-        'bbox': (-6.919, -7.105, 110.528, 110.227),  # north, south, east, west
+        'bbox': (110.227, -7.105, 110.528, -6.919),  # north, south, east, west
         'traffic_folder': 'traffic_smg_output'
     },
     'bdg': {
         'name': 'Bandung',
-        'bbox': (-6.8294, -7.0848, 107.8261, 107.4688),
+        'bbox': (107.4688, -7.0848, 107.8261, -6.8294),
         'traffic_folder': 'traffic_bdg_output'
     },
     'jkt': {
         'name': 'Jakarta',
-        'bbox': (-6.0911, -6.4096, 107.11, 106.6036),
+        'bbox': (106.6036, -6.4096, 107.11, -6.0911),
         'traffic_folder': 'traffic_jkt_output'
     }
 }
@@ -99,7 +99,7 @@ def compute_correlation(city_code, osm_edges):
     # Nearest join with distance
     print(f"    Performing spatial join...")
     joined = gpd.sjoin_nearest(
-        traffic_centroids[['geometry', 'jam_factor_mean', 'fid']],
+        traffic_centroids[['geometry', 'jam_factor_mean']],
         osm_centroids[['geometry', 'betweenness']],
         how='left',
         distance_col='match_dist'

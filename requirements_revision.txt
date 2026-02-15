@@ -1,0 +1,4 @@
+# Additional requirements for revision analyses
+# Install alongside requirements_hpc.txt
+spreg>=1.4.0
+statsmodels>=0.14.0

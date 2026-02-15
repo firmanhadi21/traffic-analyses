@@ -22,6 +22,7 @@ This document describes the procedure for running advanced spatial analyses on H
 |----------|--------|--------|
 | Centrality-Congestion Correlations | `compute_centrality_correlations.py` | Jakarta network has ~45,000 nodes; betweenness centrality is O(VE) complexity |
 | Bottleneck Analysis | `bottleneck_analysis.py` | Downloads OSMnx road network for 3 cities; graph-based capacity drop detection |
+| **Revision Analyses** | `revision_analyses.py` | Spatial weight sensitivity, FDR LISA, period-specific Moran's I, spatial regression, Gi*, match quality, POI buffer sensitivity |
 
 ---
 
@@ -49,8 +50,10 @@ tar -xzvf traffic_hpc.tar.gz
 traffic_hpc/
 ├── compute_centrality_correlations.py   # Centrality analysis script
 ├── bottleneck_analysis.py               # Bottleneck analysis script
+├── revision_analyses.py                 # Revision analyses (reviewer responses)
 ├── advanced_spatial_analysis.py         # Already completed analyses
 ├── requirements_hpc.txt                 # Python dependencies
+├── requirements_revision.txt            # Additional deps for revision (spreg)
 ├── run_hpc.sh                           # SLURM job script
 ├── traffic_smg_output/                  # Semarang data (8 files)
 ├── traffic_bdg_output/                  # Bandung data (8 files)
@@ -75,6 +78,7 @@ source venv/bin/activate
 # Install dependencies
 pip install --upgrade pip
 pip install -r requirements_hpc.txt
+pip install -r requirements_revision.txt
 ```
 
 ### Required Packages
@@ -211,6 +215,62 @@ figures/capacity_drop_spatial_analysis.png      # Capacity drop proximity + loca
 
 ---
 
+## Step 3c: Run Revision Analyses
+
+These analyses address reviewer concerns: spatial weight sensitivity, FDR-corrected LISA, period-specific Moran's I, spatial regression, Getis-Ord Gi*, match quality, and POI buffer sensitivity.
+
+### Running the Analysis
+
+```bash
+# Interactive session (recommended — allows monitoring)
+srun --time=06:00:00 --mem=48G --cpus-per-task=4 --pty bash
+source venv/bin/activate
+
+python revision_analyses.py
+```
+
+### Additional Dependencies
+
+```bash
+pip install spreg>=1.4.0 statsmodels>=0.14.0
+```
+
+### Expected Output
+
+```
+analysis_results/morans_i_sensitivity.csv      # Moran's I with KNN k=4,8,12 + distance bands
+analysis_results/lisa_fdr_corrected.csv         # FDR-corrected LISA results
+analysis_results/morans_i_by_period.csv         # Period-specific Moran's I (8 periods x 3 cities)
+analysis_results/spatial_regression_results.csv # OLS, Spatial Lag, Spatial Error models
+analysis_results/getis_ord_results.csv          # Gi* hot/cold spot counts
+analysis_results/match_quality.csv              # HERE-OSMnx match distance distribution
+analysis_results/poi_network_distance_sensitivity.csv     # POI density at 200m, 400m, 800m, 1200m
+```
+
+### Expected Runtime
+| Analysis | Estimated Time |
+|----------|----------------|
+| Weight sensitivity | 5-10 min |
+| FDR LISA | 5-10 min |
+| Period Moran's I | 10-15 min |
+| Spatial regression | 30-60 min (network download) |
+| Getis-Ord Gi* | 5-10 min |
+| Match quality | 30-60 min (network download) |
+| POI network-distance sensitivity | 30-60 min (walk network + POI download) |
+| **Total** | **~2-3 hours** |
+
+### Using Results to Update Manuscript
+
+After obtaining the CSV files, update the placeholder tables in `paper/manuscript.md`:
+- Table 7a: Spatial weight sensitivity → `morans_i_sensitivity.csv`
+- Table 7b: Period-specific Moran's I → `morans_i_by_period.csv`
+- Table 8a: FDR-corrected LISA → `lisa_fdr_corrected.csv`
+- Table 8b: Getis-Ord Gi* → `getis_ord_results.csv`
+- Table 10-mq: Match quality → `match_quality.csv`
+- Table 10e-reg: Spatial regression → `spatial_regression_results.csv`
+
+---
+
 ## Step 4: Transfer Results Back
 
 ```bash
@@ -325,8 +385,15 @@ traffic-analyses/
 │   ├── morans_i_results.csv       # ✅ Global Moran's I
 │   ├── lisa_results.csv           # ✅ LISA clusters
 │   ├── anova_results.csv          # ✅ ANOVA + Tukey
-│   ├── centrality_correlations.csv # 🔄 From HPC
-│   ├── bottleneck_analysis_results.csv # 🔄 From HPC
+│   ├── centrality_correlations.csv       # 🔄 From HPC
+│   ├── bottleneck_analysis_results.csv   # 🔄 From HPC
+│   ├── morans_i_sensitivity.csv          # 🔄 From HPC (revision)
+│   ├── lisa_fdr_corrected.csv            # 🔄 From HPC (revision)
+│   ├── morans_i_by_period.csv            # 🔄 From HPC (revision)
+│   ├── spatial_regression_results.csv    # 🔄 From HPC (revision)
+│   ├── getis_ord_results.csv             # 🔄 From HPC (revision)
+│   ├── match_quality.csv                 # 🔄 From HPC (revision)
+│   ├── poi_buffer_sensitivity.csv        # 🔄 From HPC (revision)
 │   └── advanced_analysis_results.txt
 ├── figures/
 │   ├── smg_lisa_clusters.png      # ✅ LISA maps
