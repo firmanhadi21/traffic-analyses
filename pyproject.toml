@@ -1,0 +1,94 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "traffic-congestion-pipeline"
+version = "0.1.0"
+description = "An open-source pipeline for spatiotemporal traffic congestion analysis using HERE API, OSMnx, and PySAL"
+readme = "README.md"
+license = {file = "LICENSE"}
+requires-python = ">=3.9"
+authors = [
+    {name = "Firman Hadi", email = "firmanhadi21@gmail.com"},
+]
+keywords = [
+    "traffic",
+    "congestion",
+    "spatiotemporal",
+    "geostatistics",
+    "urban-analytics",
+    "HERE-API",
+    "OSMnx",
+    "PySAL",
+    "open-data-science",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: GIS",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+]
+dependencies = [
+    "geopandas>=0.10",
+    "shapely>=1.8",
+    "osmnx>=1.2",
+    "networkx>=2.6",
+    "pandas>=1.3",
+    "numpy>=1.20",
+    "scipy>=1.7",
+    "matplotlib>=3.4",
+    "seaborn>=0.11",
+    "pytz",
+    "tqdm",
+    "fiona",
+    "click>=8.0",
+]
+
+[project.optional-dependencies]
+pysal = [
+    "libpysal>=4.7",
+    "esda>=2.4",
+    "spreg>=1.3",
+]
+all = [
+    "traffic-congestion-pipeline[pysal]",
+    "folium",
+    "contextily",
+]
+dev = [
+    "traffic-congestion-pipeline[all]",
+    "pytest>=7.0",
+    "pytest-cov",
+]
+
+[project.scripts]
+traffic-pipeline = "trafficpipeline.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/firmanhadi21/traffic-analyses"
+Repository = "https://github.com/firmanhadi21/traffic-analyses"
+Issues = "https://github.com/firmanhadi21/traffic-analyses/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/trafficpipeline"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "src/",
+    "tests/",
+    "pyproject.toml",
+    "README.md",
+    "LICENSE",
+    "CITATION.cff",
+    "DATA_README.md",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

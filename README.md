@@ -1,6 +1,11 @@
-# Traffic Data Analysis - Indonesian Cities
+# Traffic Congestion Pipeline
 
-A comprehensive traffic data collection and analysis system for three major Indonesian cities: **Semarang**, **Bandung**, and **Jakarta**. This project uses the HERE API to collect real-time traffic flow data and aggregates it by time periods for urban mobility analysis.
+[![PyPI](https://img.shields.io/pypi/v/traffic-congestion-pipeline.svg)](https://pypi.org/project/traffic-congestion-pipeline/)
+[![CI](https://github.com/firmanhadi21/traffic-analyses/actions/workflows/test.yml/badge.svg)](https://github.com/firmanhadi21/traffic-analyses/actions/workflows/test.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Python 3.9+](https://img.shields.io/badge/python-3.9%2B-blue.svg)](https://www.python.org/)
+
+An **open-source, installable Python pipeline** for spatiotemporal traffic congestion analysis, integrating the HERE Traffic API, OSMnx, and PySAL. Designed for reproducible urban analytics across Indonesian metropolitan cities (**Semarang**, **Bandung**, **Jakarta**).
 
 ## Overview
 
@@ -41,20 +46,43 @@ Data is aggregated into 8 distinct time periods:
 
 ```
 traffic-analyses/
+├── pyproject.toml               # Package build & dependency spec
+├── LICENSE                      # MIT License
 ├── README.md
-├── CLAUDE.md                    # Project instructions
-├── requirements.txt             # Python dependencies
-├── .gitignore
 │
-├── # Data Collection
-├── traffic_collector.R          # R script for HERE API data collection
-├── traffic_collector.sh         # Shell wrapper for cron scheduling
+├── src/trafficpipeline/         # Installable Python package
+│   ├── __init__.py
+│   ├── config.py                # Centralized city/period/constant definitions
+│   ├── utils.py                 # Timestamp extraction, geometry hashing, filters
+│   ├── aggregate.py             # Raw GeoPackage → time-period aggregation
+│   ├── eda.py                   # Data validation & exploratory analysis
+│   ├── geostatistics.py         # Spatial statistics & hot-spot analysis
+│   ├── bottleneck.py            # Road-capacity bottleneck analysis (OSMnx)
+│   ├── poi.py                   # POI-congestion density analysis
+│   ├── synthesis.py             # Temporal vs spatial predictor comparison
+│   └── cli.py                   # Click CLI entry point
 │
-├── # Aggregation Scripts
-├── run_semarang_aggregation.py  # Semarang data aggregation
-├── run_bandung_aggregation.py   # Bandung data aggregation
-├── run_jakarta_aggregation.py   # Jakarta data aggregation
-├── aggregate_all.ipynb          # Jupyter notebook for analysis
+├── tests/                       # Unit tests (pytest)
+│   ├── test_config.py
+│   ├── test_utils.py
+│   ├── test_aggregate.py
+│   └── test_cli.py
+│
+├── .github/workflows/test.yml   # CI (Python 3.9-3.12)
+│
+├── # Data Collection (R)
+├── traffic_collector.R          # HERE API data collection
+├── traffic_collector.sh         # Cron wrapper
+│
+├── # Legacy standalone scripts (superseded by package)
+├── run_semarang_aggregation.py
+├── run_bandung_aggregation.py
+├── run_jakarta_aggregation.py
+├── geostatistical_analysis.py
+├── exploratory_data_analysis.py
+├── bottleneck_analysis.py
+├── poi_congestion_analysis.py
+├── temporal_vs_spatial_comparison.py
 │
 ├── # Output Data (GeoPackage format)
 ├── traffic_smg_output/          # Semarang aggregated data
@@ -135,54 +163,123 @@ The jam factor indicates traffic congestion level:
 
 ## Installation
 
-### Requirements
+### From PyPI
 
 ```bash
-pip install pandas geopandas shapely numpy
+pip install traffic-congestion-pipeline
+
+# With PySAL spatial econometrics support
+pip install "traffic-congestion-pipeline[pysal]"
+
+# Full install (PySAL + Folium + Contextily)
+pip install "traffic-congestion-pipeline[all]"
 ```
 
-### R Dependencies (for data collection)
+### From Source (development)
+
+```bash
+git clone https://github.com/firmanhadi21/traffic-analyses.git
+cd traffic-analyses
+pip install -e ".[dev]"
+```
+
+### Verify Installation
+
+```bash
+traffic-pipeline --version
+traffic-pipeline --help
+```
+
+### R Dependencies (for data collection only)
 
 ```r
 install.packages(c("hereR", "sf", "lubridate"))
 ```
 
-## Usage
+## CLI Usage
 
-### Running Aggregation Scripts
+The package provides a `traffic-pipeline` command with sub-commands for each analysis stage:
 
 ```bash
-# Aggregate Semarang data
-python run_semarang_aggregation.py
+# 1. Aggregate raw GeoPackage snapshots into time-period files
+traffic-pipeline aggregate                  # all cities
+traffic-pipeline aggregate --city smg       # single city
+traffic-pipeline aggregate --column JF      # custom column
 
-# Aggregate Bandung data
-python run_bandung_aggregation.py
+# 2. Exploratory data analysis / validation
+traffic-pipeline eda
 
-# Aggregate Jakarta data
-python run_jakarta_aggregation.py
+# 3. Spatial statistics and hot-spot analysis
+traffic-pipeline geostatistics
+
+# 4. Road-capacity bottleneck analysis (requires OSMnx network download)
+traffic-pipeline bottleneck
+
+# 5. POI-congestion density analysis
+traffic-pipeline poi
+
+# 6. Temporal vs spatial predictor comparison
+traffic-pipeline synthesis
 ```
 
-### Loading Output Data
+All commands accept `--base-dir` to point at the project root:
+
+```bash
+traffic-pipeline --base-dir /path/to/data aggregate
+```
+
+### Programmatic Usage
 
 ```python
-import geopandas as gpd
+from trafficpipeline.aggregate import aggregate_city
+from trafficpipeline.geostatistics import run_analysis
+from trafficpipeline.config import CITIES
 
-# Load morning peak traffic for Jakarta
-gdf = gpd.read_file('traffic_jkt_output/morning_peak_jkt.gpkg')
+# Aggregate a single city
+aggregate_city("jkt", traffic_column="JF", verbose=True)
 
-# View statistics
-print(gdf[['fid', 'jam_factor_mean', 'jam_factor_std']].describe())
-
-# Plot the data
-gdf.plot(column='jam_factor_mean', cmap='RdYlGn_r', legend=True)
+# Run geostatistical analysis
+run_analysis(base_dir=".", figures_dir="figures")
 ```
 
-### Data Collection (requires HERE API key)
+## Data Availability
+
+The aggregated dataset (24 GeoPackages — 8 time periods × 3 cities, ~115 MB) is archived on Zenodo with a persistent DOI:
+
+> **Hadi, F., Wahyuddin, Y., Sabri, L. M., & Indrajit, A.** (2026). Traffic Congestion Dataset: Semarang, Bandung, Jakarta (2025–2026). *Zenodo*. https://doi.org/10.5281/zenodo.18650759
+
+See [DATA_README.md](DATA_README.md) for full schema documentation. To re-create the bundle locally: `./prepare_zenodo.sh`
+
+## Reproducing the Analysis
+
+Follow these steps to reproduce the full analysis from the Zenodo dataset:
 
 ```bash
-# Run data collection for all cities
-./traffic_collector.sh
+# 1. Clone the repository
+git clone https://github.com/firmanhadi21/traffic-analyses.git
+cd traffic-analyses
+
+# 2. Create a virtual environment and install the package
+python3 -m venv venv
+source venv/bin/activate          # Windows: venv\Scripts\activate
+pip install -e ".[all]"
+
+# 3. Download the dataset from Zenodo and unzip
+#    https://doi.org/10.5281/zenodo.18650759
+#    Place the three traffic_*_output/ directories in the repo root
+
+# 4. Verify the installation
+traffic-pipeline --version
+pytest tests/ -v                  # requires pip install -e ".[dev]"
+
+# 5. Run each analysis stage
+traffic-pipeline geostatistics    # Spatial statistics & hot-spot maps
+traffic-pipeline bottleneck       # Road-capacity bottleneck analysis
+traffic-pipeline poi              # POI-congestion density analysis
+traffic-pipeline synthesis        # Temporal vs spatial comparison
 ```
+
+Results are written to `figures/` (PNG) and `analysis_results/` (CSV).
 
 ## Data Source
 
@@ -393,9 +490,34 @@ $$\text{delay} = \frac{1}{\text{speed}} - \frac{1}{\text{free\_flow}}$$
 
 This gives **excess travel time per km** — an absolute measure where a motorway at 40 km/h (with 120 km/h free-flow) produces a much higher delay than a residential street at 25 km/h (with 30 km/h free-flow). This metric directly reflects capacity constraints without the normalization that flattens road class differences.
 
+## Adding a New City
+
+1. Add the city to `src/trafficpipeline/config.py`:
+
+```python
+CITIES["sby"] = {
+    "name": "Surabaya",
+    "bbox": (112.60, -7.40, 112.85, -7.20),
+    "bbox_dict": {"west": 112.60, "south": -7.40, "east": 112.85, "north": -7.20},
+    "traffic_data_dir": "traffic_data_sby",
+    "traffic_output_dir": "traffic_sby_output",
+    "filename_pattern": "surabaya_traffic_*.gpkg",
+    "expected_segments": 5000,
+    "color": "#9b59b6",
+}
+```
+
+2. Collect data using the R collector (update bounding box in `traffic_collector.R`).
+3. Run the pipeline:
+
+```bash
+traffic-pipeline aggregate --city sby
+traffic-pipeline geostatistics
+```
+
 ## License
 
-This project is for research and educational purposes. Traffic data is subject to HERE API terms of service.
+MIT — see [LICENSE](LICENSE) for details.
 
 ## Author
 

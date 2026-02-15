@@ -1,0 +1,50 @@
+cff-version: 1.2.0
+type: software
+title: "Traffic Congestion Pipeline"
+message: "If you use this software, please cite it as below."
+authors:
+  - family-names: Hadi
+    given-names: Firman
+    orcid: ""
+    email: firmanhadi21@gmail.com
+  - family-names: Wahyuddin
+    given-names: Yasser
+  - family-names: Sabri
+    given-names: L. M.
+  - family-names: Indrajit
+    given-names: Agung
+version: 0.1.0
+date-released: "2026-02-16"
+license: MIT
+repository-code: "https://github.com/firmanhadi21/traffic-analyses"
+url: "https://github.com/firmanhadi21/traffic-analyses"
+keywords:
+  - traffic congestion
+  - spatiotemporal analysis
+  - HERE API
+  - OSMnx
+  - PySAL
+  - urban analytics
+  - open data science
+  - Indonesia
+abstract: >-
+  An open-source pipeline for spatiotemporal traffic congestion
+  analysis integrating HERE Traffic API data collection, temporal
+  aggregation, OSMnx network analysis, PySAL geostatistics, and
+  graph-based capacity drop detection. Demonstrated across three
+  Indonesian metropolitan cities (Jakarta, Bandung, Semarang) with
+  264 million traffic observations over 11 months.
+preferred-citation:
+  type: article
+  title: "An Open-Source Pipeline for Spatiotemporal Traffic Congestion Analysis: Integrating HERE API, OSMnx, and PySAL Across Indonesian Metropolitan Cities"
+  authors:
+    - family-names: Hadi
+      given-names: Firman
+    - family-names: Wahyuddin
+      given-names: Yasser
+    - family-names: Sabri
+      given-names: L. M.
+    - family-names: Indrajit
+      given-names: Agung
+  journal: "Computers, Environment and Urban Systems"
+  year: 2026

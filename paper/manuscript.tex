@@ -1597,21 +1597,25 @@ This research did not receive any specific grant from funding agencies in the pu
 
 \section*{Data and Software Availability}
 
-The complete analysis pipeline, including all source code, configuration files, analysis scripts, and aggregated datasets, is available as open-source software at: \url{https://github.com/firmanhadi21/traffic-analyses}. The repository includes:
+\textbf{Software.}  The complete analysis pipeline is released as an installable Python package on the Python Package Index: \texttt{pip install traffic-congestion-pipeline} (\url{https://pypi.org/project/traffic-congestion-pipeline/}). Source code is available under the MIT licence at \url{https://github.com/firmanhadi21/traffic-analyses}. The package provides a \texttt{traffic-pipeline} CLI with sub-commands for every analysis stage (aggregation, geostatistics, bottleneck detection, POI analysis, synthesis). A \texttt{CITATION.cff} file and GitHub Actions CI workflow are included.
 
-\begin{itemize}
-\item \texttt{traffic\_collector.R}: Automated HERE API data collection script
-\item \texttt{run\_*\_aggregation.py}: City-specific temporal aggregation scripts
-\item \texttt{geostatistical\_analysis.py}: PySAL-based spatial statistics module
-\item \texttt{bottleneck\_analysis.py}: Graph-based capacity drop detection module
-\item \texttt{poi\_congestion\_analysis.py}: Network-distance POI density analysis
-\item \texttt{temporal\_vs\_spatial\_comparison.py}: Effect size synthesis module
-\item \texttt{config.py}: Centralized city configuration
-\item \texttt{requirements.txt} and \texttt{requirements\_hpc.txt}: Dependency specifications
-\item \texttt{run\_hpc.sh}: HPC job submission script
-\end{itemize}
+\textbf{Dataset.}  The aggregated traffic data---24 GeoPackage files (8~time periods $\times$ 3~cities, $\sim$115~MB) plus analysis-result CSVs---are archived on Zenodo:
 
-Raw traffic flow data were obtained from the HERE Traffic API. Street network data are publicly available from OpenStreetMap (www.openstreetmap.org) via OSMnx.
+\begin{quote}https://doi.org/10.5281/zenodo.18650759
+Hadi, F., Wahyuddin, Y., Sabri, L.~M., \& Indrajit, A.\ (2026). Traffic Congestion Dataset: Semarang, Bandung, Jakarta (2025--2026). \emph{Zenodo}. \url{https://doi.org/10.5281/zenodo.18650759}
+\end{quote}
+
+\noindent Researchers can download the Zenodo archive, place the three \texttt{traffic\_*\_output/} directories in the repository root, and reproduce all figures and tables with:
+
+\begin{verbatim}
+pip install "traffic-congestion-pipeline[all]"
+traffic-pipeline geostatistics
+traffic-pipeline bottleneck
+traffic-pipeline poi
+traffic-pipeline synthesis
+\end{verbatim}
+
+\noindent Raw traffic flow data were obtained from the HERE Traffic API via the \texttt{hereR} R package. Street network data are publicly available from OpenStreetMap (\url{www.openstreetmap.org}) via OSMnx. The \texttt{DATA\_README.md} in the Zenodo archive documents the full data schema.
 
 
 
