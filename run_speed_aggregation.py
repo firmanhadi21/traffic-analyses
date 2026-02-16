@@ -432,22 +432,25 @@ def aggregate_city(city_code, config):
 
     t0 = time.time()
 
-    # ---- Step 1: Load reference geometry from aggregated GPKG ----
-    ref_folder = config['ref_folder']
-    ref_files = sorted(glob.glob(os.path.join(ref_folder, '*.gpkg')))
-    if not ref_files:
-        print(f"  No reference files found in {ref_folder}")
-        return None
-
-    ref_gdf = gpd.read_file(ref_files[0])
-    ref_geom = ref_gdf[['fid', 'geometry']].copy()
-    print(f"  Reference: {os.path.basename(ref_files[0])} "
-          f"({len(ref_geom)} segments)")
-
-    # Build geometry → fid cache from first raw file via spatial join
+    # ---- Step 1: Get reference geometry from FIRST RAW FILE ----
+    # This matches the pattern in run_bandung_aggregation.py (line 103-109)
+    print(f"  Extracting reference geometry from first file...")
     first_raw = gpd.read_file(gpkg_files[0])
-    geom_cache = build_geom_cache(first_raw, ref_geom)
-    print(f"  Initial cache: {len(geom_cache)} geometry→fid mappings")
+    
+    # Add 1-indexed fid if missing (matches line 77-79 in run_bandung_aggregation.py)
+    if 'fid' not in first_raw.columns:
+        first_raw['fid'] = range(1, len(first_raw) + 1)
+    
+    ref_geom = first_raw[['fid', 'geometry']].copy()
+    print(f"  Reference: {os.path.basename(gpkg_files[0])} "
+          f"({len(ref_geom)} segments)")
+    
+    # Pre-populate geometry → fid cache from reference geometry
+    # (vectorized to avoid iterating)
+    wkb_bytes = ref_geom.geometry.apply(lambda g: g.wkb)
+    hashes = wkb_bytes.apply(lambda b: hashlib.md5(b).hexdigest())
+    geom_cache = dict(zip(hashes, ref_geom['fid']))
+    print(f"  Initialized cache: {len(geom_cache)} geometry→fid mappings")
 
     # Detect traffic columns from the first raw file
     col_mapping = detect_columns(first_raw)
