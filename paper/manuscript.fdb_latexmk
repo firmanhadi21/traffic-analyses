@@ -1,6 +1,6 @@
 # Fdb version 4
-["pdflatex"] 1771178506 "/Users/macbook/Dropbox/GitHub/traffic-analyses/paper/manuscript.tex" "manuscript.pdf" "manuscript" 1771178513 0
-  "/Users/macbook/Dropbox/GitHub/traffic-analyses/paper/manuscript.tex" 1771176687 108886 47390d3d74bd24bd0282c2aa89f7905b ""
+["pdflatex"] 1771216148 "/Users/macbook/Dropbox/GitHub/traffic-analyses/paper/manuscript.tex" "manuscript.pdf" "manuscript" 1771216157 0
+  "/Users/macbook/Dropbox/GitHub/traffic-analyses/paper/manuscript.tex" 1771216148 108888 529994016cdcf9a3e4010e5063527e90 ""
   "/usr/local/texlive/2023/texmf-dist/fonts/enc/dvips/cm-super/cm-super-t1.enc" 1136849721 2971 def0b6c1f0b107b3b936def894055589 ""
   "/usr/local/texlive/2023/texmf-dist/fonts/enc/dvips/cm-super/cm-super-ts1.enc" 1136849721 2900 1537cc8184ad1792082cd229ecc269f4 ""
   "/usr/local/texlive/2023/texmf-dist/fonts/map/fontname/texfonts.map" 1577235249 3524 cb3e574dea2d1052e39280babc910dc8 ""
@@ -138,14 +138,15 @@
   "figures/capacity_drop_spatial_analysis.png" 1771145002 397087 e0fd5efb5d171362d42719f3c739fa43 ""
   "figures/jkt_hotspots_evening_peak.png" 1770436354 701669 71815043b3dc52dc79f0c507f9adea7a ""
   "figures/jkt_traffic_maps.png" 1770436354 2284236 40d1a117ffd365e1a9ac17a7a59736f7 ""
+  "figures/pipeline_architechture.png" 1771216032 344970 390cd62146dfe61d9ae0a3a8614a19d3 ""
   "figures/smg_hotspots_evening_peak.png" 1770436354 203145 2278ad1e5118eeef51edffbfc894737c ""
   "figures/smg_traffic_maps.png" 1770436354 561670 137227858c7eb4c0a0241b8958d55818 ""
   "figures/street_orientation_polar.png" 1770455037 1074481 a63091414827f51c2d843be09295ba24 ""
   "figures/temporal_pattern_comparison.png" 1770436354 96358 58c5bb18ec300152f1406adec16df91b ""
   "figures/temporal_vs_spatial_effect_size.png" 1771145113 84368 41a4651f3c9c73d6988c900db94ec448 ""
-  "manuscript.aux" 1771178513 20330 11b0962f8ba1b9e6d257fc345bc3cf90 "pdflatex"
-  "manuscript.out" 1771178513 18225 2f3cccb574bcaf0a5befe961d3520dd3 "pdflatex"
-  "manuscript.tex" 1771176687 108886 47390d3d74bd24bd0282c2aa89f7905b ""
+  "manuscript.aux" 1771216157 20330 11b0962f8ba1b9e6d257fc345bc3cf90 "pdflatex"
+  "manuscript.out" 1771216157 18225 2f3cccb574bcaf0a5befe961d3520dd3 "pdflatex"
+  "manuscript.tex" 1771216148 108888 529994016cdcf9a3e4010e5063527e90 ""
   (generated)
   "manuscript.aux"
   "manuscript.log"

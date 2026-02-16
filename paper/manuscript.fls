@@ -731,10 +731,11 @@ INPUT figures/analytical_framework.png
 INPUT ./figures/analytical_framework.png
 INPUT ./figures/analytical_framework.png
 INPUT /usr/local/texlive/2023/texmf-dist/fonts/tfm/jknappen/ec/ecrm0600.tfm
-INPUT ./figures/analytical_framework.png
-INPUT ./figures/analytical_framework.png
-INPUT figures/analytical_framework.png
-INPUT ./figures/analytical_framework.png
+INPUT ./figures/pipeline_architechture.png
+INPUT ./figures/pipeline_architechture.png
+INPUT figures/pipeline_architechture.png
+INPUT ./figures/pipeline_architechture.png
+INPUT ./figures/pipeline_architechture.png
 INPUT /usr/local/texlive/2023/texmf-dist/tex/latex/base/t1cmtt.fd
 INPUT /usr/local/texlive/2023/texmf-dist/tex/latex/base/t1cmtt.fd
 INPUT /usr/local/texlive/2023/texmf-dist/tex/latex/base/t1cmtt.fd

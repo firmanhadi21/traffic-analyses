@@ -22,7 +22,7 @@
 
 \begin{frontmatter}
 
-\title{A Provider-Agnostic Open-Source Pipeline for Spatiotemporal Traffic Congestion Analysis: Integrating Commercial Traffic APIs, OSMnx, and PySAL Across Indonesian Metropolitan Cities}
+\title{An Open-Source Pipeline for Urban Traffic Analysis Using OpenStreetMap Networks and Spatial Statistics Across Indonesian Metropolitan Cities}
 
 \author[undip]{Firman Hadi\corref{cor1}}
 \ead{firmanhadi21@lecturer.undip.ac.id}
@@ -201,6 +201,30 @@ Adding a new city requires only: (1) specifying the bounding box in the configur
 \subsection{Reproducibility}
 \label{sec:reproducibility}
 
+A central goal of this work is full computational reproducibility. We designed the pipeline to minimize the gap between commercial data sources and open-source analysis tools while ensuring that researchers can replicate, validate, and extend our findings with minimal friction.
+
+\subsubsection{Pipeline architecture}
+
+Figure~\ref{fig:pipeline} illustrates the pipeline architecture, distinguishing between commercial and open-source components. The only proprietary dependencies are the traffic data APIs (HERE, TomTom, or Google), which require paid subscriptions; all other components---from data collection logic to statistical analysis and visualization---are implemented using open-source Python libraries.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{figures/pipeline_architechture.png}
+\caption{Pipeline architecture showing the separation between commercial traffic APIs (red) and open-source components (green). User input consists only of a bounding box and API key; all downstream processing is automated.}
+\label{fig:pipeline}
+\end{figure}
+
+The five pipeline stages are:
+\begin{enumerate}
+\item \textbf{Data collection:} A provider-agnostic abstraction layer (\texttt{TrafficProvider} base class) wraps commercial APIs. Concrete implementations handle API-specific authentication, query strategies, and response parsing while outputting a unified GeoDataFrame schema. This design isolates vendor lock-in to a single module.
+\item \textbf{Temporal aggregation:} GeoPandas computes per-segment statistics (mean, std, min, max, count) for each of eight temporal periods, producing aggregated GeoPackage files.
+\item \textbf{Geostatistical analysis:} PySAL/libpysal computes global Moran's I, LISA, and Getis-Ord Gi* with configurable spatial weights (KNN, distance-band).
+\item \textbf{Network analysis:} OSMnx retrieves street networks from OpenStreetMap; NetworkX computes edge betweenness centrality; custom modules perform capacity drop detection and POI density analysis.
+\item \textbf{Synthesis:} Matplotlib and seaborn generate publication-ready figures; effect-size comparisons are computed and exported as CSV.
+\end{enumerate}
+
+\subsubsection{Reproducing the analysis}
+
 All results in this paper can be reproduced from the archived dataset using five shell commands:
 
 \begin{verbatim}
@@ -212,7 +236,17 @@ traffic-pipeline poi                      # POI density correlations
 traffic-pipeline synthesis                # effect-size comparison
 \end{verbatim}
 
-\noindent The \texttt{collect} command accepts a \texttt{--provider} flag (\texttt{here}, \texttt{tomtom}, or \texttt{google}) and the corresponding API key, enabling researchers to use whichever commercial traffic data provider is available in their region. Each subsequent command reads the aggregated GeoPackage files, performs the corresponding analysis, and writes both CSV result tables and publication-ready figures to a local output directory. The pipeline pins all dependency versions via \texttt{requirements.txt} and specifies Python $\geq$3.9. Aggregated datasets are archived on Zenodo (DOI: \href{https://doi.org/10.5281/zenodo.18650759}{10.5281/zenodo.18650759}), and the full source code, commit history, and CI configuration are available on GitHub (\url{https://github.com/firmanhadi21/traffic-analyses}). API documentation generated with MkDocs is hosted at \url{https://firmanhadi21.github.io/traffic-analyses/}. To extend the analysis to a new city, a researcher supplies only a bounding box and an API key for any supported provider in \texttt{config.py}; the pipeline handles data collection scheduling, temporal aggregation, spatial joining, and all downstream analyses without code modification.
+\noindent The \texttt{collect} command accepts a \texttt{--provider} flag (\texttt{here}, \texttt{tomtom}, or \texttt{google}) and the corresponding API key, enabling researchers to use whichever commercial traffic data provider is available in their region. Each subsequent command reads the aggregated GeoPackage files, performs the corresponding analysis, and writes both CSV result tables and publication-ready figures to a local output directory.
+
+\subsubsection{Dependency management and archival}
+
+The pipeline pins all dependency versions via \texttt{requirements.txt} and \texttt{pyproject.toml}, specifying Python $\geq$3.9. Key dependencies include: GeoPandas 0.14+, PySAL 24.1+, OSMnx 1.9+, NetworkX 3.2+, and Matplotlib 3.8+. Continuous integration (GitHub Actions) runs the test suite on Python 3.9, 3.10, 3.11, and 3.12 across Ubuntu and macOS, ensuring cross-platform compatibility.
+
+Aggregated datasets (24 GeoPackage files, $\sim$115 MB) are archived on Zenodo with a persistent DOI: \href{https://doi.org/10.5281/zenodo.18650759}{10.5281/zenodo.18650759}. The full source code, commit history, and CI configuration are available on GitHub (\url{https://github.com/firmanhadi21/traffic-analyses}). API documentation generated with MkDocs is hosted at \url{https://firmanhadi21.github.io/traffic-analyses/}.
+
+\subsubsection{Extending to new cities or providers}
+
+To extend the analysis to a new city, a researcher supplies only: (1) a bounding box in WGS84 coordinates, and (2) an API key for any supported provider. These are specified in \texttt{config.py}; the pipeline handles data collection scheduling, temporal aggregation, spatial joining, and all downstream analyses without code modification. Adding a new traffic data provider requires implementing only the \texttt{fetch\_flow()} method of the \texttt{TrafficProvider} abstract base class ($\sim$50 lines of code), with no changes to downstream analysis modules.
 
 
 %% ============================================================
