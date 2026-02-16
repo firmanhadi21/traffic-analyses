@@ -54,6 +54,55 @@ def aggregate(ctx: click.Context, city: str | None, column: str, verbose: bool) 
         aggregate_all(traffic_column=column, verbose=verbose)
 
 
+# ── collect ────────────────────────────────────────────────────
+
+
+@main.command()
+@click.option("--city", multiple=True,
+              type=click.Choice(["smg", "bdg", "jkt"]),
+              help="City codes to collect (omit for all cities).")
+@click.option("--api-key", envvar="HERE_API_KEY", required=True,
+              help="HERE API key (default: $HERE_API_KEY).")
+@click.option("--interval", default=900, show_default=True, type=int,
+              help="Seconds between collection cycles (0 = once).")
+@click.option("--once", is_flag=True,
+              help="Collect once and exit.")
+@click.option("--output-dir", default=None,
+              help="Override base output directory.")
+@click.pass_context
+def collect(ctx: click.Context, city: tuple[str, ...], api_key: str,
+            interval: int, once: bool, output_dir: str | None) -> None:
+    """Collect traffic flow data from the HERE Traffic API v7."""
+    import logging
+    import time
+
+    from trafficpipeline.collector import collect_all as _collect_all
+
+    logging.basicConfig(level=logging.INFO,
+                        format="%(asctime)s  %(levelname)-8s  %(message)s")
+
+    city_codes = list(city) if city else None
+    run_once = once or interval == 0
+
+    cycle = 0
+    while True:
+        cycle += 1
+        click.echo(f"── Cycle {cycle} ──")
+        t0 = time.time()
+        paths = _collect_all(
+            api_key=api_key,
+            city_codes=city_codes,
+            output_base=output_dir,
+        )
+        for p in paths:
+            click.echo(f"  ✓ {p}")
+        click.echo(f"Cycle {cycle}: {len(paths)} files in {time.time()-t0:.1f}s")
+
+        if run_once:
+            break
+        time.sleep(max(0, interval - (time.time() - t0)))
+
+
 # ── eda ────────────────────────────────────────────────────────
 
 
