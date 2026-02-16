@@ -414,8 +414,8 @@ Predictor & Measure & Jakarta & Bandung & Semarang \\
 \midrule
 \multicolumn{5}{l}{\textit{Temporal predictors (time-of-day):}} \\
 \quad Jam factor (normalized) & $\eta^2$ (ANOVA) & 23.8\% & 19.2\% & 15.4\% \\
-\quad Speed reduction (delay) & $\eta^2$ (ANOVA) & ---\textsuperscript{\dag} & 8.8\% & 9.6\% \\
-\quad Speed (absolute km/h) & $\eta^2$ (ANOVA) & ---\textsuperscript{\dag} & 5.9\% & 5.1\% \\
+\quad Speed reduction (delay) & $\eta^2$ (ANOVA) & 8.2\% & 8.8\% & 9.6\% \\
+\quad Speed (absolute km/h) & $\eta^2$ (ANOVA) & 5.2\% & 5.9\% & 5.1\% \\
 \midrule
 \multicolumn{5}{l}{\textit{Spatial predictors:}} \\
 \quad POI density & $R^2$ & 0.006\% & 0.003\% & 0.014\% \\
@@ -426,8 +426,6 @@ Predictor & Measure & Jakarta & Bandung & Semarang \\
 \textbf{Ratio (temporal/best spatial)} & & $\sim$4,000$\times$ & $\sim$1,400$\times$ & $\sim$1,100$\times$ \\
 \bottomrule
 \end{tabular}
-\\[0.5em]
-{\footnotesize \textsuperscript{\dag}Speed data for Jakarta pending final aggregation.}
 \end{table}
 
 \begin{figure}[htbp]
@@ -456,7 +454,7 @@ Speed (absolute km/h) & 5.1\% & 5.9\% & 5.2\% & 5.4 $\pm$ 0.4\% (7.4\%) \\
 \bottomrule
 \end{tabular}
 \\[0.5em]
-{\footnotesize \textsuperscript{*}Undefined; Semarang night speed reduction is negative (−0.08 km/h), indicating observed speeds exceed free-flow baseline, likely due to small sample size or speed limit violations during empty-road conditions. \par CV = coefficient of variation; measures relative consistency across cities.}
+{\footnotesize \textsuperscript{*}Undefined; Semarang night speed reduction is negative ($-$0.08 km/h), indicating observed speeds exceed free-flow baseline, likely due to small sample size or speed limit violations during empty-road conditions. \par CV = coefficient of variation; measures relative consistency across cities.}
 \end{table}
 
 The cross-metric consistency is striking: temporal dominance shows low variability across cities (CV $<$ 8\%) despite a 20$\times$ population range, 3--6$\times$ road network size differences, and distinct urban morphologies. Evening peak congestion is 3.7--4.2$\times$ higher than night across all cities, demonstrating robust temporal synchronization patterns that transcend local characteristics.
