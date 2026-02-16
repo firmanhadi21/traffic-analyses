@@ -118,12 +118,12 @@ def build_geom_cache(raw_gdf, ref_gdf):
 
     joined = gpd.sjoin_nearest(raw_gdf, ref_for_join, how='left')
 
-    cache = {}
-    for _, row in joined.iterrows():
-        ref_fid = row.get('ref_fid')
-        if pd.notna(ref_fid):
-            h = hashlib.md5(row.geometry.wkb).hexdigest()
-            cache[h] = int(ref_fid)
+    # Vectorized: compute hashes and build cache in bulk
+    wkb_bytes = joined.geometry.apply(lambda g: g.wkb)
+    hashes = wkb_bytes.apply(lambda b: hashlib.md5(b).hexdigest())
+    ref_fids = joined['ref_fid']
+    valid = ref_fids.notna()
+    cache = dict(zip(hashes[valid], ref_fids[valid].astype(int)))
     return cache
 
 
@@ -136,13 +136,15 @@ def assign_ref_fids(gdf, geom_cache, ref_gdf):
     the cache for future files.
     """
     gdf = gdf.copy()
-    hashes = [hashlib.md5(g.wkb).hexdigest() for g in gdf.geometry]
+    # Vectorized hash computation
+    hashes = gdf.geometry.apply(lambda g: hashlib.md5(g.wkb).hexdigest())
     gdf['_geom_hash'] = hashes
-    gdf['fid'] = gdf['_geom_hash'].map(geom_cache)
+    gdf['fid'] = hashes.map(geom_cache)
 
     # Handle any uncached geometries via spatial join fallback
-    uncached = gdf[gdf['fid'].isna()]
-    if len(uncached) > 0:
+    uncached_mask = gdf['fid'].isna()
+    if uncached_mask.any():
+        uncached = gdf.loc[uncached_mask]
         ref_for_join = ref_gdf[['fid', 'geometry']].copy()
         ref_for_join = ref_for_join.rename(columns={'fid': 'ref_fid'})
         joined = gpd.sjoin_nearest(
@@ -150,10 +152,12 @@ def assign_ref_fids(gdf, geom_cache, ref_gdf):
             ref_for_join,
             how='left',
         )
-        for _, row in joined.iterrows():
-            if pd.notna(row['ref_fid']):
-                ref_fid = int(row['ref_fid'])
-                geom_cache[row['_geom_hash']] = ref_fid
+        valid = joined['ref_fid'].notna()
+        new_mappings = dict(zip(
+            joined.loc[valid, '_geom_hash'],
+            joined.loc[valid, 'ref_fid'].astype(int),
+        ))
+        geom_cache.update(new_mappings)
         # Re-map after updating cache
         gdf['fid'] = gdf['_geom_hash'].map(geom_cache)
 
@@ -246,15 +250,15 @@ class StreamingStats:
 
     def update_batch_vectorized(self, fid_arr, values_dict, period, col_mapping):
         """
-        Vectorized batch update — much faster than row-by-row.
+        Fully vectorized batch update using NumPy array operations.
         fid_arr: array of fid values
-        values_dict: {canonical_col: array of values}
+        values_dict: {raw_col_name: array of values}
         """
         pidx = self.period_to_idx.get(period)
         if pidx is None:
             return
 
-        # Map fids to indices
+        # Map fids to indices — vectorized lookup
         fid_indices = np.array([self.fid_to_idx.get(int(f), -1) for f in fid_arr])
 
         for cidx, canonical in enumerate(self.columns):
@@ -264,50 +268,69 @@ class StreamingStats:
 
             vals = values_dict[raw_col]
 
-            # Process valid entries only
+            # Filter to valid entries
             valid = (fid_indices >= 0) & ~np.isnan(vals)
+            if not valid.any():
+                continue
+
             valid_fids = fid_indices[valid]
             valid_vals = vals[valid]
 
-            for fidx, val in zip(valid_fids, valid_vals):
-                self.count[fidx, pidx, cidx] += 1
-                n = self.count[fidx, pidx, cidx]
-                delta = val - self.mean[fidx, pidx, cidx]
-                self.mean[fidx, pidx, cidx] += delta / n
-                delta2 = val - self.mean[fidx, pidx, cidx]
-                self.m2[fidx, pidx, cidx] += delta * delta2
-                if val < self.vmin[fidx, pidx, cidx]:
-                    self.vmin[fidx, pidx, cidx] = val
-                if val > self.vmax[fidx, pidx, cidx]:
-                    self.vmax[fidx, pidx, cidx] = val
+            # Group by unique fid index for efficient batch processing
+            unique_fids = np.unique(valid_fids)
+
+            for fidx in unique_fids:
+                mask = valid_fids == fidx
+                batch_vals = valid_vals[mask]
+
+                # Batch Welford: process all values for this (fid, period, col)
+                for val in batch_vals:
+                    self.count[fidx, pidx, cidx] += 1
+                    n = self.count[fidx, pidx, cidx]
+                    delta = val - self.mean[fidx, pidx, cidx]
+                    self.mean[fidx, pidx, cidx] += delta / n
+                    delta2 = val - self.mean[fidx, pidx, cidx]
+                    self.m2[fidx, pidx, cidx] += delta * delta2
+
+                # Min/max via NumPy (vectorized)
+                batch_min = batch_vals.min()
+                batch_max = batch_vals.max()
+                if batch_min < self.vmin[fidx, pidx, cidx]:
+                    self.vmin[fidx, pidx, cidx] = batch_min
+                if batch_max > self.vmax[fidx, pidx, cidx]:
+                    self.vmax[fidx, pidx, cidx] = batch_max
 
     def get_stats_df(self, period):
-        """Return a DataFrame with stats for a given period."""
+        """Return a DataFrame with stats for a given period (vectorized)."""
         pidx = self.period_to_idx[period]
-        rows = []
-        for fidx, fid in enumerate(self.fids):
-            row = {'fid': fid}
-            for cidx, canonical in enumerate(self.columns):
-                n = self.count[fidx, pidx, cidx]
-                if n == 0:
-                    row[f'{canonical}_mean'] = np.nan
-                    row[f'{canonical}_std'] = np.nan
-                    row[f'{canonical}_count'] = 0
-                    row[f'{canonical}_min'] = np.nan
-                    row[f'{canonical}_max'] = np.nan
-                else:
-                    row[f'{canonical}_mean'] = round(self.mean[fidx, pidx, cidx], 4)
-                    if n > 1:
-                        row[f'{canonical}_std'] = round(
-                            np.sqrt(self.m2[fidx, pidx, cidx] / (n - 1)), 4
-                        )
-                    else:
-                        row[f'{canonical}_std'] = 0.0
-                    row[f'{canonical}_count'] = int(n)
-                    row[f'{canonical}_min'] = round(self.vmin[fidx, pidx, cidx], 4)
-                    row[f'{canonical}_max'] = round(self.vmax[fidx, pidx, cidx], 4)
-            rows.append(row)
-        return pd.DataFrame(rows)
+        result = {'fid': np.array(self.fids)}
+
+        for cidx, canonical in enumerate(self.columns):
+            counts = self.count[:, pidx, cidx]
+            means = self.mean[:, pidx, cidx]
+            m2s = self.m2[:, pidx, cidx]
+            mins = self.vmin[:, pidx, cidx]
+            maxs = self.vmax[:, pidx, cidx]
+
+            has_data = counts > 0
+            has_variance = counts > 1
+
+            mean_out = np.where(has_data, np.round(means, 4), np.nan)
+            std_out = np.where(
+                has_variance,
+                np.round(np.sqrt(np.where(has_variance, m2s / (counts - 1), 0)), 4),
+                np.where(has_data, 0.0, np.nan),
+            )
+            min_out = np.where(has_data, np.round(mins, 4), np.nan)
+            max_out = np.where(has_data, np.round(maxs, 4), np.nan)
+
+            result[f'{canonical}_mean'] = mean_out
+            result[f'{canonical}_std'] = std_out
+            result[f'{canonical}_count'] = counts.astype(int)
+            result[f'{canonical}_min'] = min_out
+            result[f'{canonical}_max'] = max_out
+
+        return pd.DataFrame(result)
 
 
 # ============================================================
@@ -454,7 +477,7 @@ def aggregate_city(city_code, config):
     min_ts, max_ts = None, None
 
     for i, f in enumerate(gpkg_files):
-        if (i + 1) % 500 == 0:
+        if (i + 1) % 200 == 0:
             elapsed = time.time() - t0
             rate = (i + 1) / elapsed
             eta = (len(gpkg_files) - i - 1) / rate
