@@ -608,6 +608,45 @@ def aggregate_city(city_code, config):
     anova_df.to_csv(anova_csv, index=False)
     print(f"\n  ANOVA saved: {anova_csv}")
 
+    # ---- Step 7: Save detailed ANOVA output to text file ----
+    anova_txt = os.path.join(output_folder, f'anova_detailed_{city_code}.txt')
+    with open(anova_txt, 'w') as f:
+        f.write(f"ANOVA Results for {name}\n")
+        f.write(f"{'=' * 60}\n\n")
+        f.write(f"Total observations: {files_ok} files processed\n")
+        if min_ts and max_ts:
+            f.write(f"Date range: {min_ts} to {max_ts}\n")
+        f.write(f"\n{'=' * 60}\n")
+        f.write("Time Period → Metric Analysis\n")
+        f.write(f"{'=' * 60}\n\n")
+        
+        for canonical, res in anova_results.items():
+            if np.isnan(res.get('F', np.nan)):
+                continue
+            f.write(f"{canonical}:\n")
+            f.write(f"  F-statistic = {res['F']:,.0f}\n")
+            f.write(f"  η² (eta-squared) = {res['eta_sq']:.4f} ({res['eta_sq']*100:.1f}%)\n")
+            f.write(f"  n = {res['n']:,} observations\n")
+            if 'period_means' in res:
+                f.write(f"  Period means:\n")
+                for p in sorted(res['period_means']):
+                    f.write(f"    {p}: {res['period_means'][p]}\n")
+            f.write("\n")
+        
+        if has_reduction:
+            res = red_results.get('speed_reduction', {})
+            if not np.isnan(res.get('F', np.nan)):
+                f.write("speed_reduction (free_flow − speed):\n")
+                f.write(f"  F-statistic = {res['F']:,.0f}\n")
+                f.write(f"  η² (eta-squared) = {res['eta_sq']:.4f} ({res['eta_sq']*100:.1f}%)\n")
+                f.write(f"  n = {res['n']:,} observations\n")
+                if 'period_means' in res:
+                    f.write(f"  Period means:\n")
+                    for p in sorted(res['period_means']):
+                        f.write(f"    {p}: {res['period_means'][p]}\n")
+    
+    print(f"  ANOVA detailed output: {anova_txt}")
+
     total_time = time.time() - t0
     print(f"\n  {name} complete in {format_duration(total_time)}")
 
