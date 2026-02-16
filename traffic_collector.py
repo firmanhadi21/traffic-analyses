@@ -1,13 +1,16 @@
 #!/usr/bin/env python3
 """
-Pure-Python traffic data collector (replaces traffic_collector.R + .sh).
+Multi-provider traffic data collector (replaces traffic_collector.R + .sh).
 
-Drop-in replacement with built-in scheduling.  Produces the same
-GeoPackage output that the R ``hereR::flow()`` collector produces.
+Drop-in replacement with built-in scheduling.  Supports HERE, TomTom,
+and Google (experimental) traffic APIs.
 
 Usage:
-    # Collect once for all cities
+    # Collect once for all cities (default: HERE)
     python traffic_collector.py --once
+
+    # Use TomTom instead
+    python traffic_collector.py --provider tomtom --once
 
     # Continuous collection every 15 min (replaces cron)
     python traffic_collector.py --interval 900
@@ -15,11 +18,8 @@ Usage:
     # Specific cities only
     python traffic_collector.py --city smg bdg --once
 
-    # With explicit API key
-    python traffic_collector.py --api-key YOUR_KEY --once
-
 Environment variables:
-    HERE_API_KEY   – HERE platform API key (preferred over --api-key)
+    TRAFFIC_API_KEY  – API key for chosen provider (preferred over --api-key)
 """
 
 from __future__ import annotations
@@ -60,8 +60,10 @@ def _handle_signal(signum, frame):
 
 
 def main() -> None:
+    from trafficpipeline.collector import PROVIDERS
+
     parser = argparse.ArgumentParser(
-        description="Collect traffic flow data from the HERE Traffic API v7",
+        description="Collect traffic flow data from HERE, TomTom, or Google APIs",
     )
     parser.add_argument(
         "--city",
@@ -71,9 +73,15 @@ def main() -> None:
         help="City codes to collect (default: all)",
     )
     parser.add_argument(
+        "--provider",
+        choices=list(PROVIDERS.keys()),
+        default="here",
+        help="Traffic data provider (default: here)",
+    )
+    parser.add_argument(
         "--api-key",
-        default=os.environ.get("HERE_API_KEY"),
-        help="HERE API key (default: $HERE_API_KEY env var)",
+        default=os.environ.get("TRAFFIC_API_KEY"),
+        help="API key (default: $TRAFFIC_API_KEY env var)",
     )
     parser.add_argument(
         "--interval",
@@ -101,7 +109,7 @@ def main() -> None:
     # Validate API key
     if not args.api_key:
         parser.error(
-            "No API key provided. Set HERE_API_KEY env var or use --api-key."
+            "No API key provided. Set TRAFFIC_API_KEY env var or use --api-key."
         )
 
     # Optional file logging
@@ -116,7 +124,7 @@ def main() -> None:
     city_names = ", ".join(CITIES[c]["name"] for c in city_codes)
 
     logger.info("=" * 60)
-    logger.info("HERE Traffic Flow Collector (Python)")
+    logger.info("Traffic Flow Collector [%s]", args.provider.upper())
     logger.info("Cities: %s", city_names)
     if args.once:
         logger.info("Mode: single collection")
@@ -146,6 +154,7 @@ def main() -> None:
             api_key=args.api_key,
             city_codes=city_codes,
             output_base=args.output_dir,
+            provider_name=args.provider,
         )
         elapsed = time.time() - t0
 
