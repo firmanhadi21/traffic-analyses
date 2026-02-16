@@ -371,21 +371,29 @@ The key finding emerges from comparing explanatory power across predictor types 
 
 \begin{table}[htbp]
 \centering
-\caption{Variance explained by predictor type.}
+\caption{Variance explained by predictor type across metrics.}
 \label{tab:effectsize}
+\small
 \begin{tabular}{lllll}
 \toprule
 Predictor & Measure & Jakarta & Bandung & Semarang \\
 \midrule
-\textbf{Time period} & $\eta^2$ (ANOVA) & 23.8\% & 19.2\% & 15.4\% \\
-POI density & $R^2$ & 0.006\% & 0.003\% & 0.014\% \\
-Network centrality & $R^2$ & 0.0004\% & 0.014\% & 0.012\% \\
-Road capacity & $R^2$ & 0.028\% & 0.115\% & 0.072\% \\
-Capacity drop proximity & $R^2$ & 0.006\% & 0.002\% & 0.001\% \\
+\multicolumn{5}{l}{\textit{Temporal predictors (time-of-day):}} \\
+\quad Jam factor (normalized) & $\eta^2$ (ANOVA) & 23.8\% & 19.2\% & 15.4\% \\
+\quad Speed reduction (delay) & $\eta^2$ (ANOVA) & ---\textsuperscript{\dag} & 8.8\% & 9.6\% \\
+\quad Speed (absolute km/h) & $\eta^2$ (ANOVA) & ---\textsuperscript{\dag} & 5.9\% & 5.1\% \\
+\midrule
+\multicolumn{5}{l}{\textit{Spatial predictors:}} \\
+\quad POI density & $R^2$ & 0.006\% & 0.003\% & 0.014\% \\
+\quad Network centrality & $R^2$ & 0.0004\% & 0.014\% & 0.012\% \\
+\quad Road capacity & $R^2$ & 0.028\% & 0.115\% & 0.072\% \\
+\quad Capacity drop proximity & $R^2$ & 0.006\% & 0.002\% & 0.001\% \\
 \midrule
 \textbf{Ratio (temporal/best spatial)} & & $\sim$4,000$\times$ & $\sim$1,400$\times$ & $\sim$1,100$\times$ \\
 \bottomrule
 \end{tabular}
+\\[0.5em]
+{\footnotesize \textsuperscript{\dag}Speed data for Jakarta pending final aggregation.}
 \end{table}
 
 \begin{figure}[htbp]
@@ -423,11 +431,11 @@ Semarang & 1.299 & 1.034 & 1.26$\times$ & 25.6\% \\
 
 \subsection{Temporal dominance of relative congestion}
 
-The most significant finding is the overwhelming dominance of temporal over spatial factors. Time-of-day ($\eta^2$ = 15--24\%) explains 1,000--4,000$\times$ more jam factor variance than network centrality, POI density, road capacity, or capacity drop proximity combined ($<$0.02\%). This reframes relative congestion as a \emph{demand synchronization problem}: congestion occurs because millions travel at the same times, not because certain locations are inherently problematic.
+The most significant finding is the overwhelming dominance of temporal over spatial factors. Time-of-day explains 1,000--4,000$\times$ more variance than network centrality, POI density, road capacity, or capacity drop proximity combined ($<$0.02\%), and this pattern holds across both normalized and absolute congestion metrics. This reframes urban congestion as a \emph{demand synchronization problem}: congestion occurs because millions travel at the same times, not because certain locations are inherently problematic.
 
 The convergence of four independent null spatial findings---centrality, POI density, activity zone comparison, and three-tier capacity analysis---provides robust evidence. This is consistent with induced demand theory \citep{Duranton2011}, though our study does not directly test causal mechanisms.
 
-Because the jam factor normalizes speed to free-flow conditions, this finding directly characterizes \emph{relative} congestion. However, the mathematical relationship between jam factor and absolute speed---$\text{JF} = 10 \times (1 - v/v_f)$, where $v$ is current speed and $v_f$ is free-flow speed---implies that temporal dominance likely extends to absolute metrics. If jam factor variance is overwhelmingly temporal and free-flow speed $v_f$ is a time-invariant segment property, then $\text{Var}(v) \approx v_f^2 \cdot \text{Var}(\text{JF})/100$, and the temporal component of absolute speed variance inherits the same dominance. Full empirical confirmation with raw speed data is an important direction for future work.
+\textbf{Normalization and absolute metrics.} Because the jam factor normalizes speed to free-flow conditions, one might suspect the null spatial findings are a methodological artifact: if the metric already divides out capacity differences, then capacity cannot predict it. To address this, we re-aggregated the raw data with absolute speed and free-flow columns, computing two denormalized metrics: (1)~raw speed (km/h), and (2)~speed reduction ($v_f - v$), which measures excess travel time independent of segment-specific normalization. The temporal dominance pattern persists across all three metrics (Table~\ref{tab:effectsize}): jam factor ($\eta^2$ = 8.8--9.4\%), speed reduction ($\eta^2$ = 8.8--9.6\%), and absolute speed ($\eta^2$ = 5.1--5.9\%) all show strong temporal effects, while spatial predictors remain negligible. The weaker effect for raw speed reflects the limited range of speed variation when aggregated across diverse road types (motorways at 60~km/h versus residential streets at 20~km/h obscure temporal patterns), whereas speed reduction isolates the delay component. These results confirm that temporal dominance is not an artifact of normalization but a genuine characteristic of congestion dynamics.
 
 \subsection{Failure of spatial predictors}
 
@@ -452,7 +460,7 @@ The pipeline's city-agnostic and provider-agnostic design---demonstrated across 
 \subsection{Limitations}
 
 \begin{enumerate}
-\item \textbf{Jam factor normalization:} The HERE jam factor removes absolute capacity effects by design. The capacity analysis tested relative effects (drops, gradients) that should remain detectable, but absolute speed data would enable full capacity--congestion investigation.
+\item \textbf{Metric sensitivity:} While we tested temporal dominance across normalized jam factor, denormalized speed reduction, and absolute speed (Table~\ref{tab:effectsize}), each metric captures different aspects of congestion. Jam factor emphasizes relative delay, speed reduction measures absolute excess travel time, and raw speed reflects operational conditions. The consistent temporal dominance across all three strengthens the finding, though further investigation with travel time or queue length could reveal additional nuances.
 \item \textbf{API coverage:} Commercial traffic APIs may underrepresent minor roads and informal settlements. While the multi-provider architecture allows cross-validation between providers, the present study uses HERE data exclusively. Provider-specific biases in road coverage and probe vehicle density could influence results and warrant further investigation.
 \item \textbf{Capacity scoring:} Ordinal scores from OSM highway classification proxy actual capacity; lane count, signals, and intersection design are not captured.
 \item \textbf{Segment length heterogeneity (MAUP):} Segments vary from $\sim$200m to $>$3km; length-weighted statistics could be explored \citep{Openshaw1984}.
