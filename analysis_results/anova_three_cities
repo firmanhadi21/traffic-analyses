@@ -1,0 +1,171 @@
+============================================================
+ANOVA Results for Semarang
+============================================================
+
+--- ANOVA Results (time period → metric) ---
+
+  jam_factor:
+    F = 220,351, η² = 0.0881 (8.8%), n = 15,972,339
+      afternoon_offpeak: 1.53
+      evening_offpeak: 1.32
+      evening_peak: 1.66
+      late_night: 0.78
+      lunch_hours: 1.45
+      morning_offpeak: 1.39
+      morning_peak: 0.95
+      night: 0.45
+
+  speed:
+    F = 123,769, η² = 0.0515 (5.1%), n = 15,966,891
+      afternoon_offpeak: 7.35
+      evening_offpeak: 7.66
+      evening_peak: 7.22
+      late_night: 8.58
+      lunch_hours: 7.45
+      morning_offpeak: 7.53
+      morning_peak: 8.25
+      night: 9.22
+
+  free_flow:
+    F = 1, η² = 0.0000 (0.0%), n = 15,972,339
+      afternoon_offpeak: 9.14
+      evening_offpeak: 9.14
+      evening_peak: 9.14
+      late_night: 9.14
+      lunch_hours: 9.14
+      morning_offpeak: 9.14
+      morning_peak: 9.14
+      night: 9.14
+
+  speed_reduction (free_flow − speed):
+    F = 243,043, η² = 0.0963 (9.6%), n = 15,966,891
+      afternoon_offpeak: 1.79
+      evening_offpeak: 1.48
+      evening_peak: 1.92
+      late_night: 0.56
+      lunch_hours: 1.69
+      morning_offpeak: 1.61
+      morning_peak: 0.89
+      night: -0.08
+
+
+
+
+============================================================
+ANOVA Results for Bandung
+============================================================
+--- ANOVA Results (time period → metric) ---
+
+  jam_factor:
+    F = 678,660, η² = 0.0944 (9.4%), n = 45,563,167
+      afternoon_offpeak: 1.85
+      evening_offpeak: 1.39
+      evening_peak: 1.91
+      late_night: 0.76
+      lunch_hours: 1.69
+      morning_offpeak: 1.62
+      morning_peak: 1.14
+      night: 0.45
+
+  speed:
+    F = 409,180, η² = 0.0592 (5.9%), n = 45,537,512
+      afternoon_offpeak: 5.6
+      evening_offpeak: 6.04
+      evening_peak: 5.56
+      late_night: 6.83
+      lunch_hours: 5.74
+      morning_offpeak: 5.8
+      morning_peak: 6.38
+      night: 7.34
+
+  free_flow:
+    F = 10, η² = 0.0000 (0.0%), n = 45,563,167
+      afternoon_offpeak: 7.52
+      evening_offpeak: 7.51
+      evening_peak: 7.52
+      late_night: 7.51
+      lunch_hours: 7.51
+      morning_offpeak: 7.51
+      morning_peak: 7.51
+      night: 7.51
+
+  speed_reduction (free_flow − speed):
+    F = 629,397, η² = 0.0882 (8.8%), n = 45,537,512
+      afternoon_offpeak: 1.92
+      evening_offpeak: 1.48
+      evening_peak: 1.96
+      late_night: 0.68
+      lunch_hours: 1.77
+      morning_offpeak: 1.71
+      morning_peak: 1.13
+      night: 0.17
+
+
+  ANOVA saved: traffic_bdg_speed_output/anova_results_bdg.csv
+
+============================================================
+ANOVA Results for Jakarta
+============================================================
+
+Total observations: 14840 files processed
+Date range: 2025-03-06 22:00:17 to 2026-02-16 09:30:18
+
+============================================================
+Time Period → Metric Analysis
+============================================================
+
+jam_factor:
+  F-statistic = 2,771,945
+  η² (eta-squared) = 0.0822 (8.2%)
+  n = 216,667,652 observations
+  Period means:
+    afternoon_offpeak: 1.8
+    evening_offpeak: 1.67
+    evening_peak: 2.01
+    late_night: 0.97
+    lunch_hours: 1.66
+    morning_offpeak: 1.63
+    morning_peak: 1.19
+    night: 0.49
+
+speed:
+  F-statistic = 1,678,590
+  η² (eta-squared) = 0.0515 (5.2%)
+  n = 216,270,167 observations
+  Period means:
+    afternoon_offpeak: 5.71
+    evening_offpeak: 5.83
+    evening_peak: 5.53
+    late_night: 6.64
+    lunch_hours: 5.84
+    morning_offpeak: 5.87
+    morning_peak: 6.43
+    night: 7.41
+
+free_flow:
+  F-statistic = 138
+  η² (eta-squared) = 0.0000 (0.0%)
+  n = 216,667,652 observations
+  Period means:
+    afternoon_offpeak: 7.58
+    evening_offpeak: 7.58
+    evening_peak: 7.59
+    late_night: 7.57
+    lunch_hours: 7.57
+    morning_offpeak: 7.58
+    morning_peak: 7.57
+    night: 7.57
+
+speed_reduction (free_flow − speed):
+  F-statistic = 2,753,465
+  η² (eta-squared) = 0.0818 (8.2%)
+  n = 216,270,167 observations
+  Period means:
+    afternoon_offpeak: 1.86
+    evening_offpeak: 1.75
+    evening_peak: 2.05
+    late_night: 0.93
+    lunch_hours: 1.74
+    morning_offpeak: 1.7
+    morning_peak: 1.13
+    night: 0.15

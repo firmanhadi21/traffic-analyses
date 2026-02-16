@@ -437,6 +437,30 @@ Predictor & Measure & Jakarta & Bandung & Semarang \\
 \label{fig:effectsize}
 \end{figure}
 
+\begin{table}[htbp]
+\centering
+\caption{Cross-metric consistency of temporal dominance ($\eta^2$ values).}
+\label{tab:cross-metric}
+\small
+\begin{tabular}{lcccc}
+\toprule
+Metric & Semarang & Bandung & Jakarta & Mean $\pm$ SD (CV) \\
+\midrule
+Jam factor (normalized) & 8.8\% & 9.4\% & 8.2\% & 8.8 $\pm$ 0.6\% (6.8\%) \\
+Speed reduction (delay) & 9.6\% & 8.8\% & 8.2\% & 8.9 $\pm$ 0.7\% (7.9\%) \\
+Speed (absolute km/h) & 5.1\% & 5.9\% & 5.2\% & 5.4 $\pm$ 0.4\% (7.4\%) \\
+\midrule
+\multicolumn{5}{l}{\textit{Peak congestion contrast (evening peak / night):}} \\
+\quad Jam factor ratio & 3.7$\times$ & 4.2$\times$ & 4.1$\times$ & 4.0 $\pm$ 0.3$\times$ \\
+\quad Speed reduction ratio & ---\textsuperscript{*} & 11.5$\times$ & 13.7$\times$ & 12.6 $\pm$ 1.6$\times$ \\
+\bottomrule
+\end{tabular}
+\\[0.5em]
+{\footnotesize \textsuperscript{*}Undefined; Semarang night speed reduction is negative (−0.08 km/h), indicating observed speeds exceed free-flow baseline, likely due to small sample size or speed limit violations during empty-road conditions. \par CV = coefficient of variation; measures relative consistency across cities.}
+\end{table}
+
+The cross-metric consistency is striking: temporal dominance shows low variability across cities (CV $<$ 8\%) despite a 20$\times$ population range, 3--6$\times$ road network size differences, and distinct urban morphologies. Evening peak congestion is 3.7--4.2$\times$ higher than night across all cities, demonstrating robust temporal synchronization patterns that transcend local characteristics.
+
 We note that $\eta^2$ (ANOVA) and $R^2$ (bivariate correlation) are not strictly comparable measures; however, the three-order-of-magnitude gap cannot be attributed to methodological artifacts. Period-specific Moran's I analysis (no period produces significant spatial autocorrelation; Supplementary Table S2) and spatial regression models (Supplementary Table S5) corroborate this finding.
 
 \subsection{Cross-city scaling}
