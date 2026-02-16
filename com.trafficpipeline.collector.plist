@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.trafficpipeline.collector</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/Users/macbook/Dropbox/GitHub/traffic-analyses/.venv/bin/traffic-pipeline</string>
+        <string>collect</string>
+        <string>--provider</string>
+        <string>here</string>
+        <string>--interval</string>
+        <string>900</string>
+    </array>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>TRAFFIC_API_KEY</key>
+        <string>YOUR_API_KEY_HERE</string>
+    </dict>
+
+    <key>RunAtLoad</key>
+    <true/>
+
+    <key>KeepAlive</key>
+    <true/>
+
+    <key>StandardOutPath</key>
+    <string>/Users/macbook/Dropbox/GitHub/traffic-analyses/logs/collector_stdout.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>/Users/macbook/Dropbox/GitHub/traffic-analyses/logs/collector_stderr.log</string>
+
+    <key>WorkingDirectory</key>
+    <string>/Users/macbook/Dropbox/GitHub/traffic-analyses</string>
+</dict>
+</plist>

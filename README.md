@@ -6,7 +6,7 @@
 [![Python 3.9+](https://img.shields.io/badge/python-3.9%2B-blue.svg)](https://www.python.org/)
 [![Docs](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://firmanhadi21.github.io/traffic-analyses/)
 
-An **open-source, installable Python pipeline** for spatiotemporal traffic congestion analysis, integrating the HERE Traffic API, OSMnx, and PySAL. Designed for reproducible urban analytics across Indonesian metropolitan cities (**Semarang**, **Bandung**, **Jakarta**).
+An **open-source, pure-Python pipeline** for spatiotemporal traffic congestion analysis, integrating commercial traffic flow APIs (HERE, TomTom, Google), OSMnx, and PySAL. Designed for reproducible, provider-agnostic urban analytics across Indonesian metropolitan cities (**Semarang**, **Bandung**, **Jakarta**).
 
 ## Overview
 
@@ -61,19 +61,11 @@ traffic-analyses/
 │   ├── bottleneck.py            # Road-capacity bottleneck analysis (OSMnx)
 │   ├── poi.py                   # POI-congestion density analysis
 │   ├── synthesis.py             # Temporal vs spatial predictor comparison
+│   ├── collector.py             # Multi-provider traffic data collector
 │   └── cli.py                   # Click CLI entry point
 │
-├── tests/                       # Unit tests (pytest)
-│   ├── test_config.py
-│   ├── test_utils.py
-│   ├── test_aggregate.py
-│   └── test_cli.py
-│
-├── .github/workflows/test.yml   # CI (Python 3.9-3.12)
-│
-├── # Data Collection (R)
-├── traffic_collector.R          # HERE API data collection
-├── traffic_collector.sh         # Cron wrapper
+├── traffic_collector.py         # Standalone collection script (daemon/cron)
+├── com.trafficpipeline.collector.plist  # macOS launchd service
 │
 ├── # Legacy standalone scripts (superseded by package)
 ├── run_semarang_aggregation.py
@@ -191,15 +183,40 @@ traffic-pipeline --version
 traffic-pipeline --help
 ```
 
-### R Dependencies (for data collection only)
 
-```r
-install.packages(c("hereR", "sf", "lubridate"))
-```
 
 ## CLI Usage
 
-The package provides a `traffic-pipeline` command with sub-commands for each analysis stage:
+The package provides a `traffic-pipeline` command with sub-commands for each stage:
+
+### Data Collection
+
+```bash
+# Collect once for all cities (default provider: HERE)
+traffic-pipeline collect --api-key $TRAFFIC_API_KEY --once
+
+# Collect for a specific city with a specific provider
+traffic-pipeline collect --city smg --provider here --api-key $KEY --once
+
+# Continuous collection every 15 minutes (built-in daemon, replaces cron)
+traffic-pipeline collect --provider here --api-key $KEY --interval 900
+
+# Use TomTom instead
+traffic-pipeline collect --provider tomtom --api-key $TOMTOM_KEY --once
+
+# Use Google (experimental)
+traffic-pipeline collect --provider google --api-key $GOOGLE_KEY --once
+```
+
+Supported providers:
+
+| Provider | API | Query Strategy | Notes |
+|----------|-----|----------------|-------|
+| `here` | HERE Traffic Flow v7 | Bounding-box query | ✅ Tested with live API |
+| `tomtom` | TomTom Flow Segment Data v4 | Grid-sampled point queries | ⚠️ Not yet tested with live API |
+| `google` | Google Routes API v2 | Synthetic route generation | ⚠️ Experimental; not yet tested with live API |
+
+### Analysis Commands
 
 ```bash
 # 1. Aggregate raw GeoPackage snapshots into time-period files
@@ -284,7 +301,44 @@ Results are written to `figures/` (PNG) and `analysis_results/` (CSV).
 
 ## Data Source
 
-Traffic data is collected using the [HERE Traffic API](https://developer.here.com/documentation/traffic-api/dev_guide/topics/what-is.html) via the [hereR](https://github.com/munterfinger/hereR) R package.
+Traffic data is collected using a custom Python module with a pluggable provider architecture. The following providers are supported:
+
+- **HERE Traffic Flow v7** — bounding-box queries returning per-segment flow data (primary source for this study; ✅ tested)
+- **TomTom Flow Segment Data v4** — grid-sampled point queries with geometry-based deduplication (⚠️ not yet tested with live API)
+- **Google Routes API v2** — experimental; route-based traffic with categorical speed levels (⚠️ not yet tested with live API)
+
+All providers output a unified GeoDataFrame schema (`jam_factor`, `speed`, `free_flow`, `confidence`, `geometry`, `timestamp`, `provider`).
+
+### Running as a macOS Daemon (launchd)
+
+To run the collector as a persistent service that survives reboots:
+
+```bash
+# 1. Edit the plist and set your API key
+vim com.trafficpipeline.collector.plist
+
+# 2. Copy to LaunchAgents and load
+cp com.trafficpipeline.collector.plist ~/Library/LaunchAgents/
+launchctl load ~/Library/LaunchAgents/com.trafficpipeline.collector.plist
+
+# 3. Check status
+launchctl list | grep trafficpipeline
+
+# 4. View logs
+tail -f logs/collector_stdout.log
+
+# 5. Stop
+launchctl unload ~/Library/LaunchAgents/com.trafficpipeline.collector.plist
+```
+
+The service uses `KeepAlive` to auto-restart on crash and `RunAtLoad` to start on login.
+
+### Using cron Instead
+
+```bash
+# Add to crontab (crontab -e)
+*/15 * * * * /path/to/.venv/bin/traffic-pipeline collect --provider here --api-key YOUR_KEY --once >> /path/to/logs/cron.log 2>&1
+```
 
 ## Timezone
 
@@ -508,7 +562,13 @@ CITIES["sby"] = {
 }
 ```
 
-2. Collect data using the R collector (update bounding box in `traffic_collector.R`).
+2. Collect data:
+
+```bash
+export TRAFFIC_API_KEY=your_key_here
+traffic-pipeline collect --city sby --provider here --once
+```
+
 3. Run the pipeline:
 
 ```bash
@@ -526,5 +586,5 @@ MIT — see [LICENSE](LICENSE) for details.
 
 ## Acknowledgments
 
-- HERE Technologies for traffic data API
+- HERE Technologies, TomTom, and Google for traffic data APIs
 - Built with assistance from Claude (Anthropic)
