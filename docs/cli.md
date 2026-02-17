@@ -19,34 +19,68 @@ traffic-pipeline [OPTIONS] COMMAND [ARGS]...
 
 ## `collect`
 
-Collect traffic data from supported providers (HERE, TomTom, Google).
+Collect traffic data from **any city worldwide** using HERE, TomTom, or Google APIs.
 
 ```bash
 traffic-pipeline collect [OPTIONS]
 ```
 
+### Collection Modes
+
+The `collect` command supports three modes:
+
+1. **Custom bounding box** - Specify exact coordinates
+2. **City name geocoding** - Auto-lookup city boundaries via OpenStreetMap
+3. **Preconfigured cities** - Use built-in Indonesian cities (backward compatible)
+
+### Options
+
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `--provider` | TEXT | `here` | Provider (`here`, `tomtom`, `google`) |
-| `--api-key` | TEXT | *(required)* | Traffic API key for the selected provider |
-| `--city` | TEXT | *(all cities)* | City code (`smg`, `bdg`, `jkt`) |
-| `--once` | FLAG | *(disabled)* | Collect once and exit (default: continuous) |
-| `--interval` | INT | `900` | Collection interval in seconds (15 min default) |
+| `--bbox` | TEXT | - | Bounding box: `WEST,SOUTH,EAST,NORTH` |
+| `--city-name` | TEXT | - | City name to geocode (repeatable) |
+| `--city` | CHOICE | *(all)* | Preconfigured city code (`smg`, `bdg`, `jkt`) |
+| `--provider` | CHOICE | `here` | Provider (`here`, `tomtom`, `google`) |
+| `--api-key` | TEXT | *(required)* | Traffic API key |
+| `--output-dir` | TEXT | *(auto)* | Output directory |
+| `--interval` | INT | `900` | Collection interval in seconds |
+| `--once` | FLAG | - | Collect once and exit |
 
 ### Examples
 
+**Collect from any city using bounding box:**
+
 ```bash
-# Collect once for all cities using HERE
-traffic-pipeline collect --provider here --api-key $YOUR_KEY --once
+# London, UK
+traffic-pipeline collect --bbox -0.5,51.3,0.3,51.7 --output-dir london_data --once
 
-# Collect for a specific city
-traffic-pipeline collect --city smg --provider here --api-key $KEY --once
+# New York City, USA
+traffic-pipeline collect --bbox -74.05,40.63,-73.75,40.85 --output-dir nyc_data --once
+```
 
-# Run as daemon (every 15 minutes)
-traffic-pipeline collect --provider here --api-key $KEY --interval 900
+**Collect using city name (auto-geocoded):**
 
-# Use TomTom provider
-traffic-pipeline collect --provider tomtom --api-key $TOMTOM_KEY --once
+```bash
+# Single city
+traffic-pipeline collect --city-name "Paris, France" --once
+
+# Multiple cities
+traffic-pipeline collect --city-name "Paris" --city-name "London" --interval 900
+```
+
+> **Note:** City name geocoding uses OpenStreetMap Nominatim. Be specific with country names to avoid ambiguity (e.g., "Paris, France" not just "Paris").
+
+**Preconfigured cities (backward compatible):**
+
+```bash
+# Single city
+traffic-pipeline collect --city smg --once
+
+# Multiple cities
+traffic-pipeline collect --city smg --city bdg --interval 900
+
+# All configured cities
+traffic-pipeline collect --once
 ```
 
 ### Supported Providers

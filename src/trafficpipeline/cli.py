@@ -27,7 +27,6 @@ def main(ctx: click.Context, base_dir: str) -> None:
 
 # ── aggregate ──────────────────────────────────────────────────
 
-
 @main.command()
 @click.option("--city", type=click.Choice(["smg", "bdg", "jkt"]),
               help="City code (omit for all cities).")
@@ -56,11 +55,14 @@ def aggregate(ctx: click.Context, city: str | None, column: str, verbose: bool) 
 
 # ── collect ────────────────────────────────────────────────────
 
-
 @main.command()
 @click.option("--city", multiple=True,
               type=click.Choice(["smg", "bdg", "jkt"]),
-              help="City codes to collect (omit for all cities).")
+              help="Preconfigured city codes (backward compatible).")
+@click.option("--city-name", multiple=True,
+              help="City name to geocode (e.g., 'Paris, France').")
+@click.option("--bbox",
+              help="Bounding box: WEST,SOUTH,EAST,NORTH (e.g., '-74.05,40.63,-73.75,40.85').")
 @click.option("--provider", type=click.Choice(["here", "tomtom", "google"]),
               default="here", show_default=True,
               help="Traffic data provider.")
@@ -71,45 +73,173 @@ def aggregate(ctx: click.Context, city: str | None, column: str, verbose: bool) 
 @click.option("--once", is_flag=True,
               help="Collect once and exit.")
 @click.option("--output-dir", default=None,
-              help="Override base output directory.")
+              help="Output directory for collected data.")
 @click.pass_context
-def collect(ctx: click.Context, city: tuple[str, ...], provider: str,
-            api_key: str, interval: int, once: bool,
-            output_dir: str | None) -> None:
-    """Collect traffic flow data from HERE, TomTom, or Google APIs."""
+def collect(ctx: click.Context, city: tuple[str, ...], city_name: tuple[str, ...],
+            bbox: str | None, provider: str, api_key: str, interval: int,
+            once: bool, output_dir: str | None) -> None:
+    """Collect traffic data from any city worldwide.
+    
+    Three collection modes:
+    
+    \b
+    1. Preconfigured cities: --city smg --city bdg
+    2. Custom bounding box: --bbox -74.05,40.63,-73.75,40.85 --output-dir nyc_data
+    3. Geocoded city: --city-name "Paris, France" --city-name "London, UK"
+    
+    Examples:
+    
+    \b
+    # Collect from New York using bounding box
+    traffic-pipeline collect --bbox -74.05,40.63,-73.75,40.85 --output-dir nyc --once
+    
+    \b
+    # Collect from Paris using city name
+    traffic-pipeline collect --city-name "Paris, France" --once
+    
+    \b
+    # Backward compatible: Indonesian cities
+    traffic-pipeline collect --city smg --city bdg --once
+    """
     import logging
     import time
+    from datetime import datetime
+    from pathlib import Path
 
-    from trafficpipeline.collector import collect_all as _collect_all
+    import pytz
 
-    logging.basicConfig(level=logging.INFO,
-                        format="%(asctime)s  %(levelname)-8s  %(message)s")
+    from trafficpipeline.collector import collect_all as _collect_all_legacy
+    from trafficpipeline.collector import get_provider
+    from trafficpipeline.config import TIMEZONE
 
-    city_codes = list(city) if city else None
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s  %(levelname)-8s  %(message)s"
+    )
+    logger = logging.getLogger(__name__)
+
     run_once = once or interval == 0
-
+    
+    # Parse collection targets (priority: bbox > city-name > city > all)
+    targets = []
+    
+    if bbox:
+        # Direct bbox
+        from trafficpipeline.geocoding import parse_bbox_string
+        parsed = parse_bbox_string(bbox)
+        if not parsed:
+            click.echo(f"Error: Invalid bbox: {bbox}", err=True)
+            raise click.Abort()
+        targets.append({
+            "name": "custom",
+            "bbox": parsed,
+            "output_dir": output_dir or "traffic_data_custom",
+        })
+    
+    elif city_name:
+        # Geocode city names
+        from trafficpipeline.geocoding import geocode_city
+        for name in city_name:
+            result = geocode_city(name)
+            if not result:
+                click.echo(f"Error: Could not geocode '{name}'", err=True)
+                raise click.Abort()
+            
+            safe_name = result['name'].lower().replace(' ', '_').replace(',', '')
+            targets.append({
+                "name": result['name'],
+                "bbox": result['bbox'],
+                "output_dir": output_dir or f"traffic_data_{safe_name}",
+            })
+            click.echo(f"✓ Geocoded: {result['display_name']}")
+    
+    elif city:
+        # Legacy: use configured cities
+        cycle = 0
+        while True:
+            cycle += 1
+            click.echo(f"── Cycle {cycle} ({provider}) ──")
+            t0 = time.time()
+            paths = _collect_all_legacy(
+                api_key=api_key,
+                city_codes=list(city),
+                output_base=output_dir,
+                provider_name=provider,
+            )
+            for p in paths:
+                click.echo(f"  ✓ {p}")
+            click.echo(f"Cycle {cycle}: {len(paths)} files in {time.time()-t0:.1f}s")
+            if run_once:
+                break
+            time.sleep(max(0, interval - (time.time() - t0)))
+        return
+    
+    else:
+        # Default: all configured cities
+        cycle = 0
+        while True:
+            cycle += 1
+            click.echo(f"── Cycle {cycle} ({provider}) ──")
+            t0 = time.time()
+            paths = _collect_all_legacy(
+                api_key=api_key,
+                city_codes=None,
+                output_base=output_dir,
+                provider_name=provider,
+            )
+            for p in paths:
+                click.echo(f"  ✓ {p}")
+            click.echo(f"Cycle {cycle}: {len(paths)} files in {time.time()-t0:.1f}s")
+            if run_once:
+                break
+            time.sleep(max(0, interval - (time.time() - t0)))
+        return
+    
+    # Dynamic collection loop (bbox / city-name)
+    provider_obj = get_provider(provider, api_key)
     cycle = 0
+    
     while True:
         cycle += 1
         click.echo(f"── Cycle {cycle} ({provider}) ──")
         t0 = time.time()
-        paths = _collect_all(
-            api_key=api_key,
-            city_codes=city_codes,
-            output_base=output_dir,
-            provider_name=provider,
-        )
-        for p in paths:
-            click.echo(f"  ✓ {p}")
+        paths = []
+        
+        for target in targets:
+            try:
+                gdf = provider_obj.fetch_flow(target["bbox"])
+                
+                if len(gdf) == 0:
+                    logger.warning("No data for %s", target["name"])
+                    continue
+                
+                # Save GeoPackage
+                out_dir = Path(target["output_dir"])
+                out_dir.mkdir(parents=True, exist_ok=True)
+                
+                tz = pytz.timezone(TIMEZONE)
+                now = datetime.now(tz)
+                timestamp = now.strftime("%Y%m%d_%H%M%S")
+                
+                filename = f"{target['name']}_traffic_{timestamp}.gpkg"
+                outpath = out_dir / filename
+                
+                gdf.to_file(outpath, driver="GPKG")
+                logger.info("Saved %d segments → %s", len(gdf), outpath)
+                paths.append(outpath)
+                click.echo(f"  ✓ {outpath}")
+                
+            except Exception:
+                logger.exception("Failed to collect %s", target["name"])
+        
         click.echo(f"Cycle {cycle}: {len(paths)} files in {time.time()-t0:.1f}s")
-
+        
         if run_once:
             break
         time.sleep(max(0, interval - (time.time() - t0)))
 
 
 # ── eda ────────────────────────────────────────────────────────
-
 
 @main.command()
 @click.option("--output-dir", default="eda_output", show_default=True,
@@ -122,7 +252,6 @@ def eda(ctx: click.Context, output_dir: str) -> None:
 
 
 # ── geostatistics ─────────────────────────────────────────────
-
 
 @main.command()
 @click.option("--figures-dir", default="figures", show_default=True)
@@ -140,7 +269,6 @@ def geostatistics(ctx: click.Context, figures_dir: str, output_dir: str) -> None
 
 # ── bottleneck ────────────────────────────────────────────────
 
-
 @main.command()
 @click.option("--figures-dir", default="figures", show_default=True)
 @click.pass_context
@@ -151,7 +279,6 @@ def bottleneck(ctx: click.Context, figures_dir: str) -> None:
 
 
 # ── poi ───────────────────────────────────────────────────────
-
 
 @main.command()
 @click.option("--figures-dir", default="figures", show_default=True)
@@ -168,7 +295,6 @@ def poi(ctx: click.Context, figures_dir: str, output_dir: str) -> None:
 
 
 # ── synthesis ─────────────────────────────────────────────────
-
 
 @main.command()
 @click.option("--figures-dir", default="figures", show_default=True)
