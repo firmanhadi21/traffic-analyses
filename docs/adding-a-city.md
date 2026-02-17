@@ -40,19 +40,29 @@ CITIES["sby"] = {
 
 ## 2. Collect data
 
-Update the bounding-box coordinates in `traffic_collector.R` and run the
-R-based collector (requires a HERE API key):
+Use the Python-based collector with your traffic API key:
 
 ```bash
-Rscript traffic_collector.R
+# Collect once for the new city
+export TRAFFIC_API_KEY=your_key_here
+traffic-pipeline collect --city sby --provider here --api-key $TRAFFIC_API_KEY --once
 ```
 
-Or set up cron for continuous collection:
+For continuous collection, you can use the built-in daemon mode:
+
+```bash
+# Run as daemon (every 15 minutes)
+traffic-pipeline collect --city sby --provider here --api-key $TRAFFIC_API_KEY --interval 900
+```
+
+Or set up cron for scheduled collection:
 
 ```bash
 # Every 15 minutes
-*/15 * * * * /path/to/traffic_collector.sh >> output.log 2>> error.log
+*/15 * * * * /path/to/.venv/bin/traffic-pipeline collect --city sby --provider here --api-key YOUR_KEY --once >> /path/to/logs/cron.log 2>&1
 ```
+
+Or use macOS launchd (see `com.trafficpipeline.collector.plist` for reference).
 
 ## 3. Run the pipeline
 

@@ -272,7 +272,7 @@ Three complementary tests assessed the capacity-congestion relationship:
 Analysis was conducted using:
 - Python 3.11 with GeoPandas, NetworkX, SciPy
 - OSMnx 2.0 for network analysis
-- HERE Traffic API via hereR package (R)
+- Python-based multi-provider traffic collector (HERE, TomTom, Google support)
 - Visualization: Matplotlib, Seaborn
 
 ---

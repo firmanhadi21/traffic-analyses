@@ -17,6 +17,48 @@ traffic-pipeline [OPTIONS] COMMAND [ARGS]...
 
 ---
 
+## `collect`
+
+Collect traffic data from supported providers (HERE, TomTom, Google).
+
+```bash
+traffic-pipeline collect [OPTIONS]
+```
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `--provider` | TEXT | `here` | Provider (`here`, `tomtom`, `google`) |
+| `--api-key` | TEXT | *(required)* | Traffic API key for the selected provider |
+| `--city` | TEXT | *(all cities)* | City code (`smg`, `bdg`, `jkt`) |
+| `--once` | FLAG | *(disabled)* | Collect once and exit (default: continuous) |
+| `--interval` | INT | `900` | Collection interval in seconds (15 min default) |
+
+### Examples
+
+```bash
+# Collect once for all cities using HERE
+traffic-pipeline collect --provider here --api-key $YOUR_KEY --once
+
+# Collect for a specific city
+traffic-pipeline collect --city smg --provider here --api-key $KEY --once
+
+# Run as daemon (every 15 minutes)
+traffic-pipeline collect --provider here --api-key $KEY --interval 900
+
+# Use TomTom provider
+traffic-pipeline collect --provider tomtom --api-key $TOMTOM_KEY --once
+```
+
+### Supported Providers
+
+| Provider | API | Status |
+|----------|-----|--------|
+| `here` | HERE Traffic Flow v7 | ✅ Tested |
+| `tomtom` | TomTom Flow Segment Data v4 | ⚠️ Not tested with live API |
+| `google` | Google Routes API v2 | ⚠️ Experimental |
+
+---
+
 ## `aggregate`
 
 Aggregate raw GeoPackage snapshots into time-period files.

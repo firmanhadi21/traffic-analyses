@@ -105,7 +105,7 @@ print(gdf[["fid", "jam_factor_mean", "jam_factor_std"]].describe())
 
 ## Source
 
-Traffic data: [HERE Traffic API](https://developer.here.com/documentation/traffic-api/) via [hereR](https://github.com/munterfinger/hereR) R package.
+Traffic data: [HERE Traffic API](https://developer.here.com/documentation/traffic-api/) via Python-based collector with multi-provider support (HERE, TomTom, Google). See [`src/trafficpipeline/collector.py`](src/trafficpipeline/collector.py) for implementation.
 
 Road networks: [OpenStreetMap](https://www.openstreetmap.org/) via [OSMnx](https://github.com/gboeing/osmnx).
 

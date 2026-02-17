@@ -42,12 +42,9 @@ traffic-pipeline --help
 - Core dependencies are installed automatically: GeoPandas, OSMnx, NetworkX,
   SciPy, Matplotlib, Seaborn, Click, and others.
 
-### R (data collection only)
+### Data Collection (Optional)
 
-The data-collection step uses the [hereR](https://github.com/munterfinger/hereR)
-R package.  This is **not required** for analysis — pre-aggregated data is
-available on [Zenodo](https://doi.org/10.5281/zenodo.18650759).
-
-```r
-install.packages(c("hereR", "sf", "lubridate"))
-```
+Data collection is now fully Python-based using the `traffic-pipeline collect`
+command. You'll need a traffic API key from one of the supported providers
+(HERE, TomTom, or Google). Pre-aggregated data is available on
+[Zenodo](https://doi.org/10.5281/zenodo.18650759) if you want to skip collection.
