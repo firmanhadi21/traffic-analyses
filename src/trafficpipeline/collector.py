@@ -625,6 +625,138 @@ class GoogleProvider(TrafficProvider):
 
 
 # ═══════════════════════════════════════════════════════════════════════════
+# Mapbox Traffic
+# ═══════════════════════════════════════════════════════════════════════════
+
+
+class MapboxProvider(TrafficProvider):
+    """Mapbox Traffic v1 via Tilequery API.
+
+    Mapbox provides traffic data through a vector tileset
+    (mapbox.mapbox-traffic-v1) with congestion levels updated every ~5 minutes
+    from 700M+ active users. This provider queries the tileset using the
+    Tilequery API at grid points and returns congestion data.
+
+    API: ``https://api.mapbox.com/v4/mapbox.mapbox-traffic-v1/tilequery/{lng},{lat}.json``
+    """
+
+    _TILESET_ID = "mapbox.mapbox-traffic-v1"
+    _BASE_URL = "https://api.mapbox.com/v4"
+
+    def __init__(
+        self,
+        api_key: str,
+        grid_spacing_m: float = 500,
+        request_delay: float = 0.05,
+    ) -> None:
+        super().__init__(api_key)
+        self.grid_spacing_m = grid_spacing_m
+        self.request_delay = request_delay
+
+    @property
+    def name(self) -> str:
+        return "mapbox"
+
+    def fetch_flow(
+        self, bbox: tuple[float, float, float, float]
+    ) -> gpd.GeoDataFrame:
+        points = TomTomProvider._grid_points(bbox, self.grid_spacing_m)
+        logger.info(
+            "Mapbox: querying %d grid points (%.0fm spacing)",
+            len(points),
+            self.grid_spacing_m,
+        )
+
+        seen_hashes: set[str] = set()
+        rows: list[dict[str, Any]] = []
+        now = datetime.now()
+
+        for i, (lat, lng) in enumerate(points):
+            if i > 0 and self.request_delay > 0:
+                time.sleep(self.request_delay)
+
+            try:
+                url = f"{self._BASE_URL}/{self._TILESET_ID}/tilequery/{lng},{lat}.json"
+                resp = self._request_with_retry(
+                    "GET",
+                    url,
+                    params={
+                        "access_token": self.api_key,
+                        "radius": 50,  # meters
+                        "limit": 5,  # max features to return
+                    },
+                    max_retries=2,
+                    timeout=30,
+                )
+                data = resp.json()
+            except Exception:
+                continue
+
+            features = data.get("features", [])
+            if not features:
+                continue
+
+            # Process each feature
+            for feature in features:
+                geom_data = feature.get("geometry", {})
+                if geom_data.get("type") != "LineString":
+                    continue
+
+                coords = geom_data.get("coordinates", [])
+                if len(coords) < 2:
+                    continue
+
+                geom = LineString(coords)
+
+                # Deduplicate by geometry hash
+                geom_hash = hashlib.md5(geom.wkb).hexdigest()
+                if geom_hash in seen_hashes:
+                    continue
+                seen_hashes.add(geom_hash)
+
+                props = feature.get("properties", {})
+                congestion = props.get("congestion", "low")
+
+                # Map Mapbox congestion levels to jam_factor
+                # low: minimal congestion
+                # moderate: some congestion
+                # heavy: significant congestion
+                # severe: severe congestion
+                congestion_map = {
+                    "low": 1.0,
+                    "moderate": 4.0,
+                    "heavy": 7.0,
+                    "severe": 9.0,
+                }
+                jam_factor = congestion_map.get(congestion, 0.0)
+
+                rows.append(
+                    {
+                        "jam_factor": jam_factor,
+                        "speed": None,  # Mapbox doesn't provide numeric speeds
+                        "free_flow": None,
+                        "congestion_level": congestion,
+                        "road_class": props.get("road_class"),
+                        "timestamp": now,
+                        "provider": "mapbox",
+                        "geometry": geom,
+                    }
+                )
+
+        if not rows:
+            logger.warning("Mapbox: 0 unique segments found")
+            return self._empty_gdf(["congestion_level", "road_class"])
+
+        gdf = gpd.GeoDataFrame(rows, geometry="geometry", crs=CRS)
+        logger.info(
+            "Mapbox: %d unique segments from %d queries",
+            len(gdf),
+            len(points),
+        )
+        return gdf
+
+
+# ═══════════════════════════════════════════════════════════════════════════
 # Provider registry & factory
 # ═══════════════════════════════════════════════════════════════════════════
 
@@ -632,7 +764,9 @@ PROVIDERS: dict[str, type[TrafficProvider]] = {
     "here": HEREProvider,
     "tomtom": TomTomProvider,
     "google": GoogleProvider,
+    "mapbox": MapboxProvider,
 }
+
 
 
 def get_provider(name: str, api_key: str, **kwargs: Any) -> TrafficProvider:

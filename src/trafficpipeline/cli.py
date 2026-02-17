@@ -63,7 +63,7 @@ def aggregate(ctx: click.Context, city: str | None, column: str, verbose: bool) 
               help="City name to geocode (e.g., 'Paris, France').")
 @click.option("--bbox",
               help="Bounding box: WEST,SOUTH,EAST,NORTH (e.g., '-74.05,40.63,-73.75,40.85').")
-@click.option("--provider", type=click.Choice(["here", "tomtom", "google"]),
+@click.option("--provider", type=click.Choice(["here", "tomtom", "google", "mapbox"]),
               default="here", show_default=True,
               help="Traffic data provider.")
 @click.option("--api-key", envvar="TRAFFIC_API_KEY", required=True,
