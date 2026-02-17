@@ -90,7 +90,6 @@ traffic-pipeline collect --once
 | `here` | HERE Traffic Flow v7 | ✅ Tested |
 | `tomtom` | TomTom Flow Segment Data v4 | ⚠️ Not tested with live API |
 | `google` | Google Routes API v2 | ⚠️ Experimental |
-| `mapbox` | Mapbox Traffic v1 Tileset | ✅ Tilequery API |
 
 ---
 

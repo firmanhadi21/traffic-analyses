@@ -163,7 +163,7 @@ class TestProviderFactory:
 
     def test_unknown_provider(self):
         with pytest.raises(ValueError, match="Unknown provider"):
-            get_provider("mapbox", api_key="k")
+            get_provider("unknown_provider", api_key="k")
 
     def test_case_insensitive(self):
         p = get_provider("HERE", api_key="k")
