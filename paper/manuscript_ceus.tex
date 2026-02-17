@@ -52,7 +52,7 @@ Open-source pipeline \sep Reproducible urban analytics \sep Traffic congestion \
 \item Time-of-day explains 1,000--4,000$\times$ more congestion variance than any spatial predictor across three Indonesian cities
 \item Four independent spatial tests (centrality, POI density, capacity, bottleneck) converge on null results
 \item Novel graph-based capacity drop detection module using directed OSMnx networks
-\item Pipeline requires only a bounding box and API key; installable via PyPI for any city worldwide
+\item Pipeline requires only a bounding box or city name and API key; installable via PyPI for any city worldwide
 \end{highlights}
 
 %% ============================================================
@@ -68,7 +68,7 @@ The three cities examined---Jakarta (metropolitan population 34 million), Bandun
 This study makes the following contributions:
 
 \begin{itemize}
-\item \textbf{Open-source pipeline:} A complete, modular, installable pure-Python package (\url{https://pypi.org/project/traffic-congestion-pipeline/}) with a provider-agnostic data collection layer supporting multiple commercial traffic APIs (HERE, TomTom, Google), temporal aggregation, OSMnx network analysis, PySAL geostatistics, and graph-based capacity drop detection. The pipeline requires only a bounding box and API key to replicate the full analysis for any city.
+\item \textbf{Open-source pipeline:} A complete, modular, installable pure-Python package (\url{https://pypi.org/project/traffic-congestion-pipeline/}) with a provider-agnostic data collection layer supporting multiple commercial traffic APIs (HERE, TomTom, Google), temporal aggregation, OSMnx network analysis, PySAL geostatistics, and graph-based capacity drop detection. The pipeline requires only a bounding box or city name and API key to replicate the full analysis for any city.
 \item \textbf{Novel analytical module:} A graph-based capacity drop detection framework using the directed OSMnx road network to identify locations where road hierarchy decreases, enabling systematic testing of the bottleneck hypothesis at city scale.
 \item \textbf{Empirical:} The first systematic comparative analysis of traffic patterns across three major Indonesian cities demonstrating that temporal factors dominate spatial factors by three orders of magnitude.
 \item \textbf{Theoretical:} Evidence that normalized congestion metrics (jam factor) inherently remove capacity effects, with implications for capacity--congestion studies.
@@ -186,17 +186,18 @@ Road segments were assigned ordinal capacity scores based on OSM highway classif
 \subsection{Pipeline architecture}
 \label{sec:pipeline}
 
-A key contribution is the open-source pipeline, designed for reproducibility and transferability. The pipeline is implemented entirely in Python and comprises five modular stages (Fig.~\ref{fig:framework}):
+A key contribution is the open-source pipeline, designed for reproducibility and transferability. The pipeline is implemented entirely in Python and comprises six modular stages (Fig.~\ref{fig:framework}):
 
 \begin{enumerate}
 \item \textbf{Stage 1 --- Data collection (Python/requests):} A provider-agnostic collector module queries commercial traffic APIs at configurable intervals (default: 15 minutes), with built-in scheduling and exponential-backoff retry logic. The module supports HERE Traffic Flow v7 (bounding-box queries), TomTom Flow Segment Data (grid-sampled point queries), and Google Routes API (route-based, experimental). All providers output timestamped GeoPackage files with a unified schema. The collector can run as a background daemon (replacing \texttt{cron}) or in single-shot mode for external schedulers.
 \item \textbf{Stage 2 --- Temporal aggregation (GeoPandas):} Per-segment statistics for each temporal period.
-\item \textbf{Stage 3 --- Geostatistical analysis (PySAL):} Moran's I, LISA, and Gi* with configurable spatial weights.
-\item \textbf{Stage 4 --- Network analysis (OSMnx/NetworkX):} Centrality computation, spatial joins, capacity drop detection, and POI density analysis.
-\item \textbf{Stage 5 --- Synthesis:} Temporal vs.\ spatial effect size comparison and publication-ready figures.
+\item \textbf{Stage 3 --- Exploratory data analysis:} Custom modules generate distribution plots, coverage maps, and statistical summaries to validate data quality and identify temporal coverage gaps using Matplotlib and Seaborn.
+\item \textbf{Stage 4 --- Geostatistical analysis (PySAL):} Moran's I, LISA, and Gi* with configurable spatial weights.
+\item \textbf{Stage 5 --- Network analysis (OSMnx/NetworkX):} Centrality computation, spatial joins, capacity drop detection, and POI density analysis.
+\item \textbf{Stage 6 --- Synthesis:} Temporal vs.\ spatial effect size comparison and publication-ready figures.
 \end{enumerate}
 
-Adding a new city requires only: (1) specifying the bounding box in the configuration, (2) providing an API key for any supported provider, and (3) running the pipeline. The package is installable via \texttt{pip install traffic-congestion-pipeline} and provides a CLI with sub-commands for each stage (\texttt{collect}, \texttt{aggregate}, \texttt{geostatistics}, \texttt{bottleneck}, \texttt{poi}, \texttt{synthesis}). All data use GeoPackage format (OGC standard) and WGS84 coordinates.
+Adding a new city requires only: (1) specifying the bounding box or city name in the configuration, (2) providing an API key for any supported provider, and (3) running the pipeline. The package is installable via \texttt{pip install traffic-congestion-pipeline} and provides a CLI with sub-commands for each stage (\texttt{collect}, \texttt{aggregate}, \texttt{geostatistics}, \texttt{bottleneck}, \texttt{poi}, \texttt{synthesis}). All data use GeoPackage format (OGC standard) and WGS84 coordinates.
 
 \subsection{Reproducibility}
 \label{sec:reproducibility}
@@ -214,10 +215,11 @@ Figure~\ref{fig:pipeline} illustrates the pipeline architecture, distinguishing 
 \label{fig:pipeline}
 \end{figure}
 
-The five pipeline stages are:
+The six pipeline stages are:
 \begin{enumerate}
 \item \textbf{Data collection:} A provider-agnostic abstraction layer (\texttt{TrafficProvider} base class) wraps commercial APIs. Concrete implementations handle API-specific authentication, query strategies, and response parsing while outputting a unified GeoDataFrame schema. This design isolates vendor lock-in to a single module.
 \item \textbf{Temporal aggregation:} GeoPandas computes per-segment statistics (mean, std, min, max, count) for each of eight temporal periods, producing aggregated GeoPackage files.
+\item \textbf{Exploratory data analysis:} Custom modules generate distribution plots, coverage maps, and statistical summaries to validate data quality and identify temporal coverage gaps using Matplotlib and Seaborn.
 \item \textbf{Geostatistical analysis:} PySAL/libpysal computes global Moran's I, LISA, and Getis-Ord Gi* with configurable spatial weights (KNN, distance-band).
 \item \textbf{Network analysis:} OSMnx retrieves street networks from OpenStreetMap; NetworkX computes edge betweenness centrality; custom modules perform capacity drop detection and POI density analysis.
 \item \textbf{Synthesis:} Matplotlib and seaborn generate publication-ready figures; effect-size comparisons are computed and exported as CSV.
@@ -229,7 +231,15 @@ All results in this paper can be reproduced from the archived dataset using five
 
 \begin{verbatim}
 pip install "traffic-congestion-pipeline[all]"
-traffic-pipeline collect --provider here  # data collection
+
+# 1. Continuous collection (daemon mode)
+traffic-pipeline collect --provider here --api-key $KEY --interval 900
+
+# 2. Single snapshot for a specific city (geocoded)
+traffic-pipeline collect --city "Surabaya" --provider here --once
+
+# 3. Analysis pipeline
+traffic-pipeline eda                      # exploratory data analysis
 traffic-pipeline geostatistics            # Moran's I, LISA, Gi*
 traffic-pipeline bottleneck               # capacity drop analysis
 traffic-pipeline poi                      # POI density correlations
@@ -246,7 +256,7 @@ Aggregated datasets (24 GeoPackage files, $\sim$115 MB) are archived on Zenodo w
 
 \subsubsection{Extending to new cities or providers}
 
-To extend the analysis to a new city, a researcher supplies only: (1) a bounding box in WGS84 coordinates, and (2) an API key for any supported provider. These are specified in \texttt{config.py}; the pipeline handles data collection scheduling, temporal aggregation, spatial joining, and all downstream analyses without code modification. Adding a new traffic data provider requires implementing only the \texttt{fetch\_flow()} method of the \texttt{TrafficProvider} abstract base class ($\sim$50 lines of code), with no changes to downstream analysis modules.
+To extend the analysis to a new city, a researcher supplies only: (1) a bounding box in WGS84 coordinates or a city name (automatically geocoded), and (2) an API key for any supported provider. These are specified in \texttt{config.py}; the pipeline handles data collection scheduling, temporal aggregation, spatial joining, and all downstream analyses without code modification. Adding a new traffic data provider requires implementing only the \texttt{fetch\_flow()} method of the \texttt{TrafficProvider} abstract base class ($\sim$50 lines of code), with no changes to downstream analysis modules.
 
 
 %% ============================================================
@@ -533,7 +543,7 @@ This study presents an open-source, pure-Python pipeline for spatiotemporal traf
 
 The primary empirical finding is that \textbf{relative congestion is fundamentally temporal}: time-of-day explains 15--24\% of jam factor variance, while spatial predictors (centrality, POI density, road capacity, capacity drops) explain $<$0.02\% combined---a 1,000--4,000$\times$ gap. Four independent spatial tests yield null results, demonstrating that congestion patterns reflect synchronized demand, not problematic locations.
 
-The pipeline is available as \texttt{pip install traffic-congestion-pipeline} (\url{https://pypi.org/project/traffic-congestion-pipeline/}) with source code, API documentation (\url{https://firmanhadi21.github.io/traffic-analyses/}), and aggregated datasets on Zenodo (DOI: \href{https://doi.org/10.5281/zenodo.18650759}{10.5281/zenodo.18650759}). It requires only a bounding box and API key to replicate for any city worldwide.
+The pipeline is available as \texttt{pip install traffic-congestion-pipeline} (\url{https://pypi.org/project/traffic-congestion-pipeline/}) with source code, API documentation (\url{https://firmanhadi21.github.io/traffic-analyses/}), and aggregated datasets on Zenodo (DOI: \href{https://doi.org/10.5281/zenodo.18650759}{10.5281/zenodo.18650759}). It requires only a bounding box or city name and API key to replicate for any city worldwide.
 
 
 %% ============================================================

@@ -29,7 +29,9 @@
       "fillStyle": "solid",
       "strokeWidth": 2,
       "roughness": 1,
-      "roundness": { "type": 3 }
+      "roundness": {
+        "type": 3
+      }
     },
     {
       "id": "commercial-label",
@@ -56,7 +58,9 @@
       "fillStyle": "solid",
       "strokeWidth": 2,
       "roughness": 1,
-      "roundness": { "type": 3 }
+      "roundness": {
+        "type": 3
+      }
     },
     {
       "id": "here-text",
@@ -83,7 +87,9 @@
       "fillStyle": "solid",
       "strokeWidth": 2,
       "roughness": 1,
-      "roundness": { "type": 3 }
+      "roundness": {
+        "type": 3
+      }
     },
     {
       "id": "tomtom-text",
@@ -110,7 +116,9 @@
       "fillStyle": "solid",
       "strokeWidth": 2,
       "roughness": 1,
-      "roundness": { "type": 3 }
+      "roundness": {
+        "type": 3
+      }
     },
     {
       "id": "google-text",
@@ -137,7 +145,9 @@
       "fillStyle": "solid",
       "strokeWidth": 2,
       "roughness": 1,
-      "roundness": { "type": 3 }
+      "roundness": {
+        "type": 3
+      }
     },
     {
       "id": "open-data-label",
@@ -164,7 +174,9 @@
       "fillStyle": "solid",
       "strokeWidth": 2,
       "roughness": 1,
-      "roundness": { "type": 3 }
+      "roundness": {
+        "type": 3
+      }
     },
     {
       "id": "osm-text",
@@ -191,7 +203,9 @@
       "fillStyle": "solid",
       "strokeWidth": 2,
       "roughness": 1,
-      "roundness": { "type": 3 }
+      "roundness": {
+        "type": 3
+      }
     },
     {
       "id": "stage1-title",
@@ -231,7 +245,9 @@
       "fillStyle": "solid",
       "strokeWidth": 2,
       "roughness": 1,
-      "roundness": { "type": 3 }
+      "roundness": {
+        "type": 3
+      }
     },
     {
       "id": "stage2-title",
@@ -263,7 +279,7 @@
       "id": "stage3-box",
       "type": "rectangle",
       "x": 400,
-      "y": 280,
+      "y": 380,
       "width": 200,
       "height": 80,
       "strokeColor": "#2f9e44",
@@ -271,16 +287,18 @@
       "fillStyle": "solid",
       "strokeWidth": 2,
       "roughness": 1,
-      "roundness": { "type": 3 }
+      "roundness": {
+        "type": 3
+      }
     },
     {
       "id": "stage3-title",
       "type": "text",
       "x": 420,
-      "y": 290,
+      "y": 390,
       "width": 160,
       "height": 20,
-      "text": "Stage 3: Geostatistics",
+      "text": "Stage 4: Geostatistics",
       "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
@@ -290,7 +308,7 @@
       "id": "stage3-detail",
       "type": "text",
       "x": 420,
-      "y": 315,
+      "y": 415,
       "width": 160,
       "height": 40,
       "text": "PySAL/libpysal\nMoran's I, LISA, Gi*",
@@ -303,7 +321,7 @@
       "id": "stage4-box",
       "type": "rectangle",
       "x": 400,
-      "y": 380,
+      "y": 480,
       "width": 200,
       "height": 80,
       "strokeColor": "#2f9e44",
@@ -311,16 +329,18 @@
       "fillStyle": "solid",
       "strokeWidth": 2,
       "roughness": 1,
-      "roundness": { "type": 3 }
+      "roundness": {
+        "type": 3
+      }
     },
     {
       "id": "stage4-title",
       "type": "text",
       "x": 420,
-      "y": 390,
+      "y": 490,
       "width": 160,
       "height": 20,
-      "text": "Stage 4: Network",
+      "text": "Stage 5: Network",
       "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
@@ -330,7 +350,7 @@
       "id": "stage4-detail",
       "type": "text",
       "x": 420,
-      "y": 415,
+      "y": 515,
       "width": 160,
       "height": 40,
       "text": "OSMnx/NetworkX\nCentrality, POI, drops",
@@ -343,7 +363,7 @@
       "id": "stage5-box",
       "type": "rectangle",
       "x": 400,
-      "y": 480,
+      "y": 580,
       "width": 200,
       "height": 80,
       "strokeColor": "#2f9e44",
@@ -351,16 +371,18 @@
       "fillStyle": "solid",
       "strokeWidth": 2,
       "roughness": 1,
-      "roundness": { "type": 3 }
+      "roundness": {
+        "type": 3
+      }
     },
     {
       "id": "stage5-title",
       "type": "text",
       "x": 420,
-      "y": 490,
+      "y": 590,
       "width": 160,
       "height": 20,
-      "text": "Stage 5: Synthesis",
+      "text": "Stage 6: Synthesis",
       "fontSize": 14,
       "fontFamily": 1,
       "textAlign": "center",
@@ -370,7 +392,7 @@
       "id": "stage5-detail",
       "type": "text",
       "x": 420,
-      "y": 515,
+      "y": 615,
       "width": 160,
       "height": 40,
       "text": "Matplotlib/seaborn\nEffect-size comparison",
@@ -391,7 +413,9 @@
       "fillStyle": "solid",
       "strokeWidth": 2,
       "roughness": 1,
-      "roundness": { "type": 3 }
+      "roundness": {
+        "type": 3
+      }
     },
     {
       "id": "output-label",
@@ -506,7 +530,16 @@
       "height": 0,
       "strokeColor": "#1e1e1e",
       "strokeWidth": 2,
-      "points": [[0, 0], [60, -80]]
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          60,
+          -80
+        ]
+      ]
     },
     {
       "id": "arrow2",
@@ -517,7 +550,16 @@
       "height": 15,
       "strokeColor": "#1e1e1e",
       "strokeWidth": 2,
-      "points": [[0, 0], [0, 15]]
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          15
+        ]
+      ]
     },
     {
       "id": "arrow3",
@@ -528,21 +570,19 @@
       "height": 15,
       "strokeColor": "#1e1e1e",
       "strokeWidth": 2,
-      "points": [[0, 0], [0, 15]]
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          15
+        ]
+      ]
     },
     {
       "id": "arrow4",
-      "type": "arrow",
-      "x": 500,
-      "y": 360,
-      "width": 0,
-      "height": 15,
-      "strokeColor": "#1e1e1e",
-      "strokeWidth": 2,
-      "points": [[0, 0], [0, 15]]
-    },
-    {
-      "id": "arrow5",
       "type": "arrow",
       "x": 500,
       "y": 460,
@@ -550,18 +590,56 @@
       "height": 15,
       "strokeColor": "#1e1e1e",
       "strokeWidth": 2,
-      "points": [[0, 0], [0, 15]]
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          15
+        ]
+      ]
+    },
+    {
+      "id": "arrow5",
+      "type": "arrow",
+      "x": 500,
+      "y": 560,
+      "width": 0,
+      "height": 15,
+      "strokeColor": "#1e1e1e",
+      "strokeWidth": 2,
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          15
+        ]
+      ]
     },
     {
       "id": "arrow6",
       "type": "arrow",
       "x": 600,
-      "y": 330,
+      "y": 530,
       "width": 70,
       "height": 0,
       "strokeColor": "#1e1e1e",
       "strokeWidth": 2,
-      "points": [[0, 0], [70, 0]]
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          70,
+          0
+        ]
+      ]
     },
     {
       "id": "arrow-osm",
@@ -572,7 +650,16 @@
       "height": 40,
       "strokeColor": "#1e1e1e",
       "strokeWidth": 2,
-      "points": [[0, 0], [60, -40]]
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          60,
+          -40
+        ]
+      ]
     },
     {
       "id": "legend-box",
@@ -586,7 +673,9 @@
       "fillStyle": "solid",
       "strokeWidth": 1,
       "roughness": 1,
-      "roundness": { "type": 3 }
+      "roundness": {
+        "type": 3
+      }
     },
     {
       "id": "legend-title",
@@ -688,7 +777,9 @@
       "fillStyle": "solid",
       "strokeWidth": 2,
       "roughness": 1,
-      "roundness": { "type": 3 }
+      "roundness": {
+        "type": 3
+      }
     },
     {
       "id": "config-label",
@@ -725,7 +816,78 @@
       "height": 445,
       "strokeColor": "#9775fa",
       "strokeWidth": 2,
-      "points": [[0, 0], [60, -445]]
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          60,
+          -445
+        ]
+      ]
+    },
+    {
+      "id": "eda-box",
+      "type": "rectangle",
+      "x": 400,
+      "y": 280,
+      "width": 200,
+      "height": 80,
+      "strokeColor": "#2f9e44",
+      "backgroundColor": "#b2f2bb",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "roughness": 1,
+      "roundness": {
+        "type": 3
+      }
+    },
+    {
+      "id": "eda-title",
+      "type": "text",
+      "x": 420,
+      "y": 290,
+      "width": 160,
+      "height": 20,
+      "text": "Stage 3: EDA",
+      "fontSize": 14,
+      "fontFamily": 1,
+      "textAlign": "center",
+      "strokeColor": "#2b8a3e"
+    },
+    {
+      "id": "eda-detail",
+      "type": "text",
+      "x": 420,
+      "y": 315,
+      "width": 160,
+      "height": 40,
+      "text": "Matplotlib/Seaborn\nQC & Validation",
+      "fontSize": 12,
+      "fontFamily": 1,
+      "textAlign": "center",
+      "strokeColor": "#1e1e1e"
+    },
+    {
+      "id": "arrow-eda",
+      "type": "arrow",
+      "x": 500,
+      "y": 360,
+      "width": 0,
+      "height": 15,
+      "strokeColor": "#1e1e1e",
+      "strokeWidth": 2,
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          15
+        ]
+      ]
     }
   ],
   "appState": {
