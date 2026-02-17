@@ -272,8 +272,10 @@ Three complementary tests assessed the capacity-congestion relationship:
 Analysis was conducted using:
 - Python 3.11 with GeoPandas, NetworkX, SciPy
 - OSMnx 2.0 for network analysis
-- Python-based multi-provider traffic collector (HERE, TomTom, Google support)
+- Custom Python-based traffic collector with multi-provider support (HERE, TomTom, Google)
 - Visualization: Matplotlib, Seaborn
+
+The traffic collection pipeline is available as an open-source Python package (`traffic-congestion-pipeline` on PyPI) and supports data collection from any city worldwide via bounding box coordinates or city name geocoding, enabling researchers to replicate this methodology in different urban contexts.
 
 ---
 
