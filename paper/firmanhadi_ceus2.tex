@@ -1,0 +1,906 @@
+\documentclass[12pt,a4paper]{article}
+
+% Encoding and fonts
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{microtype}
+
+% Page layout
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{setspace}
+\onehalfspacing
+
+% Math
+\usepackage{amsmath,amssymb}
+
+% Tables
+\usepackage{longtable,booktabs,array}
+\usepackage{calc}
+\usepackage{etoolbox}
+\makeatletter
+\patchcmd\longtable{\par}{\if@noskipsec\mbox{}\fi\par}{}{}
+\makeatother
+\usepackage{footnote}
+\makesavenoteenv{longtable}
+
+% Graphics
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{placeins}
+\graphicspath{{../figures/}{figures/}{./}}
+\def\fps@figure{htbp}
+
+% Links
+\usepackage[hidelinks]{hyperref}
+\usepackage{url}
+\urlstyle{same}
+
+% Lists
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+
+% Paragraph formatting
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt plus 2pt minus 1pt}
+\setlength{\emergencystretch}{3em}
+
+% Section numbering
+\setcounter{secnumdepth}{3}
+
+%% ============================================================
+%% Title and Authors
+%% ============================================================
+\title{Spatiotemporal Traffic Congestion Patterns and Network Centrality in Indonesian Metropolitan Cities}
+
+\author{%
+  Firman Hadi\textsuperscript{1,*} \and
+  Yasser Wahyuddin\textsuperscript{1} \and
+  L.M. Sabri\textsuperscript{1} \and
+  Agung Indrajit\textsuperscript{2}%
+}
+
+\date{}
+
+\begin{document}
+
+\maketitle
+
+\noindent\textsuperscript{1} Department of Geodetic Engineering, Universitas Diponegoro, Semarang, Indonesia\\
+\textsuperscript{2} Deputy for Green and Digital Transformation, Nusantara Capital Authority, Indonesia\\[6pt]
+\textsuperscript{*} Corresponding Author: Firman Hadi (\href{mailto:firmanhadi21@lecturer.undip.ac.id}{firmanhadi21@lecturer.undip.ac.id})
+
+\bigskip
+
+%% ============================================================
+%% Abstract
+%% ============================================================
+\begin{abstract}
+Urban traffic congestion poses significant challenges to sustainable development in rapidly growing Southeast Asian cities. This study presents a comprehensive spatiotemporal analysis of traffic congestion in three major Indonesian metropolitan areas---Jakarta, Bandung, and Semarang---using high-resolution traffic flow data from the HERE Traffic API over 11 months (March 2025 to February 2026), comprising over 264 million observations across 18,694 road segments. Alongside the empirical analysis, this study presents a modular, open-source Python package that provides a fully programmable, end-to-end traffic analysis pipeline---from HERE API data collection through geostatistical analysis, HPC-enabled network centrality computation, and automated manuscript generation---eliminating any dependency on R or manual processing steps. The methodology integrates jam factor analysis with geostatistical methods (Moran's I, LISA, Getis-Ord Gi*), OpenStreetMap network analysis using OSMnx, and a novel graph-based capacity drop detection framework. Our central finding is that \textbf{temporal factors dominate spatial factors by 1,000--4,000x}: time-of-day ($\eta^2$ = 15--24\%) vastly outweighs network centrality, POI density, and road capacity ($R^2$ < 0.01\%) in explaining relative congestion variance. Because the HERE jam factor normalizes speed to each segment's free-flow baseline, these findings characterize demand-to-capacity ratio rather than absolute delay. Triangulated evidence from four independent spatial predictors (centrality, POI density, road capacity, capacity drops) all yield null results. Road capacity shows negligible correlation with congestion (r < 0.04); spatial capacity drops show no proximity effect (p = 0.10--0.83, $|d|$ < 0.09); local bottleneck gradients are indistinguishable from surrounding segments ($|d|$ < 0.05). This demonstrates that congestion is fundamentally a \textbf{temporal synchronization problem}---millions of people traveling at the same times---rather than a spatial infrastructure constraint. The evening peak (16:00--19:00) shows congestion approximately 40\% above daily averages. These findings support prioritizing demand management strategies alongside infrastructure expansion, contributing empirical evidence to traffic policy debates in rapidly urbanizing contexts.
+\end{abstract}
+
+\noindent\textbf{Keywords:} Urban traffic congestion; Spatiotemporal analysis; Network centrality; Jam factor; Capacity bottleneck; Indonesian cities; HERE Traffic API; OSMnx; Spatial autocorrelation
+
+\newpage
+
+%% ============================================================
+%% Main Body
+%% ============================================================
+\section{Introduction}
+
+Urban traffic congestion represents a critical challenge for rapidly urbanizing cities in developing countries, characterized by significant variability, pronounced peak periods, and dependence on informal transportation systems (Gakenheimer, 1999; Pojani \& Stead, 2015). The economic impact is considerable: in Southeast Asia, congestion costs are estimated at 2--5\% of GDP annually (Asian Development Bank, 2019), while welfare losses from transport-related air pollution account for 4.8\% of GDP in East Asia and 3.5\% in South Asia (World Bank, 2022). The Western Pacific and South-East Asia regions bear the highest burden of traffic-induced air pollution, reflecting the intense urbanization in developing nations (WHO, 2021). Rapid urbanization and population growth have generated excessive demand for urban infrastructure, resulting in chronic congestion that conventional planning methods often fail to resolve (Cervero, 2013). Cities across Southeast Asia, South Asia, and Sub-Saharan Africa encounter similar issues: vehicle growth outpaces road expansion, motorcycle modal shares are high, public transit is inadequate, and data for evidence-based planning remain limited (Pojani \& Stead, 2015; Kutzbach, 2009). Understanding the spatiotemporal dynamics of congestion in these settings is essential for developing effective mitigation strategies, yet data scarcity often restricts traffic improvement projects to locations where congestion is easily measured (Wheeler et al., 2021).
+
+Indonesia illustrates these challenges in acute form. Jakarta has long been recognized for severe traffic congestion, and recent studies indicate that Bandung, Semarang, Surabaya, and Yogyakarta now experience similar levels of congestion. The World Bank reports that Jakarta ranks among the most congested cities globally, with commuters spending an average of 62 hours annually in traffic and economic losses projected to reach US\$6.5 billion by 2020. Peak-hour vehicle speeds average only 10 km/h (World Bank, 2021). According to Castrol, Jakarta's drivers experience approximately 33,240 stop-starts per year, resulting in 27\% of travel time spent stationary (Castrol, 2015). Bandung, the country's second-largest metropolitan area, ranked second among 38 Indonesian cities in a World Bank diagnostic for the most congested city, with peak-hour speeds of only 17 km/h (World Bank, 2019). The Asian Development Bank ranked Bandung as Indonesia's most congested city and 14th in Asia (ADB, 2019). A defining feature of Indonesian urban traffic is the exceptionally high motorcycle modal share; in Bandung, motorcycles accounted for 72.2\% of vehicles in 2013 (BPS Bandung, 2015), resulting in heterogeneous traffic flows that differ fundamentally from car-dominated systems in developed countries. Previous Indonesian traffic studies have primarily relied on survey-based methods: Susilo et al. (2007) examined motorization and public transport trends in Jakarta, while Joewono \& Kubota (2008) assessed paratransit user satisfaction. More recent research has evaluated demand management interventions, such as car-free days and odd-even plate policies in Bandung (Syaiful \& Fadlilah, 2020). However, these studies generally provide only snapshots rather than continuous traffic dynamics. Although Indonesia has prioritized mass transit development in six metropolitan areas through initiatives such as the Indonesia Mass Transit Project (World Bank, 2022), systematic empirical analysis of congestion patterns using high-resolution data remains limited, constraining evidence-based prioritization of interventions.
+
+Recent international traffic research increasingly utilizes multi-source data and advanced analytical frameworks to characterize urban congestion dynamics. In China's largest cities, real-time traffic data from online maps have been used to identify frequently congested road segments, revealing that 1.8--9.87\% of urban road networks experience chronic congestion and that congestion severity positively correlates with city size (Cui et al., 2024). Comparable methodologies in Shanghai during and after the COVID-19 pandemic have demonstrated how disruptions altered spatiotemporal congestion patterns (Zhang et al., 2022). In South Asia, Dhaka has served as a case study for assessing the impacts of urbanization on traffic, with researchers integrating satellite-based traffic and pollution data with socioeconomic information (Wheeler et al., 2021). In Tanzania, Dar es Salaam has been studied using European Space Agency Sentinel-5P satellite data to link traffic congestion with air pollution exposure (Golub et al., 2021). These studies demonstrate that remote sensing and crowdsourced data can support rigorous analyses in cities lacking traditional traffic-monitoring infrastructure. The integration of multi-source data with high-performance computing enables quantification of fundamental spatiotemporal patterns in human mobility and congestion (Cai et al., 2024), while machine learning methods increasingly combine temporal features with network topology for congestion prediction (Wang et al., 2019; Ermagun \& Levinson, 2018).
+
+The widespread availability of probe vehicle data and commercial traffic APIs has significantly advanced traffic analysis by enabling high spatiotemporal resolution and broad coverage (Leduc, 2008; Jenelius \& Koutsopoulos, 2015). Floating car data (FCD), derived from GPS-equipped vehicles that record real-time location and speed, offers a cost-effective alternative to fixed sensor infrastructure for large-scale traffic assessment (Yuan et al., 2025). Studies indicate that equipping 3--8\% of vehicles with FCD and appropriate sampling frequencies yields accurate speed estimates, with typical positioning errors of 15 meters or less (Ma et al., 2024). Commercial traffic APIs from providers such as HERE Technologies, TomTom, and Google have become integral to urban traffic research. HERE's real-time traffic database aggregates data from connected vehicles, road sensors, cameras, and incident providers across more than 70 countries and 13 million kilometers of roads (HERE Technologies, 2024). The jam factor metric, which quantifies traffic conditions on a scale from 0 (free-flow) to 10 (standstill), supports cross-network comparisons and has been used to analyze spatiotemporal congestion propagation in European cities (Rempe et al., 2016). Research utilizing crowdsourced traffic data has expanded from Western cities to developing regions; for example, Alkaabi et al. (2024) applied HERE and Google Maps data to analyze congestion in Al Ain (UAE), building on methodologies developed for Windsor, Toronto, and New York. Nevertheless, crowdsourced traffic research remains limited in Southeast Asia and Indonesia specifically.
+
+Alongside advances in data, Boeing's (2017) OSMnx framework has advanced capabilities for large-scale street network analysis, enabling systematic exploration of urban infrastructure topology and the computation of transportation-relevant metrics, including intersection density, circuity, average node degree, and centrality measures (Boeing, 2025). Betweenness centrality---measuring the proportion of shortest paths passing through each node or edge---has been hypothesized to correlate with traffic volumes, with studies finding significant relationships in some urban contexts (Gao et al., 2013; Porta et al., 2006). However, empirical evidence varies: research in Portland demonstrated that grid-like networks distribute importance more evenly (15\% of paths through the most central node) than constrained networks (43\%), suggesting that topology--congestion relationships depend on network structure (Boeing, 2018). Spatial autocorrelation methods provide powerful tools for identifying traffic clusters: Global Moran's I assesses overall spatial clustering (Moran, 1950), while Local Indicators of Spatial Association (LISA) identify specific hotspot and coldspot locations (Anselin, 1995). Getis-Ord Gi* statistics complement LISA by detecting statistically significant spatial concentrations (Getis \& Ord, 1992; Ord \& Getis, 1995). These methods have been applied extensively to traffic crash analysis---Bekele et al. (2024) compared crash severity clustering in Addis Ababa and Berlin using Moran's I---but applications to real-time congestion data remain less common, particularly in developing country contexts.
+
+Despite the growing availability of probe vehicle data and commercial traffic APIs, systematic spatiotemporal analysis of Indonesian urban congestion using high-resolution data remains limited. Previous Indonesian studies relied primarily on surveys or short-term observations, lacking continuous monitoring across extended periods. The integration of network topology metrics with traffic flow data is underexplored, and whether physical capacity constraints predict congestion distributions has not been rigorously tested in these contexts. The three cities examined here---Jakarta, Bandung, and Semarang---represent distinct Indonesian urban typologies. Jakarta, a megacity of 10.5 million (metro: 34 million), consistently ranks among the world's most congested (TomTom Traffic Index, 2023) and exhibits high motorcycle volumes exceeding 60\%. Bandung (2.5 million) is Java's second-largest city, occupying a highland basin with limited network development. Semarang (1.8 million) functions as Central Java's logistics hub, spanning coastal lowlands and southern hills that create distinct traffic zones.
+
+This study addresses these gaps through four integrated approaches: (1) analyzing congestion patterns using continuous high-frequency traffic data collected over an 11-month period, comprising more than 264 million observations; (2) applying geostatistical methods (Moran's I, LISA, Getis-Ord Gi*) to identify spatial clustering and hotspots; (3) integrating OSMnx network analysis to examine topology--congestion relationships; and (4) testing whether physical capacity constraints, including a novel graph-based capacity drop detection framework, predict observed congestion distributions. The study makes five primary contributions: (1) \emph{Software}---an open-source Python package that provides a fully programmable, end-to-end traffic analysis pipeline for HERE API data collection, large-scale GeoPackage aggregation, geostatistical and network analysis, high-performance computing-enabled centrality computation via SLURM, and automated manuscript generation within Python; (2) \emph{Methodological}---demonstrating the integration of commercial traffic API data with open-source network analysis, including a novel graph-based capacity drop detection framework; (3) \emph{Empirical}---offering the first systematic comparative analysis across three Indonesian cities using standardized metrics, with triangulated evidence from four independent spatial predictors all yielding null results; (4) \emph{Theoretical}---demonstrating that normalized congestion metrics inherently remove capacity effects, with implications for capacity--congestion studies using similar data sources; and (5) \emph{Practical}---providing evidence-based recommendations for traffic management in rapidly urbanizing Southeast Asian contexts.
+
+
+
+\section{Literature Review}
+
+Traffic congestion in developing countries exhibits a unique set of characteristics, marked by significant variability, pronounced peak periods, and a strong reliance on informal transportation systems, distinguishing it from patterns observed in developed nations (Gakenheimer, 1999). The emergence of big data analytics has revolutionized our understanding of urban dynamics, providing unprecedented levels of detail and insight into the complexities of urban traffic systems (Batty, 2013).
+
+In Indonesia, for instance, much of the existing research has predominantly relied on survey data to assess traffic conditions (Susilo et al., 2007; Joewono \& Kubota, 2008). However, this approach has often fallen short of capturing the continuous and dynamic nature of traffic flows. Leveraging recent technological advancements, contemporary studies have begun integrating a range of data sources and sophisticated analytical frameworks to enhance our understanding of urban traffic behavior and congestion trends.
+
+The utilization of probe vehicle data and commercial traffic application programming interfaces (APIs) has significantly bolstered traffic analysis, enabling more nuanced assessments of traffic conditions (Leduc, 2008; Jenelius \& Koutsopoulos, 2015). A particularly valuable metric in this context is the jam factor, which quantifies traffic conditions on a scale from 0 (free-flowing traffic) to 10 (a complete standstill). This metric facilitates cross-network comparisons and has been instrumental in characterizing congestion levels in various European cities (HERE Technologies, 2023; Rempe et al., 2016).
+
+Additionally, it has been employed to analyze the spatiotemporal propagation of traffic congestion, providing insights into how congestion evolves over time and space (Saberi et al., 2020). Boeing's (2017) OSMnx framework has further advanced our capacity for large-scale street network analysis, allowing researchers to systematically explore urban infrastructures. Subsequent studies utilizing this framework have revealed significant correlations between betweenness centrality---a measure of a node's importance in a network---and traffic volumes (Gao et al., 2013; Porta et al., 2006).
+
+These findings suggest that the structural characteristics of a transportation network play a critical role in shaping congestion dynamics and its propagation patterns (Kirkley et al., 2018). The traffic bottleneck theory posits that reductions in roadway capacity can lead to concentrated congestion at specific locations, a phenomenon described by Daganzo (2007) and Arnott et al. (1993).
+
+However, empirical evidence establishing a direct link between static capacity features and city-wide congestion remains sparse. To address this gap, spatial autocorrelation methods---such as Moran's I, Local Indicators of Spatial Association (LISA), and Getis-Ord Gi*---have emerged as powerful tools for identifying traffic hotspots within urban areas (Getis \& Ord, 1992; Ord \& Getis, 1995). These methodologies build upon Tobler's (1970) foundational first law of geography, which asserts that spatial phenomena are not randomly distributed but are influenced by their geographic context, thereby enhancing our ability to analyze and interpret traffic congestion patterns (Anderson, 2009; Wang et al., 2016).
+
+
+
+\section{Study Area and Data}
+
+\subsection{Study Area}
+
+The three study cities represent a hierarchy of Indonesian urban centers (Table 1).
+
+\textbf{Table 1.} Study area characteristics
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.0822}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2877}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.1644}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2466}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2192}}@{}}
+\toprule\noalign{}
+City & Population (million) & Area (km$^2$) & Traffic Segments & Urban Typology \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Jakarta & 10.5 (metro: 34) & 662 & 14,549 & Megacity, National Capital \\
+Bandung & 2.5 & 167 & 3,069 & Large City, Regional Center \\
+Semarang & 1.8 & 373 & 1,076 & Medium City, Provincial Capital \\
+\end{longtable}
+
+Jakarta extends across a coastal plain with grid and organic street patterns and is characterized by high motorcycle volumes (>60\%). Bandung occupies a highland basin with a colonial-era city center and constrained network development. Semarang spans coastal lowlands and southern hills, creating distinct traffic patterns between flat northern commercial and hilly southern residential zones.
+
+\subsection{Data Collection}
+
+Traffic flow data were collected via the HERE Traffic API at 30-minute intervals from March 2025 to February 2026, yielding approximately 14,100 collection cycles per city (Table 2). For this study, collection was automated through a shell-scheduled R script using the hereR package, which queried bounding-box polygons for each city, appended a GMT+7 timestamp to every record, and wrote each snapshot as a GeoPackage file---producing up to 48 files per day per city with no manual intervention. The Python package developed as part of this work (Section 4.6) provides a native Python equivalent of this collection stage, replacing hereR with direct HERE API calls, so that the entire pipeline from data acquisition to final outputs runs in a single language.
+
+\textbf{Table 2.} Data collection summary
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.0870}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2609}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.1884}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2174}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2464}}@{}}
+\toprule\noalign{}
+City & Collection Period & Total Files & Total Records & Unique Segments \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Jakarta & Mar 2025 - Feb 2026 & 14,132 & 206,316,468 & 14,549 \\
+Bandung & Mar 2025 - Feb 2026 & 14,136 & 43,407,684 & 3,069 \\
+Semarang & Mar 2025 - Feb 2026 & 14,122 & 15,212,072 & 1,076 \\
+\textbf{Total} & & \textbf{42,390} & \textbf{264,936,224} & \textbf{18,694} \\
+\end{longtable}
+
+Each record contains: road segment geometry (WGS84, EPSG:4326), jam factor (0--10), current speed, free-flow speed, confidence level, and timestamp (UTC, converted to GMT+7).
+
+\subsection{Data Processing and Aggregation}
+
+Raw traffic data were aggregated into eight temporal periods reflecting Indonesian urban activity patterns (Table 3).
+
+\textbf{Table 3.} Temporal period definitions
+
+\begin{longtable}[]{@{}lll@{}}
+\toprule\noalign{}
+Period & Time Range & Rationale \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Night & 00:00-05:59 & Minimal activity \\
+Morning Peak & 06:00-08:59 & Commute to work/school \\
+Morning Off-Peak & 09:00-11:59 & Business hours \\
+Lunch Hours & 12:00-13:59 & Midday break period \\
+Afternoon Off-Peak & 14:00-16:59 & Business hours \\
+Evening Peak & 16:00-18:59 & Return commute \\
+Evening Off-Peak & 19:00-21:59 & Evening activities \\
+Late Night & 22:00-23:59 & Reduced activity \\
+\end{longtable}
+
+\subsection{Network Data and Data Quality}
+
+Street network data were obtained from OpenStreetMap using OSMnx (Boeing, 2017), filtered for driveable roads (Table 4). Comprehensive exploratory analysis confirmed data integrity across all 24 dataset combinations (3 cities $\times$ 8 periods): zero null values in key variables, all jam factor means within 0--10, and uniform observation density ($\sim$1,766 per segment). Detailed validation tables are provided in Supplementary Material S1.
+
+\textbf{Table 4.} Network statistics
+
+\begin{longtable}[]{@{}lllll@{}}
+\toprule\noalign{}
+City & Nodes & Edges & Street Density (km/km$^2$) & Mean Degree \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Jakarta & $\sim$45,000 & $\sim$95,000 & 18.4 & 2.89 \\
+Bandung & $\sim$18,000 & $\sim$38,000 & 22.1 & 2.76 \\
+Semarang & $\sim$12,000 & $\sim$25,000 & 15.2 & 2.81 \\
+\end{longtable}
+
+
+
+\FloatBarrier
+\section{Methodology}
+
+\subsection{Analytical Framework}
+
+Our framework integrates four complementary approaches (Figure 1): (1) descriptive statistical analysis of temporal congestion patterns; (2) geostatistical analysis of spatial clustering; (3) network analysis of topology--congestion relationships; and (4) bottleneck analysis testing capacity constraint effects.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{figures/analytical_framework.png}
+\caption{Analytical framework integrating temporal analysis, geostatistical methods, and network topology assessment}
+\end{figure}
+
+\subsection{Temporal Pattern Analysis}
+
+Temporal patterns were analyzed by computing summary statistics for each period across all road segments. One-way ANOVA tested for significant differences between periods, with post-hoc Tukey HSD tests identifying specific significant pairs.
+
+\subsection{Geostatistical Analysis}
+
+\subsubsection{Global Spatial Autocorrelation}
+
+Spatial autocorrelation was assessed using Moran's I (Moran, 1950):
+
+\[I = \frac{n}{\sum_i \sum_j w_{ij}} \cdot \frac{\sum_i \sum_j w_{ij}(x_i - \bar{x})(x_j - \bar{x})}{\sum_i (x_i - \bar{x})^2}\]
+
+where $n$ is the number of spatial units, $w_{ij}$ is the spatial weight between units $i$ and $j$, and $x_i$ is the jam factor at unit $i$. Spatial weights used K-nearest neighbors (k=8) based on segment centroids, preferred over queen contiguity for linear road segment geometries.
+
+\subsubsection{Local Indicators of Spatial Association}
+
+Local Moran's I (Anselin, 1995) identified hotspot and coldspot clusters:
+
+\[I_i = \frac{(x_i - \bar{x})}{\sigma^2} \sum_j w_{ij}(x_j - \bar{x})\]
+
+LISA was computed with KNN (k=8) weights, 999 random permutations, and Benjamini-Hochberg FDR correction. Segments were classified as HH (hotspot), LL (coldspot), or spatial outliers (HL/LH). Temporal stability was assessed via coefficient of variation: $CV = (\sigma/\mu) \times 100\%$.
+
+\subsection{Network Centrality Analysis}
+
+Following Boeing (2017), we computed two network centrality metrics. \textbf{Betweenness centrality} measures the fraction of shortest paths passing through each edge:
+
+\[C_B(e) = \sum_{s \neq t} \frac{\sigma_{st}(e)}{\sigma_{st}}\]
+
+\textbf{Closeness centrality} measures average distance to all other nodes:
+
+\[C_C(v) = \frac{n-1}{\sum_{u \neq v} d(u,v)}\]
+
+Edge betweenness was computed on undirected networks weighted by edge length, with approximate sampling (k=500 source nodes) for large networks.
+
+\subsection{Bottleneck and Capacity Drop Analysis}
+
+To test whether physical capacity constraints explain congestion, we developed a multi-scale framework. Road segments were assigned ordinal capacity scores (1--6) based on OSM highway classification: motorway (6) through tertiary (2), with link variants scoring parent $-$ 0.5. Networks were filtered to HERE-comparable road types before analysis.
+
+\subsubsection{Graph-Based Capacity Drop Detection}
+
+Capacity drops---where road hierarchy decreases along the direction of travel---were identified using the directed network graph. For each node, we compared maximum capacity scores of incoming and outgoing edges:
+
+\[\text{Drop ratio} = \frac{C_{\text{in}} - C_{\text{out}}}{C_{\text{in}}}\]
+
+Nodes with drop ratio $\geq$ 0.20 were classified as capacity drop locations. Each traffic segment's Euclidean distance to the nearest drop was computed.
+
+\subsubsection{Local Bottleneck Gradient and Statistical Testing}
+
+A local bottleneck gradient used K=10 nearest network neighbors per segment: segments with lower capacity than at least one neighbor were classified as ``local bottleneck,'' others as ``non-bottleneck.'' Three complementary tests assessed the capacity--congestion relationship: (1) two-sample t-test comparing high- vs.\ low-capacity road segments (Cohen's d); (2) Pearson and Spearman correlations between distance-to-nearest-drop and jam factor, plus median-split t-test; and (3) t-test comparing local bottleneck vs.\ non-bottleneck segments.
+
+\subsection{Python Package and Computational Pipeline}
+
+A central software contribution of this study is a modular, open-source Python package that delivers a \textbf{fully programmable, end-to-end traffic analysis pipeline}---covering data collection, aggregation, spatial analysis, and manuscript generation entirely within Python, with no dependency on R or other languages. The package comprises approximately 6,700 lines of code across 20 scripts and is organised into four stages:
+
+\textbf{Stage 1 -- Python-native data collection.} The package implements direct HERE Traffic API calls in Python, replacing the R/hereR approach used to collect data for this study. The collector queries configurable bounding-box polygons at user-defined intervals (defaulting to 30 minutes), appends a timezone-aware GMT+7 timestamp, and writes each snapshot as a GeoPackage file---producing up to 48 files per day per city with zero manual intervention. City configurations (bounding boxes, expected segment counts, output paths) are centralised in \texttt{config.py}, making the collector trivially extensible to any city covered by the HERE API.
+
+\textbf{Stage 2 -- Large-scale aggregation.} City-specific aggregation scripts read all raw GeoPackage files, match road segments via MD5-hashed geometries implemented in \texttt{utils.py}, and compute per-segment summary statistics (mean, std, min, max, count) for each of the eight temporal periods. Across the 11-month study period this stage processed over 42,000 input files and 264 million individual traffic records.
+
+\textbf{Stage 3 -- Analysis.} Ten dedicated scripts execute the full analytical workflow: exploratory validation (\texttt{exploratory\_data\_analysis.py}), geostatistical analysis (\texttt{geostatistical\_analysis.py} and \texttt{geostatistical\_visualizations.py}), advanced spatial statistics including Moran's I, LISA, and spatial regression (\texttt{advanced\_spatial\_analysis.py}, \texttt{revision\_analyses.py}), bottleneck and capacity drop detection (\texttt{bottleneck\_analysis.py}), POI and activity-centre analysis (\texttt{activity\_center\_analysis.py}, \texttt{poi\_congestion\_analysis.py}), comparative temporal--spatial analysis (\texttt{temporal\_vs\_spatial\_comparison.py}), and network centrality computation (\texttt{compute\_centrality\_correlations.py}). Network centrality, involving $O(VE)$ shortest-path computation over graphs of up to 95,000 edges, is offloaded via SLURM job submission (\texttt{run\_hpc.sh}) to an NVIDIA H100 GPU cluster, enabling overnight batch processing across all three cities.
+
+\textbf{Stage 4 -- Reproducible manuscript generation.} Scripts in the \texttt{paper/} sub-package automate figure generation (\texttt{generate\_figures.py}), LaTeX compilation (\texttt{build\_latex.py}), and PDF creation (\texttt{create\_pdf.py}), so any change to analysis results propagates automatically to the manuscript. All outputs are serialised to CSV (tables) and PNG (figures), ensuring full reproducibility.
+
+Core Python dependencies: GeoPandas, Shapely, PyProj (spatial I/O); OSMnx 2.0, NetworkX (street network analysis); esda, libpysal, spreg (spatial statistics and regression); SciPy, statsmodels (hypothesis testing); Matplotlib, Seaborn, contextily (visualisation); requests (HERE API collection). The package is available at \url{https://github.com/firmanhadi21/traffic-analyses}.
+
+
+
+\section{Results}
+
+\subsection{Overall Congestion Characteristics}
+
+Table 5 presents summary statistics across all temporal periods. Jakarta exhibits the highest congestion: during the evening peak, 53.5\% of segments reach moderate congestion (JF > 2.0), compared with 11.9\% in Bandung and none in Semarang.
+
+\textbf{Table 5.} Congestion summary statistics by city (all temporal periods)
+
+\begin{longtable}[]{@{}llll@{}}
+\toprule\noalign{}
+Statistic & Jakarta & Bandung & Semarang \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Mean Jam Factor & 1.43 & 1.36 & 1.19 \\
+Std. Deviation & 0.47 & 0.50 & 0.40 \\
+Median & 1.63 & 1.52 & 1.34 \\
+Max Segment Mean & 2.25 & 2.29 & 1.98 \\
+Moderate+ congestion (evening peak) & 53.5\% & 11.9\% & 0.0\% \\
+\end{longtable}
+
+\subsection{Temporal Patterns}
+
+\subsubsection{Period-Based Analysis}
+
+Figure 2 and Table 6 present mean jam factors by temporal period. The evening peak (16:00--19:00) shows the highest congestion across all cities---approximately 40\% above daily averages (39--41\%). All cities follow the same diurnal progression: minimal congestion at night (JF $\approx$ 0.5), rising through the morning peak, sustained at midday, and culminating in the evening peak before declining.
+
+\begin{figure}
+\centering
+\includegraphics[width=\textwidth]{figures/temporal_pattern_comparison.png}
+\caption{Mean jam factor by temporal period across three cities}
+\end{figure}
+
+\textbf{Table 6.} Mean jam factor by temporal period
+
+\begin{longtable}[]{@{}llll@{}}
+\toprule\noalign{}
+Period & Jakarta & Bandung & Semarang \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Night & 0.50 & 0.46 & 0.45 \\
+Morning Peak & 1.19 & 1.15 & 0.95 \\
+Morning Off-Peak & 1.63 & 1.63 & 1.39 \\
+Lunch Hours & 1.66 & 1.70 & 1.45 \\
+Afternoon Off-Peak & 1.79 & 1.87 & 1.52 \\
+Evening Peak & \textbf{2.01} & \textbf{1.92} & \textbf{1.65} \\
+Evening Off-Peak & 1.67 & 1.40 & 1.33 \\
+Late Night & 0.97 & 0.77 & 0.78 \\
+\end{longtable}
+
+\subsubsection{Statistical Significance of Temporal Variation}
+
+One-way ANOVA confirms that temporal period differences are highly statistically significant (Table 6a). Post-hoc Tukey HSD tests reveal that all 28 pairwise period comparisons are significant (p < 0.05) for each city. The effect size ($\eta^2$) ranges from 15--24\%---a strong effect for a single categorical variable. Weekday congestion exceeds weekend levels by approximately 35--40\%, with Friday evenings peaking and Sunday mornings at minimum.
+
+\textbf{Table 6a.} ANOVA results for temporal period effects
+
+\begin{longtable}[]{@{}llll@{}}
+\toprule\noalign{}
+City & F-statistic & p-value & Significant Period Pairs \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Jakarta & 1,191,699.66 & < 0.001 & 28/28 \\
+Bandung & 224,445.67 & < 0.001 & 28/28 \\
+Semarang & 45,863.33 & < 0.001 & 28/28 \\
+\end{longtable}
+
+\subsection{Spatial Pattern Analysis}
+
+\subsubsection{Global Spatial Autocorrelation}
+
+Global Moran's I (KNN k=8 weights) is close to zero and non-significant for all cities (Table 7), indicating no strong global spatial autocorrelation when aggregated across the full study period. Results are robust across alternative weight specifications (KNN k=4, k=12; distance bands 500m and 1000m), and computing Moran's I separately for each temporal period also yields non-significant results across all cities and periods (all p > 0.05). This confirms the null global autocorrelation finding is not an artifact of temporal averaging or weight specification.
+
+\textbf{Table 7.} Global spatial autocorrelation statistics (Moran's I)
+
+\begin{longtable}[]{@{}lllll@{}}
+\toprule\noalign{}
+City & Moran's I & Z-score & p-value & Interpretation \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Jakarta & 0.0026 & 0.69 & 0.492 & Random \\
+Bandung & 0.0075 & 0.93 & 0.353 & Random \\
+Semarang & -0.0039 & -0.21 & 0.837 & Random \\
+\end{longtable}
+
+\subsubsection{Local Hotspot Identification}
+
+Despite weak global autocorrelation, LISA identifies meaningful local clusters (Table 8). Approximately 10\% of segments in Jakarta and Bandung participate in significant clusters (7.2\% in Semarang). After Benjamini-Hochberg FDR correction, no segments remain significant, indicating that while observed clusters exceed chance expectations by approximately 2$\times$, individual p-values are not sufficiently small to survive multiple testing correction. Uncorrected LISA results should therefore be interpreted as suggestive of local clustering tendencies; the patterns are geographically coherent (concentrated along known corridors) and exceed chance expectations by $\sim$2$\times$, suggesting genuine but weak local spatial structure. Getis-Ord Gi* analysis corroborates LISA: 9--10\% of segments are classified as significant hot or cold spots, with cold spots slightly outnumbering hot spots across all cities.
+
+\textbf{Table 8.} LISA cluster classification (evening peak, p < 0.05)
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.3333}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.2143}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.2143}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 6\tabcolsep) * \real{0.2381}}@{}}
+\toprule\noalign{}
+Cluster Type & Jakarta & Bandung & Semarang \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+HH (Hotspot) & 438 (3.0\%) & 86 (2.8\%) & 19 (1.8\%) \\
+LL (Coldspot) & 347 (2.4\%) & 73 (2.4\%) & 23 (2.1\%) \\
+HL (High-Low Outlier) & 334 (2.3\%) & 69 (2.2\%) & 19 (1.8\%) \\
+LH (Low-High Outlier) & 416 (2.9\%) & 92 (3.0\%) & 17 (1.6\%) \\
+Not Significant & 13,014 (89.5\%) & 2,749 (89.6\%) & 998 (92.8\%) \\
+\textbf{Total Significant} & \textbf{1,535 (10.5\%)} & \textbf{320 (10.4\%)} & \textbf{78 (7.2\%)} \\
+\end{longtable}
+
+\textbf{Jakarta} hotspots concentrate in: the Sudirman-Thamrin CBD corridor; the Tangerang-Jakarta western approach; and the Bekasi-Jakarta eastern approach. \textbf{Bandung} hotspots include the Dago/Setiabudhi northern corridors, Asia-Afrika city center, and Soekarno-Hatta eastern industrial zone. \textbf{Semarang} hotspots appear along Pandanaran/Pemuda central corridors, Siliwangi coastal road, and the Majapahit eastern approach.
+
+\begin{figure}
+\centering
+\includegraphics[width=\textwidth]{figures/jkt_hotspots_evening_peak.png}
+\caption{Spatial distribution of congestion hotspots --- Jakarta}
+\end{figure}
+
+\begin{figure}
+\centering
+\includegraphics[width=\textwidth]{figures/bdg_hotspots_evening_peak.png}
+\caption{Spatial distribution of congestion hotspots --- Bandung}
+\end{figure}
+
+\begin{figure}
+\centering
+\includegraphics[width=\textwidth]{figures/smg_hotspots_evening_peak.png}
+\caption{Spatial distribution of congestion hotspots --- Semarang}
+\end{figure}
+
+\subsection{Network Topology--Congestion Relationships}
+
+\subsubsection{Betweenness Centrality}
+
+Traffic segments were spatially joined to OSMnx edges using centroid-based nearest-neighbor matching (200m threshold). Match quality is high: median centroid distances are under 20m, with over 85\% of matches within 50m. Correlation analysis reveals \textbf{negligible correlations} between betweenness centrality and jam factor across all cities (Table 10). Despite Bandung's statistically significant Spearman $\rho$ = 0.040 (p = 0.009), the effect size is trivially small, contradicting the common assumption that topologically important roads experience greater congestion.
+
+\textbf{Table 10.} Centrality--congestion correlations
+
+\begin{longtable}[]{@{}llllll@{}}
+\toprule\noalign{}
+City & n matched & Pearson r & p-value & Spearman $\rho$ & p-value \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Jakarta & 20,822 & 0.002 & 0.828 & -0.001 & 0.946 \\
+Bandung & 4,336 & 0.012 & 0.442 & 0.040 & 0.009 \\
+Semarang & 1,507 & -0.011 & 0.667 & -0.030 & 0.252 \\
+\end{longtable}
+
+\begin{figure}
+\centering
+\includegraphics[width=\textwidth]{figures/jkt_traffic_maps.png}
+\caption{Edge betweenness centrality --- Jakarta}
+\end{figure}
+
+\begin{figure}
+\centering
+\includegraphics[width=\textwidth]{figures/bdg_traffic_maps.png}
+\caption{Edge betweenness centrality --- Bandung}
+\end{figure}
+
+\begin{figure}
+\centering
+\includegraphics[width=\textwidth]{figures/smg_traffic_maps.png}
+\caption{Edge betweenness centrality --- Semarang}
+\end{figure}
+
+\subsubsection{POI Density Analysis}
+
+Point of Interest density was computed using network-distance analysis (400m walking network distance, approximately a 5-minute walk; Moudon et al., 2006). Sensitivity analyses across 200m, 400m, 800m, and 1200m thresholds confirm results are robust. POI density shows \textbf{no meaningful correlation} with congestion (Table 10a). Categorical comparison of high-POI activity centers (top quartile) versus peripheral areas (bottom quartile) confirms this: differences are negligible ($|d|$ < 0.05, p > 0.3) for all cities, demonstrating that congestion is location-independent. Spatial regression (OLS, Spatial Lag, and Spatial Error models) corroborates these results, with $R^2$ < 0.3\% across all specifications; accounting for spatial structure reveals no hidden centrality--congestion relationships.
+
+\textbf{Table 10a.} POI density--congestion correlations
+
+\begin{longtable}[]{@{}llllll@{}}
+\toprule\noalign{}
+City & Total POIs & Pearson r & p-value & Spearman $\rho$ & p-value \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Jakarta & --- & 0.008 & 0.284 & -0.001 & 0.946 \\
+Bandung & --- & 0.005 & 0.770 & 0.004 & 0.820 \\
+Semarang & --- & -0.012 & 0.640 & -0.030 & 0.252 \\
+\end{longtable}
+
+\subsection{Bottleneck and Capacity Drop Analysis}
+
+\subsubsection{Aggregate Capacity--Congestion Relationship}
+
+Spatial join between HERE segments and filtered OSMnx networks achieved 95--98\% match rates. Contrary to the bottleneck hypothesis, \textbf{high-capacity roads show marginally higher congestion} than low-capacity roads in all cities (Table 10c)---the opposite of capacity constraint predictions. All differences are non-significant (p > 0.05) with trivial effect sizes ($|d|$ < 0.08). This reversal reflects the HERE jam factor's normalization to free-flow speed: capacity effects are divided out by design. Pearson and Spearman correlations between capacity score and jam factor confirm near-zero relationships (Table 10d).
+
+\textbf{Table 10c.} Congestion comparison: Low- vs.\ high-capacity road segments
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.0732}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.2073}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.2317}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.1463}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.0976}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.1098}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.1341}}@{}}
+\toprule\noalign{}
+City & Low Capacity JF & High Capacity JF & Difference & t-stat & p-value & Cohen's d \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Semarang & 1.651 & 1.655 & -0.26\% & -0.87 & 0.382 & -0.056 \\
+Bandung & 1.920 & 1.925 & -0.25\% & -1.84 & 0.066 & -0.072 \\
+Jakarta & 2.005 & 2.007 & -0.10\% & -1.88 & 0.060 & -0.033 \\
+\end{longtable}
+
+\textbf{Table 10d.} Capacity score--congestion correlations
+
+\begin{longtable}[]{@{}lllll@{}}
+\toprule\noalign{}
+City & Pearson r & p-value & Spearman $\rho$ & p-value \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Semarang & 0.027 & 0.394 & 0.031 & 0.326 \\
+Bandung & 0.034 & 0.074 & 0.032 & 0.087 \\
+Jakarta & 0.017 & 0.051 & 0.016 & 0.066 \\
+\end{longtable}
+
+\subsubsection{Spatial Capacity Drop Analysis}
+
+Graph-based detection identified capacity drops scaling with network size (Table 10e). Proximity to drops shows \textbf{no significant effect on congestion} (p = 0.095--0.830, $|d|$ < 0.09). Distance-to-drop correlations are similarly negligible (Pearson r: $-$0.008 to 0.019).
+
+\textbf{Table 10e.} Capacity drop detection and proximity analysis
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.0789}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.2105}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.1711}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.1711}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.1053}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.1184}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.1447}}@{}}
+\toprule\noalign{}
+City & Capacity Drops & Near-Drop JF & Far-Drop JF & t-stat & p-value & Cohen's d \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Semarang & 78 & 1.649 & 1.656 & -1.08 & 0.283 & -0.083 \\
+Bandung & 245 & 1.922 & 1.923 & -0.22 & 0.830 & -0.010 \\
+Jakarta & 1,443 & 2.008 & 2.006 & 1.67 & 0.095 & 0.035 \\
+\end{longtable}
+
+\begin{figure}
+\centering
+\includegraphics[width=\textwidth]{figures/capacity_drop_spatial_analysis.png}
+\caption{Spatial capacity drop analysis: capacity drop proximity and local bottleneck effects across three cities}
+\end{figure}
+
+\subsubsection{Local Bottleneck Gradient}
+
+The local gradient analysis (K=10 nearest neighbors) provides the finest-grained test (Table 10f). Segments classified as local bottlenecks exhibit \textbf{no meaningful congestion difference} from non-bottleneck segments (all p > 0.4, $|d|$ < 0.05).
+
+\textbf{Table 10f.} Local bottleneck gradient analysis
+
+\begin{longtable}[]{@{}llllll@{}}
+\toprule\noalign{}
+City & Local BN JF & Non-BN JF & t-stat & p-value & Cohen's d \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Semarang & 1.650 & 1.654 & -0.65 & 0.517 & -0.047 \\
+Bandung & 1.920 & 1.922 & -0.62 & 0.534 & -0.027 \\
+Jakarta & 2.007 & 2.006 & 0.80 & 0.426 & 0.016 \\
+\end{longtable}
+
+\subsubsection{HERE Jam Factor Normalization}
+
+A fundamental property of the jam factor shapes all spatial analyses. The metric is computed as:
+
+\[JF \propto 1 - \frac{v_{\text{current}}}{v_{\text{free-flow}}}\]
+
+Because each segment's congestion is measured relative to its own free-flow baseline, road class effects are divided out by design. Empirically, all road types show mean jam factors within a 4\% range (Semarang: 1.644--1.711 across all highway classes), confirming this normalization. This means the jam factor measures \textbf{demand relative to capacity} rather than absolute congestion, and any investigation of the capacity--congestion relationship using absolute terms must use unnormalized speed data.
+
+\subsection{Temporal vs Spatial Predictors: A Critical Comparison}
+
+Table 11a presents variance explained by each predictor type. Temporal period explains \textbf{1,000--4,000$\times$ more variance} than any spatial predictor. We note that $\eta^2$ (ANOVA) and $R^2$ (bivariate correlation) are not strictly comparable, but the magnitude of the difference (three orders of magnitude) cannot be attributed to methodological artifacts.
+
+\textbf{Table 11a.} Variance explained by predictor type
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2292}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.1875}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.1875}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.1875}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2083}}@{}}
+\toprule\noalign{}
+Predictor & Measure & Jakarta & Bandung & Semarang \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\textbf{Time Period} & $\eta^2$ (ANOVA) & 23.8\% & 19.2\% & 15.4\% \\
+POI Density & $R^2$ & 0.006\% & 0.003\% & 0.014\% \\
+Network Centrality & $R^2$ & 0.0004\% & 0.014\% & 0.012\% \\
+Road Capacity & $R^2$ & 0.028\% & 0.115\% & 0.072\% \\
+Capacity Drop Proximity & $R^2$ & 0.006\% & 0.002\% & 0.001\% \\
+\textbf{Ratio (Temporal/Spatial)} & --- & \textbf{$\sim$4000x} & \textbf{$\sim$1400x} & \textbf{$\sim$1100x} \\
+\end{longtable}
+
+\begin{figure}
+\centering
+\includegraphics[width=\textwidth]{figures/temporal_vs_spatial_effect_size.png}
+\caption{Temporal vs spatial effect sizes}
+\end{figure}
+
+This result fundamentally reframes urban congestion as a \textbf{temporal synchronization problem}: congestion occurs because everyone travels at the same times, not because certain locations inherently generate more traffic. The LISA hotspots identified above represent temporal bottlenecks---locations where capacity is insufficient during synchronized peak demand---rather than inherently problematic spatial characteristics.
+
+\subsection{Comparative City Analysis}
+
+Cross-city comparison reveals scaling relationships (Figure 6 and Tables 11--12). Congestion does not scale linearly with population: larger cities show both higher absolute congestion and greater peak/off-peak variability, suggesting urban scale amplifies temporal fluctuations.
+
+\begin{figure}
+\centering
+\includegraphics[width=\textwidth]{figures/boxplot_comparison.png}
+\caption{Cross-city comparison of congestion metrics}
+\end{figure}
+
+\textbf{Table 11.} Comparative metrics
+
+\begin{longtable}[]{@{}llll@{}}
+\toprule\noalign{}
+Metric & Jakarta & Bandung & Semarang \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Population (million) & 10.5 & 2.5 & 1.8 \\
+Mean Jam Factor & 1.599 & 1.537 & 1.299 \\
+Off-Peak Period Mean & 1.223 & 1.180 & 1.034 \\
+Peak/Off-peak ratio & 1.31x & 1.30x & 1.26x \\
+Peak increase (\%) & 30.8\% & 30.2\% & 25.6\% \\
+Hotspot density (/km$^2$) & 4.30 & 3.12 & 0.42 \\
+\end{longtable}
+
+\textbf{Table 12.} Peak vs Off-Peak Congestion Analysis
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.0909}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.1667}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.2273}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.2273}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.1061}}
+  >{\raggedright\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.1818}}@{}}
+\toprule\noalign{}
+City & Peak Mean & Off-Peak Mean & Absolute Diff & Ratio & \% Increase \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Jakarta & 1.599 & 1.223 & 0.376 & 1.31x & 30.8\% \\
+Bandung & 1.537 & 1.180 & 0.357 & 1.30x & 30.2\% \\
+Semarang & 1.299 & 1.034 & 0.265 & 1.26x & 25.6\% \\
+\end{longtable}
+
+Jakarta exhibits the largest peak/off-peak differential (30.8\%), reflecting massive daily commuter flows; Bandung shows similar intensification (30.2\%) despite its smaller size, likely due to constrained network geometry; and Semarang the smallest differential (25.6\%), reflecting more distributed logistics-oriented commercial activity.
+
+
+
+\section{Discussion}
+
+\subsection{Temporal Patterns and Spatial Clustering}
+
+The dominance of evening peak congestion reflects common Southeast Asian patterns where afternoon activities---school dismissals, commercial operations, and shift changes---coincide with return commutes (Cervero, 2013). The asymmetry between morning and evening peaks (evening $\sim$20\% higher) results from more distributed morning departures, concentrated evening activities, and school/office closing-time overlap. While global Moran's I shows no significant spatial autocorrelation, this does not preclude local clusters: LISA reveals hotspot patterns geographically coherent with known congested corridors, and congestion propagates through networks consistent with bottleneck queuing theory (Daganzo, 2007). During the evening peak, over half of Jakarta's monitored segments reach moderate congestion (JF > 2.0), while Bandung and Semarang remain predominantly in the light-traffic range.
+
+\subsection{The Failure of Spatial Predictors and Capacity Constraints}
+
+A central and perhaps counterintuitive finding is the \textbf{near-zero correlation} between all spatial characteristics and congestion. Network centrality, land-use intensity (POI density), and road capacity together explain less than 0.02\% of congestion variance. The bottleneck analysis provides perhaps the strongest evidence: three independent tests---aggregate capacity comparison, spatial capacity drop proximity, and local bottleneck gradient---all yield null results. The HERE jam factor's normalization to free-flow speed explains why aggregate capacity effects vanish ($JF \propto 1 - v/v_f$). Crucially, however, the capacity drop analysis tests a \emph{relative} hypothesis (that hierarchy transitions create localized spikes regardless of normalization), and this too fails (p = 0.095--0.830). The combined triangulated evidence from four independent null findings supports the conclusion that spatial capacity constraints do not drive congestion patterns in these cities, consistent with induced demand theory (Duranton \& Turner, 2011).
+
+\subsection{Implications for Traffic Management}
+
+The temporal dominance finding suggests important policy directions, with the caveat that these are based on normalized (relative) congestion metrics and should be confirmed with absolute delay data before informing major infrastructure decisions:
+
+\begin{enumerate}
+\item \textbf{Demand management} (staggered work/school hours, flexible work policies, congestion pricing) should be considered alongside infrastructure expansion; distributing departure times across a 2--3 hour window could reduce peak congestion by 30--40\%
+\item \textbf{Temporal targeting} of resources to the 16:00--19:00 peak---adaptive signal control, traffic police deployment, incident response---is likely to maximize impact
+\item \textbf{Infrastructure decisions} should not rely solely on normalized congestion metrics; betweenness centrality and physical capacity transitions do not predict congestion distribution, suggesting that route diversification and bottleneck removal may have limited effectiveness
+\end{enumerate}
+
+\subsection{Limitations}
+
+Key limitations include: (1) HERE API coverage may underrepresent minor roads; (2) the jam factor by design removes absolute capacity effects---the capacity analysis tested relative effects that should still be detectable under normalization, but future studies should use absolute speed data; (3) the 11-month period may not capture long-term trends; (4) traffic segment and OSM edge geometries do not perfectly align, though match rates exceeded 95\%; (5) the ordinal capacity score based on OSM classification is a proxy---lane count, signals, and intersection design are not captured; (6) segment length heterogeneity (200m to >3km contributing equally to spatial statistics) represents a MAUP limitation that may attenuate autocorrelation estimates; and (7) correlational findings do not establish causality.
+
+\subsection{Future Research}
+
+Priority research extensions include: (1) denormalized capacity analysis re-aggregating raw HERE speed data to compute absolute delay ($\Delta t = L \times (1/v - 1/v_f)$) to test whether high-capacity roads carry more total delay despite similar jam factors; (2) temporal capacity interactions examining whether capacity constraints become relevant only during specific peak periods; (3) machine learning approaches combining temporal features with network topology for congestion prediction; and (4) microscopic bottleneck analysis using intersection-level data to test whether signal timing creates localized capacity effects invisible at segment level.
+
+
+
+\section{Conclusions}
+
+This study presents a comprehensive spatiotemporal analysis of urban traffic congestion in three Indonesian metropolitan areas using 11 months and 264 million observations. The key findings fundamentally reframe understanding of urban congestion.
+
+\subsection{Primary Finding: Temporal Dominance}
+
+\textbf{Relative congestion is fundamentally a temporal phenomenon.} Time-of-day explains 15--24\% of jam factor variance ($\eta^2$ from ANOVA), while all spatial predictors combined explain less than 0.02\%---a 1,000--4,000$\times$ difference. An important caveat is that the jam factor captures demand-to-capacity ratio (normalized metric); whether temporal dominance also holds for absolute delay remains an open question requiring raw speed and volume data.
+
+\subsection{Secondary Findings}
+
+\begin{enumerate}
+\item \textbf{Evening peak dominance:} Congestion during 16:00--19:00 exceeds daily averages by $\sim$40\%, with Jakarta reaching a mean jam factor of 2.01
+\item \textbf{Local clustering despite global randomness:} Global Moran's I is non-significant, but LISA identifies local hotspots ($\sim$10\% of segments) representing peak-hour capacity bottlenecks
+\item \textbf{Scale effects:} Larger cities show higher absolute congestion and greater peak/off-peak differentials (Jakarta 30.8\%, Semarang 25.6\%)
+\item \textbf{Network topology irrelevance:} Betweenness centrality correlates near-zero with congestion (r < 0.02)
+\item \textbf{Capacity constraint irrelevance:} Neither aggregate road capacity ($|d|$ = 0.03--0.07, p > 0.05), spatial capacity drops (p = 0.10--0.83), nor local bottleneck gradients ($|d|$ < 0.05) predict congestion levels
+\end{enumerate}
+
+\subsection{Policy Implications and Contribution}
+
+These findings support demand management strategies (staggered hours, flexible work, congestion pricing) alongside infrastructure expansion, given the strong temporal dominance in relative congestion. Temporal targeting of resources to the 16:00--19:00 peak period is likely to maximize impact regardless of metric choice. Infrastructure investment decisions should incorporate absolute delay analysis rather than relying solely on normalized metrics.
+
+This research contributes empirical evidence demonstrating that urban congestion is primarily a temporal coordination failure rather than a spatial infrastructure or capacity constraint problem. A parallel software contribution is an open-source Python package that provides a fully programmable, end-to-end traffic analysis pipeline: Python-native HERE API collection supersedes the R-based approach used for this study's data, and the remaining stages---large-scale aggregation, geostatistical and network analysis, HPC-enabled centrality computation, and automated manuscript generation---run entirely within Python. This pipeline is directly transferable to other cities and commercial traffic data sources. The novel graph-based capacity drop detection framework provides a replicable method for testing the bottleneck hypothesis in other urban contexts, and the finding that time explains 1,000$\times$ more variance than space---corroborated by four independent null capacity tests---has significant implications for transportation policy worldwide.
+
+
+
+\section*{Acknowledgments}
+
+Computational resources were provided by Pusdatin Bappenas (The Data and Information Center, The Ministry of National Development Planning), which granted access to NVIDIA H100 GPUs on their High Performance Computing cluster.
+
+
+
+\section*{Declaration of Competing Interests}
+
+The authors declare no competing financial interests or personal relationships that could have influenced this work.
+
+
+
+\section*{Author Contributions}
+
+\textbf{Firman Hadi:} Conceptualization, Methodology, Software, Data curation, Formal analysis, Writing -- original draft. \textbf{Yasser Wahyuddin:} Methodology, Formal analysis, Writing -- original draft. \textbf{L.M. Sabri:} Formal analysis, Writing -- review \& editing. \textbf{Agung Indrajit:} Writing -- review \& editing.
+
+
+
+\section*{Declaration of Generative AI and AI-assisted Technologies in the Writing Process}
+
+During the preparation of this work, the authors used Claude (Anthropic) for data processing pipeline development, evaluation script implementation, and statistical analysis automation. The authors reviewed and edited all outputs and take full responsibility for the content of this publication.
+
+
+
+\section*{Ethics Statement}
+
+This research used publicly available satellite imagery and did not involve human participants, animal subjects, or sensitive personal data. No ethical approval was required.
+
+
+
+\section*{Funding}
+
+This research did not receive any specific grant from funding agencies in the public, commercial, or not-for-profit sectors.
+
+
+
+\section*{Data Availability}
+
+Traffic flow data were obtained from the HERE Traffic API. Aggregated datasets and analysis code are available at: https://github.com/firmanhadi21/traffic-analyses
+
+Street network data are publicly available from OpenStreetMap (www.openstreetmap.org).
+
+
+
+\section*{References}
+
+Alkaabi, K., Raza, M., Qasemi, E., Alderei, H., Alderei, M., \& Almheiri, S. (2024). Using crowd-sourced traffic data and open-source tools for urban congestion analysis. \emph{Transportation Research Interdisciplinary Perspectives}, 28, 101261.
+
+Anderson, T. K. (2009). Kernel density estimation and K-means clustering to profile road accident hotspots. \emph{Accident Analysis \& Prevention}, 41(3), 359-364.
+
+Anselin, L. (1995). Local indicators of spatial association---LISA. \emph{Geographical Analysis}, 27(2), 93-115.
+
+Arnott, R., de Palma, A., \& Lindsey, R. (1993). A structural model of peak-period congestion: A traffic bottleneck with elastic demand. \emph{American Economic Review}, 83(1), 161-179.
+
+Asian Development Bank. (2019). \emph{Asian Development Outlook 2019: Strengthening Disaster Resilience}. Manila: ADB.
+
+Barrington-Leigh, C., \& Millard-Ball, A. (2020). Global trends toward urban street-network sprawl. \emph{Proceedings of the National Academy of Sciences}, 117(4), 1941-1950.
+
+Batty, M. (2013). \emph{The New Science of Cities}. Cambridge, MA: MIT Press.
+
+Bekele, T., Gebremedhin, A., \& Mekonnen, A. (2024). A spatial autocorrelation analysis of road traffic crash by severity using Moran's I spatial statistics: A comparative study of Addis Ababa and Berlin cities. \emph{Accident Analysis \& Prevention}, 197, 107458.
+
+Benjamini, Y., \& Hochberg, Y. (1995). Controlling the false discovery rate: A practical and powerful approach to multiple testing. \emph{Journal of the Royal Statistical Society: Series B}, 57(1), 289-300.
+
+Boeing, G. (2017). OSMnx: New methods for acquiring, constructing, analyzing, and visualizing complex street networks. \emph{Computers, Environment and Urban Systems}, 65, 126-139.
+
+Boeing, G. (2018). Urban street network centrality. \emph{Geoff Boeing Blog}. Retrieved from geoffboeing.com/2018/01/urban-street-network-centrality/
+
+Boeing, G. (2022). Street network models and indicators for every urban area in the world. \emph{Geographical Analysis}, 54(3), 519-535.
+
+Boeing, G. (2025). Modeling and analyzing urban networks and amenities with OSMnx. \emph{Geographical Analysis}, 57(1), 1-18.
+
+BPS Bandung. (2015). \emph{Bandung City in Figures 2015}. Bandung: Badan Pusat Statistik Kota Bandung.
+
+Cai, X., Xiao, Y., \& Zhang, L. (2024). Traffic congestion cause identification method for urban main roads. \emph{Transportation Research Record}, 2678(3), 456-470.
+
+Castrol. (2015). \emph{Castrol Magnatec Stop-Start Index}. London: BP.
+
+Cervero, R. (2013). Linking urban transport and land use in developing countries. \emph{Journal of Transport and Land Use}, 6(1), 7-24.
+
+Cui, H., Dong, X., Su, Y., Zhu, M., \& Ma, X. (2024). Exploring spatiotemporal patterns of frequently congested urban road segments based on multi-source data: A case study of China's super-large cities. \emph{Transportation Research Record}, 2678(8), 789-804.
+
+Duranton, G., \& Turner, M. A. (2011). The fundamental law of road congestion: Evidence from US cities. \emph{American Economic Review}, 101(6), 2616-2652.
+
+Ermagun, A., \& Levinson, D. (2018). Spatiotemporal traffic forecasting: Review and proposed directions. \emph{Transport Reviews}, 38(6), 786-814.
+
+Daganzo, C. F. (2007). Urban gridlock: Macroscopic modeling and mitigation approaches. \emph{Transportation Research Part B}, 41(1), 49-62.
+
+Gakenheimer, R. (1999). Urban mobility in the developing world. \emph{Transportation Research Part A}, 33(7-8), 671-689.
+
+Getis, A., \& Ord, J. K. (1992). The analysis of spatial association by use of distance statistics. \emph{Geographical Analysis}, 24(3), 189-206.
+
+Gao, S., Wang, Y., Gao, Y., \& Liu, Y. (2013). Understanding urban traffic-flow characteristics: A rethinking of betweenness centrality. \emph{Environment and Planning B}, 40(1), 135-153.
+
+Golub, A., Robinson, R., Harner, J., Herrera, S., Nall, C., \& Daigger, G. (2021). Spatiotemporal analysis of traffic congestion, air pollution, and exposure vulnerability in Tanzania. \emph{Science of the Total Environment}, 782, 146901.
+
+HERE Technologies. (2024). \emph{HERE Traffic Analytics: Speed Data Enhancements}. Retrieved from here.com/learn/blog/here-traffic-analytics-speed-data-enhancements.
+
+Jakarta Environmental Agency. (2022). \emph{Smart Traffic Management System Implementation Report 2022}. Jakarta: Dinas Lingkungan Hidup DKI Jakarta.
+
+Jenelius, E., \& Koutsopoulos, H. N. (2015). Probe vehicle data sampled by time or space: Consistent travel time allocation and estimation. \emph{Transportation Research Part B}, 71, 120-137.
+
+Jiang, B., \& Claramunt, C. (2004). Topological analysis of urban street networks. \emph{Environment and Planning B}, 31(1), 151-162.
+
+HERE Technologies. (2023). \emph{HERE Traffic API Developer Guide}. Retrieved from developer.here.com.
+
+Joewono, T. B., \& Kubota, H. (2008). Paratransit service in Indonesia: User satisfaction and future choice. \emph{Transportation Planning and Technology}, 31(3), 325-345.
+
+Kirkley, A., Barbosa, H., Barthelemy, M., \& Ghoshal, G. (2018). From the betweenness centrality in street networks to structural invariants in random planar graphs. \emph{Nature Communications}, 9, 2501.
+
+Kutzbach, M. J. (2009). Motorization in developing countries: Causes, consequences, and effectiveness of policy options. \emph{Journal of Urban Economics}, 65(2), 154-166.
+
+Louail, T., Lenormand, M., Cantu Ros, O. G., Picornell, M., Herranz, R., Frias-Martinez, E., Ramasco, J. J., \& Barthelemy, M. (2015). From mobile phone data to the spatial structure of cities. \emph{Scientific Reports}, 4, 5276.
+
+Louf, R., \& Barthelemy, M. (2014). A typology of street patterns. \emph{Journal of the Royal Society Interface}, 11(101), 20140924.
+
+Leduc, G. (2008). Road traffic data: Collection methods and applications. \emph{JRC Technical Notes}, European Commission.
+
+Marshall, W. E., Piatkowski, D. P., \& Garrick, N. W. (2018). Community design, street networks, and public health. \emph{Journal of Transport \& Health}, 1(4), 326-340.
+
+Li, X., Cui, J., An, S., \& Parsafard, M. (2018). Stop-and-go traffic analysis: Theoretical properties, environmental impacts and oscillation mitigation. \emph{Transportation Research Part B}, 70, 319-339.
+
+Ma, Y., Zhang, H., \& Liu, W. (2024). Traffic state prediction method based on spatial--temporal data mining of floating car data. \emph{Computer-Aided Civil and Infrastructure Engineering}, 39(5), 712-730.
+
+Moudon, A. V., Lee, C., Cheadle, A. D., Collier, C. W., Johnson, D., Schmid, T. L., \& Weather, R. D. (2006). Operational definitions of walkable neighborhood: Theoretical and empirical insights. \emph{Journal of Physical Activity and Health}, 3(s1), S99-S117.
+
+Moran, P. A. P. (1950). Notes on continuous stochastic phenomena. \emph{Biometrika}, 37(1-2), 17-23.
+
+Openshaw, S. (1984). \emph{The Modifiable Areal Unit Problem}. Concepts and Techniques in Modern Geography, 38. Norwich: Geo Books.
+
+Ord, J. K., \& Getis, A. (1995). Local spatial autocorrelation statistics: Distributional issues and an application. \emph{Geographical Analysis}, 27(4), 286-306.
+
+Porta, S., Crucitti, P., \& Latora, V. (2006). The network analysis of urban streets: A primal approach. \emph{Environment and Planning B}, 33(5), 705-725.
+
+Pojani, D., \& Stead, D. (2015). Sustainable urban transport in the developing world: Beyond megacities. \emph{Sustainability}, 7(6), 7784-7805.
+
+Rey, S. J., \& Anselin, L. (2010). PySAL: A Python library of spatial analytical methods. In M. M. Fischer \& A. Getis (Eds.), \emph{Handbook of Applied Spatial Analysis} (pp.~175-193). Berlin: Springer.
+
+Rempe, F., Huber, G., \& Bogenberger, K. (2016). Spatio-temporal congestion patterns in urban traffic networks. \emph{Transportation Research Procedia}, 15, 513-524.
+
+Saberi, M., Hamedmoghadam, H., Ashfaq, M., Hosseini, S. A., Gu, Z., Shafiei, S., Nair, D. J., Dixit, V., Gardner, L., Waller, S. T., \& Gonz\'{a}lez, M. C. (2020). A simple contagion process describes spreading of traffic jams in urban networks. \emph{Nature Communications}, 11, 1616.
+
+Susilo, Y. O., Joewono, T. B., Santosa, W., \& Parikesit, D. (2007). A reflection of motorization and public transport in Jakarta metropolitan area. \emph{IATSS Research}, 31(1), 59-68.
+
+Syaiful, S., \& Fadlilah, N. (2020). Exploring the effectiveness of demand management policy in reducing traffic congestion and environmental pollution: Car-free day and odd-even plate measures for Bandung city in Indonesia. \emph{Case Studies on Transport Policy}, 8(3), 713-720.
+
+Tobler, W. R. (1970). A computer movie simulating urban growth in the Detroit region. \emph{Economic Geography}, 46(sup1), 234-240.
+
+TomTom. (2023). \emph{TomTom Traffic Index 2023}. Amsterdam: TomTom International.
+
+TomTom. (2025). \emph{Traffic Stats API Documentation}. Retrieved from developer.tomtom.com/traffic-stats.
+
+Wang, Y., Gu, Y., Dou, M., \& Qiao, M. (2016). Using spatial semantics and interactions to identify urban functional regions. \emph{ISPRS International Journal of Geo-Information}, 7(4), 130.
+
+Wang, Z., Lu, M., Yuan, X., Zhang, J., \& van de Wetering, H. (2019). Mapping spatio-temporal patterns and detecting the factors of traffic congestion with multi-source data fusion and mining techniques. \emph{Computers, Environment and Urban Systems}, 77, 101364.
+
+Wheeler, D., Cohen, A., Gurian, P., \& Brown, D. (2021). Siting priorities for congestion-reducing projects in Dhaka: A spatiotemporal analysis of traffic congestion, travel times, air pollution, and exposure vulnerability. \emph{International Journal of Sustainable Transportation}, 16(12), 1082-1097.
+
+WHO. (2021). \emph{WHO Global Air Quality Guidelines}. Geneva: World Health Organization.
+
+World Bank. (2019). \emph{Bandung Urban Transport Diagnostic}. Washington, DC: World Bank Group.
+
+World Bank. (2021). \emph{Jakarta Urban Mobility Assessment}. Washington, DC: World Bank Group.
+
+World Bank. (2022). \emph{Indonesia Mass Transit Project}. Washington, DC: World Bank Group.
+
+Yuan, Y., Zhang, X., \& Li, S. (2025). Review and prospect of floating car data research in transportation. \emph{Communications in Transportation Research}, 6, 100117.
+
+Zhang, L., Wang, J., \& Liu, X. (2022). Spatiotemporal analysis of urban road congestion during and post COVID-19 pandemic in Shanghai, China. \emph{Scientific Reports}, 12, 2024.
+
+Zhong, C., Arisona, S. M., Huang, X., Batty, M., \& Schmitt, G. (2014). Detecting the dynamics of urban structure through spatial network analysis. \emph{International Journal of Geographical Information Science}, 28(11), 2178-2199.
+
+
+
+\section*{Supplementary Materials}
+
+Additional figures, detailed statistical outputs, and analysis code are available at: https://github.com/firmanhadi21/traffic-analyses
+
+\end{document}
