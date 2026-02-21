@@ -576,6 +576,48 @@ traffic-pipeline aggregate --city sby
 traffic-pipeline geostatistics
 ```
 
+## LISA Markov Analysis (FOSS4G 2026)
+
+Advanced spatiotemporal analysis using PySAL ecosystem tools to study congestion hotspot dynamics.
+
+### Methodology
+
+1. **LISA Classification**: Local Moran's I computed for each segment in each time period (esda.Moran_Local)
+2. **Classic Markov**: Transition probabilities between LISA categories (NS, HH, LL, HL, LH)
+3. **Spatial Markov**: Tests whether transitions depend on neighbors' states (spatial contagion)
+
+### Running the Analysis
+
+```bash
+# Step 1: Compute LISA for all 24 files (3 cities × 8 periods)
+python compute_lisa_all_periods.py
+
+# Step 2: Run Markov analysis
+python compute_lisa_markov.py
+```
+
+### Key Findings
+
+| City | P(HH→HH) | P(LL→LL) | Spatial χ² | p-value |
+|------|----------|----------|------------|---------|
+| Jakarta | 6.5% | 6.1% | 2.54 | 0.111 |
+| Bandung | 12.0% | 10.9% | 8.43 | 0.004 |
+| Semarang | 18.8% | 25.1% | 6.48 | 0.011 |
+
+- **Smaller cities show higher hotspot persistence** - once congested, segments stay congested longer
+- **Bandung and Semarang show spatial contagion** - congestion transitions depend on neighbors' states
+- **Jakarta's hotspots are most volatile** - possibly due to more complex traffic dynamics
+
+### Output Files
+
+| Directory | Contents |
+|-----------|----------|
+| `lisa_results/` | LISA classifications for all periods |
+| `markov_results/` | Markov analysis results and reports |
+| `figures/markov/` | Transition matrices, persistence analysis |
+
+See [docs/foss4g_paper.md](docs/foss4g_paper.md) for full methodology and paper documentation.
+
 ## License
 
 MIT — see [LICENSE](LICENSE) for details.

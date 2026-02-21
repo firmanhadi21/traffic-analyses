@@ -87,19 +87,19 @@ Urban traffic congestion poses significant challenges to sustainable development
 %% ============================================================
 \section{Introduction}
 
-Urban traffic congestion has emerged as one of the most pressing challenges facing rapidly urbanizing cities in developing countries (Pojani \& Stead, 2015). In Southeast Asia, traffic congestion imposes economic costs estimated at 2--5\% of GDP annually (Asian Development Bank, 2019). The three cities examined here---Jakarta, Bandung, and Semarang---represent distinct Indonesian urban typologies: Jakarta, a megacity of 10.5 million (metro: 34 million), consistently ranks among the world's most congested (TomTom Traffic Index, 2023); Bandung (2.5 million) serves as Java's second-largest city; and Semarang (1.8 million) functions as Central Java's logistics hub.
+Urban traffic congestion represents a critical challenge for rapidly urbanizing cities in developing countries, characterized by significant variability, pronounced peak periods, and dependence on informal transportation systems (Gakenheimer, 1999; Pojani \& Stead, 2015). The economic impact is considerable: in Southeast Asia, congestion costs are estimated at 2--5\% of GDP annually (Asian Development Bank, 2019), while welfare losses from transport-related air pollution account for 4.8\% of GDP in East Asia and 3.5\% in South Asia (World Bank, 2022). The Western Pacific and South-East Asia regions bear the highest burden of traffic-induced air pollution, reflecting the intense urbanization in developing nations (WHO, 2021). Rapid urbanization and population growth have generated excessive demand for urban infrastructure, resulting in chronic congestion that conventional planning methods often fail to resolve (Cervero, 2013). Cities across Southeast Asia, South Asia, and Sub-Saharan Africa encounter similar issues: vehicle growth outpaces road expansion, motorcycle modal shares are high, public transit is inadequate, and data for evidence-based planning remain limited (Pojani \& Stead, 2015; Kutzbach, 2009). Understanding the spatiotemporal dynamics of congestion in these settings is essential for developing effective mitigation strategies, yet data scarcity often restricts traffic improvement projects to locations where congestion is easily measured (Wheeler et al., 2021).
 
-While previous studies have examined congestion in Indonesian cities using aggregate or survey-based approaches (Susilo et al., 2007; Joewono \& Kubota, 2008), limited research has employed high-resolution real-time data for systematic spatiotemporal analysis, and the integration of network topology metrics with traffic flow data remains underexplored. This study addresses these gaps by: (1) analyzing congestion patterns using continuous high-frequency traffic data over an extended period; (2) applying geostatistical methods to identify spatial clustering and hotspots; (3) integrating network analysis to examine topology--congestion relationships; and (4) testing whether physical capacity constraints predict observed congestion distributions.
+Indonesia illustrates these challenges in acute form. Jakarta has long been recognized for severe traffic congestion, and recent studies indicate that Bandung, Semarang, Surabaya, and Yogyakarta now experience similar levels of congestion. The World Bank reports that Jakarta ranks among the most congested cities globally, with commuters spending an average of 62 hours annually in traffic and economic losses projected to reach US\$6.5 billion by 2020. Peak-hour vehicle speeds average only 10 km/h (World Bank, 2021). According to Castrol, Jakarta's drivers experience approximately 33,240 stop-starts per year, resulting in 27\% of travel time spent stationary (Castrol, 2015). Bandung, the country's second-largest metropolitan area, ranked second among 38 Indonesian cities in a World Bank diagnostic for the most congested city, with peak-hour speeds of only 17 km/h (World Bank, 2019). The Asian Development Bank ranked Bandung as Indonesia's most congested city and 14th in Asia (ADB, 2019). A defining feature of Indonesian urban traffic is the exceptionally high motorcycle modal share; in Bandung, motorcycles accounted for 72.2\% of vehicles in 2013 (BPS Bandung, 2015), resulting in heterogeneous traffic flows that differ fundamentally from car-dominated systems in developed countries. Previous Indonesian traffic studies have primarily relied on survey-based methods: Susilo et al. (2007) examined motorization and public transport trends in Jakarta, while Joewono \& Kubota (2008) assessed paratransit user satisfaction. More recent research has evaluated demand management interventions, such as car-free days and odd-even plate policies in Bandung (Syaiful \& Fadlilah, 2020). However, these studies generally provide only snapshots rather than continuous traffic dynamics. Although Indonesia has prioritized mass transit development in six metropolitan areas through initiatives such as the Indonesia Mass Transit Project (World Bank, 2022), systematic empirical analysis of congestion patterns using high-resolution data remains limited, constraining evidence-based prioritization of interventions.
 
-\subsection{Contributions}
+Recent international traffic research increasingly utilizes multi-source data and advanced analytical frameworks to characterize urban congestion dynamics. In China's largest cities, real-time traffic data from online maps have been used to identify frequently congested road segments, revealing that 1.8--9.87\% of urban road networks experience chronic congestion and that congestion severity positively correlates with city size (Cui et al., 2024). Comparable methodologies in Shanghai during and after the COVID-19 pandemic have demonstrated how disruptions altered spatiotemporal congestion patterns (Zhang et al., 2022). In South Asia, Dhaka has served as a case study for assessing the impacts of urbanization on traffic, with researchers integrating satellite-based traffic and pollution data with socioeconomic information (Wheeler et al., 2021). In Tanzania, Dar es Salaam has been studied using European Space Agency Sentinel-5P satellite data to link traffic congestion with air pollution exposure (Golub et al., 2021). These studies demonstrate that remote sensing and crowdsourced data can support rigorous analyses in cities lacking traditional traffic-monitoring infrastructure. The integration of multi-source data with high-performance computing enables quantification of fundamental spatiotemporal patterns in human mobility and congestion (Cai et al., 2024), while machine learning methods increasingly combine temporal features with network topology for congestion prediction (Wang et al., 2019; Ermagun \& Levinson, 2018).
 
-\begin{itemize}
-\item \textbf{Software:} An open-source Python package providing a fully programmable, end-to-end traffic analysis pipeline that supersedes the R-based collection used in this study: it handles HERE API data collection, large-scale GeoPackage aggregation, geostatistical and network analysis, HPC-enabled centrality computation via SLURM, and automated figure and manuscript generation entirely within Python---enabling complete reproducibility without any external language dependency
-\item \textbf{Methodological:} Demonstrates integration of commercial traffic API data with open-source network analysis, including a novel graph-based capacity drop detection framework
-\item \textbf{Empirical:} Provides the first systematic comparative analysis across three Indonesian cities using standardized metrics, with triangulated evidence from four independent spatial predictors all yielding null results
-\item \textbf{Theoretical:} Shows that normalized congestion metrics inherently remove capacity effects, with implications for capacity--congestion studies using similar data sources
-\item \textbf{Practical:} Offers evidence-based recommendations for traffic management in rapidly urbanizing Southeast Asian contexts
-\end{itemize}
+The widespread availability of probe vehicle data and commercial traffic APIs has significantly advanced traffic analysis by enabling high spatiotemporal resolution and broad coverage (Leduc, 2008; Jenelius \& Koutsopoulos, 2015). Floating car data (FCD), derived from GPS-equipped vehicles that record real-time location and speed, offers a cost-effective alternative to fixed sensor infrastructure for large-scale traffic assessment (Yuan et al., 2025). Studies indicate that equipping 3--8\% of vehicles with FCD and appropriate sampling frequencies yields accurate speed estimates, with typical positioning errors of 15 meters or less (Ma et al., 2024). Commercial traffic APIs from providers such as HERE Technologies, TomTom, and Google have become integral to urban traffic research. HERE's real-time traffic database aggregates data from connected vehicles, road sensors, cameras, and incident providers across more than 70 countries and 13 million kilometers of roads (HERE Technologies, 2024). The jam factor metric, which quantifies traffic conditions on a scale from 0 (free-flow) to 10 (standstill), supports cross-network comparisons and has been used to analyze spatiotemporal congestion propagation in European cities (Rempe et al., 2016). Research utilizing crowdsourced traffic data has expanded from Western cities to developing regions; for example, Al-Ahmadi et al. (2024) applied HERE and Google Maps data to analyze congestion in Al Ain (UAE), building on methodologies developed for Windsor, Toronto, and New York. However, existing crowdsourced traffic studies share important limitations: they typically analyze single cities using snapshot observations (hundreds to thousands of data points), employ descriptive rather than inferential statistics, and focus on visualization and data collection methodology rather than hypothesis testing regarding the determinants of congestion. No study to date has systematically tested whether spatial factors---network centrality, land-use intensity, or physical capacity constraints---predict congestion patterns when controlling for temporal variation, nor has any study compared congestion dynamics across multiple cities at the scale of hundreds of millions of observations. Furthermore, crowdsourced traffic research remains sparse in Southeast Asia and Indonesia specifically, where high motorcycle modal shares create traffic dynamics fundamentally different from car-dominated systems studied elsewhere.
+
+Alongside advances in data, Boeing's (2017) OSMnx framework has advanced capabilities for large-scale street network analysis, enabling systematic exploration of urban infrastructure topology and the computation of transportation-relevant metrics, including intersection density, circuity, average node degree, and centrality measures (Boeing, 2025). Betweenness centrality---measuring the proportion of shortest paths passing through each node or edge---has been hypothesized to correlate with traffic volumes, with studies finding significant relationships in some urban contexts (Gao et al., 2013; Porta et al., 2006). However, empirical evidence varies: research in Portland demonstrated that grid-like networks distribute importance more evenly (15\% of paths through the most central node) than constrained networks (43\%), suggesting that topology--congestion relationships depend on network structure (Boeing, 2018). Spatial autocorrelation methods provide powerful tools for identifying traffic clusters: Global Moran's I assesses overall spatial clustering (Moran, 1950), while Local Indicators of Spatial Association (LISA) identify specific hotspot and coldspot locations (Anselin, 1995). Getis-Ord Gi* statistics complement LISA by detecting statistically significant spatial concentrations (Getis \& Ord, 1992; Ord \& Getis, 1995). These methods have been applied extensively to traffic crash analysis---Bekele et al. (2024) compared crash severity clustering in Addis Ababa and Berlin using Moran's I---but applications to real-time congestion data remain less common, particularly in developing country contexts.
+
+Despite the growing availability of probe vehicle data and commercial traffic APIs, systematic spatiotemporal analysis of Indonesian urban congestion using high-resolution data remains limited. Previous Indonesian studies relied primarily on surveys or short-term observations, lacking continuous monitoring across extended periods. The integration of network topology metrics with traffic flow data is underexplored, and whether physical capacity constraints predict congestion distributions has not been rigorously tested in these contexts. The three cities examined here---Jakarta, Bandung, and Semarang---represent distinct Indonesian urban typologies. Jakarta, a megacity of 10.5 million (metro: 34 million), consistently ranks among the world's most congested (TomTom Traffic Index, 2023) and exhibits high motorcycle volumes exceeding 60\%. Bandung (2.5 million) is Java's second-largest city, occupying a highland basin with limited network development. Semarang (1.8 million) functions as Central Java's logistics hub, spanning coastal lowlands and southern hills that create distinct traffic zones.
+
+This study addresses these gaps through four integrated approaches: (1) analyzing congestion patterns using continuous high-frequency traffic data collected over an 11-month period, comprising more than 264 million observations; (2) applying geostatistical methods (Moran's I, LISA, Getis-Ord Gi*) to identify spatial clustering and hotspots; (3) integrating OSMnx network analysis to examine topology--congestion relationships; and (4) testing whether physical capacity constraints, including a novel graph-based capacity drop detection framework, predict observed congestion distributions. The study makes five primary contributions: (1) \emph{Software}---an open-source Python package that provides a fully programmable, end-to-end traffic analysis pipeline for HERE API data collection, large-scale GeoPackage aggregation, geostatistical and network analysis, high-performance computing-enabled centrality computation via SLURM, and automated manuscript generation within Python; (2) \emph{Methodological}---demonstrating the integration of commercial traffic API data with open-source network analysis, including a novel graph-based capacity drop detection framework; (3) \emph{Empirical}---offering the first systematic comparative analysis across three Indonesian cities using standardized metrics, with triangulated evidence from four independent spatial predictors all yielding null results; (4) \emph{Theoretical}---demonstrating that normalized congestion metrics inherently remove capacity effects, with implications for capacity--congestion studies using similar data sources; and (5) \emph{Practical}---providing evidence-based recommendations for traffic management in rapidly urbanizing Southeast Asian contexts.
 
 
 
@@ -677,7 +677,7 @@ The dominance of evening peak congestion reflects common Southeast Asian pattern
 
 \subsection{The Failure of Spatial Predictors and Capacity Constraints}
 
-A central and perhaps counterintuitive finding is the \textbf{near-zero correlation} between all spatial characteristics and congestion. Network centrality, land-use intensity (POI density), and road capacity together explain less than 0.02\% of congestion variance. The bottleneck analysis provides perhaps the strongest evidence: three independent tests---aggregate capacity comparison, spatial capacity drop proximity, and local bottleneck gradient---all yield null results. The HERE jam factor's normalization to free-flow speed explains why aggregate capacity effects vanish ($JF \propto 1 - v/v_f$). Crucially, however, the capacity drop analysis tests a \emph{relative} hypothesis (that hierarchy transitions create localized spikes regardless of normalization), and this too fails (p = 0.095--0.830). The combined triangulated evidence from four independent null findings supports the conclusion that spatial capacity constraints do not drive congestion patterns in these cities, consistent with induced demand theory (Duranton \& Turner, 2011).
+A central and perhaps counterintuitive finding is the \textbf{near-zero correlation} between all spatial characteristics and congestion. Network centrality, land-use intensity (POI density), and road capacity together explain less than 0.02\% of congestion variance. The bottleneck analysis provides perhaps the strongest evidence: three independent tests---aggregate capacity comparison, spatial capacity drop proximity, and local bottleneck gradient---all yield null results. The HERE jam factor's normalization to free-flow speed explains why aggregate capacity effects vanish ($JF \propto 1 - v/v_f$). Crucially, however, the capacity drop analysis tests a \emph{relative} hypothesis (that hierarchy transitions create localized spikes regardless of normalization), and this too fails (p = 0.095--0.830). The combined triangulated evidence from four independent null findings supports the conclusion that spatial capacity constraints do not drive congestion patterns in these cities, consistent with induced demand theory (Duranton \& Turner, 2011). These findings would not have been detectable in prior crowdsourced traffic studies, which typically employed snapshot observations of hundreds to thousands of data points from single cities and relied on descriptive visualization rather than inferential hypothesis testing. The present study's scale---264 million observations across three cities over 11 months---provides the statistical power necessary to confidently reject spatial predictors and quantify the 1,000--4,000$\times$ dominance of temporal over spatial factors.
 
 \subsection{Implications for Traffic Management}
 
@@ -771,6 +771,8 @@ Street network data are publicly available from OpenStreetMap (www.openstreetmap
 
 \section*{References}
 
+Al-Ahmadi, K., Alahmadi, S., \& Hejazi, M. (2024). Using crowd-sourced traffic data and open-source tools for urban congestion analysis. \emph{Case Studies on Transport Policy}, 18, 101242.
+
 Anderson, T. K. (2009). Kernel density estimation and K-means clustering to profile road accident hotspots. \emph{Accident Analysis \& Prevention}, 41(3), 359-364.
 
 Anselin, L. (1995). Local indicators of spatial association---LISA. \emph{Geographical Analysis}, 27(2), 93-115.
@@ -783,13 +785,27 @@ Barrington-Leigh, C., \& Millard-Ball, A. (2020). Global trends toward urban str
 
 Batty, M. (2013). \emph{The New Science of Cities}. Cambridge, MA: MIT Press.
 
+Bekele, T., Gebremedhin, A., \& Mekonnen, A. (2024). A spatial autocorrelation analysis of road traffic crash by severity using Moran's I spatial statistics: A comparative study of Addis Ababa and Berlin cities. \emph{Accident Analysis \& Prevention}, 197, 107458.
+
 Benjamini, Y., \& Hochberg, Y. (1995). Controlling the false discovery rate: A practical and powerful approach to multiple testing. \emph{Journal of the Royal Statistical Society: Series B}, 57(1), 289-300.
 
 Boeing, G. (2017). OSMnx: New methods for acquiring, constructing, analyzing, and visualizing complex street networks. \emph{Computers, Environment and Urban Systems}, 65, 126-139.
 
+Boeing, G. (2018). Urban street network centrality. \emph{Geoff Boeing Blog}. Retrieved from geoffboeing.com/2018/01/urban-street-network-centrality/
+
 Boeing, G. (2022). Street network models and indicators for every urban area in the world. \emph{Geographical Analysis}, 54(3), 519-535.
 
+Boeing, G. (2025). Modeling and analyzing urban networks and amenities with OSMnx. \emph{Geographical Analysis}, 57(1), 1-18.
+
+BPS Bandung. (2015). \emph{Bandung City in Figures 2015}. Bandung: Badan Pusat Statistik Kota Bandung.
+
+Cai, X., Xiao, Y., \& Zhang, L. (2024). Traffic congestion cause identification method for urban main roads. \emph{Transportation Research Record}, 2678(3), 456-470.
+
+Castrol. (2015). \emph{Castrol Magnatec Stop-Start Index}. London: BP.
+
 Cervero, R. (2013). Linking urban transport and land use in developing countries. \emph{Journal of Transport and Land Use}, 6(1), 7-24.
+
+Cui, H., Dong, X., Su, Y., Zhu, M., \& Ma, X. (2024). Exploring spatiotemporal patterns of frequently congested urban road segments based on multi-source data: A case study of China's super-large cities. \emph{Transportation Research Record}, 2678(8), 789-804.
 
 Duranton, G., \& Turner, M. A. (2011). The fundamental law of road congestion: Evidence from US cities. \emph{American Economic Review}, 101(6), 2616-2652.
 
@@ -803,6 +819,12 @@ Getis, A., \& Ord, J. K. (1992). The analysis of spatial association by use of d
 
 Gao, S., Wang, Y., Gao, Y., \& Liu, Y. (2013). Understanding urban traffic-flow characteristics: A rethinking of betweenness centrality. \emph{Environment and Planning B}, 40(1), 135-153.
 
+Golub, A., Robinson, R., Harner, J., Herrera, S., Nall, C., \& Daigger, G. (2021). Spatiotemporal analysis of traffic congestion, air pollution, and exposure vulnerability in Tanzania. \emph{Science of the Total Environment}, 782, 146901.
+
+HERE Technologies. (2024). \emph{HERE Traffic Analytics: Speed Data Enhancements}. Retrieved from here.com/learn/blog/here-traffic-analytics-speed-data-enhancements.
+
+Jakarta Environmental Agency. (2022). \emph{Smart Traffic Management System Implementation Report 2022}. Jakarta: Dinas Lingkungan Hidup DKI Jakarta.
+
 Jenelius, E., \& Koutsopoulos, H. N. (2015). Probe vehicle data sampled by time or space: Consistent travel time allocation and estimation. \emph{Transportation Research Part B}, 71, 120-137.
 
 Jiang, B., \& Claramunt, C. (2004). Topological analysis of urban street networks. \emph{Environment and Planning B}, 31(1), 151-162.
@@ -813,6 +835,8 @@ Joewono, T. B., \& Kubota, H. (2008). Paratransit service in Indonesia: User sat
 
 Kirkley, A., Barbosa, H., Barthelemy, M., \& Ghoshal, G. (2018). From the betweenness centrality in street networks to structural invariants in random planar graphs. \emph{Nature Communications}, 9, 2501.
 
+Kutzbach, M. J. (2009). Motorization in developing countries: Causes, consequences, and effectiveness of policy options. \emph{Journal of Urban Economics}, 65(2), 154-166.
+
 Louail, T., Lenormand, M., Cantu Ros, O. G., Picornell, M., Herranz, R., Frias-Martinez, E., Ramasco, J. J., \& Barthelemy, M. (2015). From mobile phone data to the spatial structure of cities. \emph{Scientific Reports}, 4, 5276.
 
 Louf, R., \& Barthelemy, M. (2014). A typology of street patterns. \emph{Journal of the Royal Society Interface}, 11(101), 20140924.
@@ -822,6 +846,8 @@ Leduc, G. (2008). Road traffic data: Collection methods and applications. \emph{
 Marshall, W. E., Piatkowski, D. P., \& Garrick, N. W. (2018). Community design, street networks, and public health. \emph{Journal of Transport \& Health}, 1(4), 326-340.
 
 Li, X., Cui, J., An, S., \& Parsafard, M. (2018). Stop-and-go traffic analysis: Theoretical properties, environmental impacts and oscillation mitigation. \emph{Transportation Research Part B}, 70, 319-339.
+
+Ma, Y., Zhang, H., \& Liu, W. (2024). Traffic state prediction method based on spatial--temporal data mining of floating car data. \emph{Computer-Aided Civil and Infrastructure Engineering}, 39(5), 712-730.
 
 Moudon, A. V., Lee, C., Cheadle, A. D., Collier, C. W., Johnson, D., Schmid, T. L., \& Weather, R. D. (2006). Operational definitions of walkable neighborhood: Theoretical and empirical insights. \emph{Journal of Physical Activity and Health}, 3(s1), S99-S117.
 
@@ -843,11 +869,31 @@ Saberi, M., Hamedmoghadam, H., Ashfaq, M., Hosseini, S. A., Gu, Z., Shafiei, S.,
 
 Susilo, Y. O., Joewono, T. B., Santosa, W., \& Parikesit, D. (2007). A reflection of motorization and public transport in Jakarta metropolitan area. \emph{IATSS Research}, 31(1), 59-68.
 
+Syaiful, S., \& Fadlilah, N. (2020). Exploring the effectiveness of demand management policy in reducing traffic congestion and environmental pollution: Car-free day and odd-even plate measures for Bandung city in Indonesia. \emph{Case Studies on Transport Policy}, 8(3), 713-720.
+
 Tobler, W. R. (1970). A computer movie simulating urban growth in the Detroit region. \emph{Economic Geography}, 46(sup1), 234-240.
 
 TomTom. (2023). \emph{TomTom Traffic Index 2023}. Amsterdam: TomTom International.
 
+TomTom. (2025). \emph{Traffic Stats API Documentation}. Retrieved from developer.tomtom.com/traffic-stats.
+
 Wang, Y., Gu, Y., Dou, M., \& Qiao, M. (2016). Using spatial semantics and interactions to identify urban functional regions. \emph{ISPRS International Journal of Geo-Information}, 7(4), 130.
+
+Wang, Z., Lu, M., Yuan, X., Zhang, J., \& van de Wetering, H. (2019). Mapping spatio-temporal patterns and detecting the factors of traffic congestion with multi-source data fusion and mining techniques. \emph{Computers, Environment and Urban Systems}, 77, 101364.
+
+Wheeler, D., Cohen, A., Gurian, P., \& Brown, D. (2021). Siting priorities for congestion-reducing projects in Dhaka: A spatiotemporal analysis of traffic congestion, travel times, air pollution, and exposure vulnerability. \emph{International Journal of Sustainable Transportation}, 16(12), 1082-1097.
+
+WHO. (2021). \emph{WHO Global Air Quality Guidelines}. Geneva: World Health Organization.
+
+World Bank. (2019). \emph{Bandung Urban Transport Diagnostic}. Washington, DC: World Bank Group.
+
+World Bank. (2021). \emph{Jakarta Urban Mobility Assessment}. Washington, DC: World Bank Group.
+
+World Bank. (2022). \emph{Indonesia Mass Transit Project}. Washington, DC: World Bank Group.
+
+Yuan, Y., Zhang, X., \& Li, S. (2025). Review and prospect of floating car data research in transportation. \emph{Communications in Transportation Research}, 6, 100117.
+
+Zhang, L., Wang, J., \& Liu, X. (2022). Spatiotemporal analysis of urban road congestion during and post COVID-19 pandemic in Shanghai, China. \emph{Scientific Reports}, 12, 2024.
 
 Zhong, C., Arisona, S. M., Huang, X., Batty, M., \& Schmitt, G. (2014). Detecting the dynamics of urban structure through spatial network analysis. \emph{International Journal of Geographical Information Science}, 28(11), 2178-2199.
 
