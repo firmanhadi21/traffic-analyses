@@ -1,0 +1,7 @@
+Highlights
+
+- Temporal factors dominate spatial factors by 1,000-4,000x in congestion variance
+- Four spatial predictors (centrality, POI, capacity, bottlenecks) all yield null
+- 264 million observations across three Indonesian cities over 11 months
+- Open-source Python package delivers end-to-end traffic analysis pipeline
+- Congestion is a temporal synchronization problem, not spatial constraint
