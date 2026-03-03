@@ -224,7 +224,7 @@ Semarang & $\sim$12,000 & $\sim$25,000 & 15.2 & 2.81 \\
 
 \subsection{Analytical Framework}
 
-Our framework integrates four complementary approaches (Figure~\ref{fig:fig1_analytic}): (1) descriptive statistical analysis of temporal congestion patterns; (2) geostatistical analysis of spatial clustering; (3) network analysis of topology--congestion relationships; and (4) bottleneck analysis testing capacity constraint effects.
+Our framework integrates five complementary approaches (Figure~\ref{fig:fig1_analytic}): (1) descriptive statistical analysis of temporal congestion patterns; (2) geostatistical analysis of spatial clustering; (3) network analysis of topology--congestion relationships; (4) bottleneck analysis testing capacity constraint effects; and (5) spatial scale-sensitivity analysis using Uber H3 hexagonal aggregation to evaluate robustness of spatial findings to the modifiable areal unit problem.
 
 \begin{figure}[H]
 \centering
@@ -254,6 +254,26 @@ Local Moran's I (Anselin, 1995) identified hotspot and coldspot clusters:
 \[I_i = \frac{(x_i - \bar{x})}{\sigma^2} \sum_j w_{ij}(x_j - \bar{x})\]
 
 LISA was computed with KNN (k=8) weights, 999 random permutations, and Benjamini-Hochberg FDR correction. Segments were classified as HH (hotspot), LL (coldspot), or spatial outliers (HL/LH). Temporal stability was assessed via coefficient of variation: $CV = (\sigma/\mu) \times 100\%$.
+
+\subsection{Spatial Scale Sensitivity Analysis (H3 Hexagonal Aggregation)}
+\label{sec:method_h3}
+
+A persistent methodological concern in urban spatial analysis is the modifiable areal unit problem (MAUP; Openshaw, 1984): statistical relationships can change substantially depending on the spatial unit chosen for analysis. Road segments vary in length from under 200\,m to over 3\,km, and predictors such as POI density and network centrality may operate at a neighbourhood rather than a segment scale. To test whether null correlations at the road-segment level reflect genuine absence of relationships or a unit-of-analysis artefact, we aggregated all variables into regular hexagonal bins using the Uber H3 hierarchical geospatial indexing system (Brodsky, 2018) and re-ran the full correlation and spatial autocorrelation suite.
+
+\textbf{Choice of hexagonal grid.} Hexagons are preferred over square grids for spatial aggregation because all six neighbours share an equal centroid-to-centroid distance, minimising directional bias in spatial weight matrices (Sahr et al., 2003). H3's hierarchical structure allows analysis at multiple scales using a consistent topology. Two resolutions were selected to span the neighbourhood and block scales relevant to urban traffic dynamics:
+
+\begin{itemize}
+  \item \textbf{Resolution 8}: mean hex diameter $\approx$461\,m, area $\approx$0.46\,km$^2$ (neighbourhood scale; 235--1,836 hexagons per city)
+  \item \textbf{Resolution 9}: mean hex diameter $\approx$174\,m, area $\approx$0.10\,km$^2$ (block scale; 490--5,319 hexagons per city)
+\end{itemize}
+
+\textbf{Variable aggregation.} Each road segment centroid was assigned to its containing H3 cell using \texttt{h3.latlng\_to\_cell()}. Jam factor per hexagon was computed as the observation-weighted mean across all segments and all eight temporal periods within the cell:
+
+\[\overline{JF}_{\text{hex}} = \frac{\displaystyle\sum_{s \in \text{hex}} \sum_{t} JF_{s,t} \cdot n_{s,t}}{\displaystyle\sum_{s \in \text{hex}} \sum_{t} n_{s,t}}\]
+
+where $s$ indexes road segments, $t$ indexes temporal periods, $JF_{s,t}$ is the mean jam factor for segment $s$ in period $t$, and $n_{s,t}$ is the corresponding observation count. POI count per hexagon was the number of OSM POI centroids falling within each cell. Mean betweenness centrality per hexagon was the arithmetic mean of all OSM edge centrality values whose midpoints fell within the cell.
+
+\textbf{Statistical tests.} Pearson and Spearman correlations were computed between hex-level jam factor and each predictor variable. Global Moran's I was computed using Queen contiguity weights derived from hexagon polygon adjacency---geometrically well-defined for regular hexagons, where each interior cell has exactly six neighbours---with row-standardisation and 999 random permutations for inference. Results are reported alongside the corresponding segment-level baseline values to quantify the effect of spatial scale on each statistic.
 
 \subsection{Network Centrality Analysis}
 
@@ -291,11 +311,11 @@ A key contribution of this study is a modular, open-source Python package that o
 
 \textbf{Stage 2 -- Large-scale aggregation.} City-specific aggregation scripts process all raw GeoPackage files, match road segments using MD5-hashed geometries implemented in \texttt{utils.py}, and compute per-segment summary statistics (mean, std, min, max, count) for each of the eight temporal periods. During the 11-month study, this stage handled over 42,000 input files and 264 million traffic records.
 
-\textbf{Stage 3 -- Analysis.} Ten dedicated scripts perform the complete analytical workflow: exploratory validation  (\texttt{exploratory\_data\_analysis.py}), geostatistical analysis (\texttt{geostatistical\_analysis.py} and \texttt{geostatistical\_visualizations.py}), advanced spatial statistics including Moran's I, LISA, and spatial regression (\texttt{advanced\_spatial\_analysis.py}, \texttt{revision\_analyses.py}), bottleneck and capacity drop detection (\texttt{bottleneck\_analysis.py}), POI and activity-centre analysis (\texttt{activity\_center\_analysis.py}, \texttt{poi\_congestion\_analysis.py}), comparative temporal--spatial analysis (\texttt{temporal\_vs\_spatial\_comparison.py}), and network centrality computation (\texttt{compute\_centrality\_correlations.py}). Network centrality, involving $O(VE)$ shortest-path computation over graphs of up to 95,000 edges, is offloaded via SLURM job submission (\texttt{run\_hpc.sh}) to an NVIDIA H100 GPU cluster, enabling overnight batch processing across all three cities.
+\textbf{Stage 3 -- Analysis.} Ten dedicated scripts perform the complete analytical workflow: exploratory validation  (\texttt{exploratory\_data\_analysis.py}), geostatistical analysis (\texttt{geostatistical\_analysis.py} and \texttt{geostatistical\_visualizations.py}), advanced spatial statistics including Moran's I, LISA, and spatial regression (\texttt{advanced\_spatial\_analysis.py}, \texttt{revision\_analyses.py}), bottleneck and capacity drop detection (\texttt{bottleneck\_analysis.py}), POI and activity-centre analysis (\texttt{activity\_center\_analysis.py}, \texttt{poi\_congestion\_analysis.py}), comparative temporal--spatial analysis (\texttt{temporal\_vs\_spatial\_comparison.py}), and network centrality computation (\texttt{compute\_centrality\_correlations.py}), and H3 hexagonal scale-sensitivity analysis (\texttt{h3\_robustness\_check.py}, \texttt{generate\_h3\_figures.py}). Network centrality, involving $O(VE)$ shortest-path computation over graphs of up to 95,000 edges, is offloaded via SLURM job submission (\texttt{run\_hpc.sh}) to an NVIDIA H100 GPU cluster, enabling overnight batch processing across all three cities.
 
 \textbf{Stage 4 -- Reproducible manuscript generation.} Scripts in the \texttt{paper/} sub-package automate figure generation (\texttt{generate\_figures.py}), LaTeX compilation (\texttt{build\_latex.py}), and PDF creation (\texttt{create\_pdf.py}), so any change to analysis results propagates automatically to the manuscript. All outputs are serialised to CSV (tables) and PNG (figures), ensuring full reproducibility.
 
-Core Python dependencies: GeoPandas, Shapely, PyProj (spatial I/O); OSMnx 2.0, NetworkX (street network analysis); esda, libpysal, spreg (spatial statistics and regression); SciPy, statsmodels (hypothesis testing); Matplotlib, Seaborn, contextily (visualisation); requests (HERE API collection). The package is available at \url{https://github.com/firmanhadi21/traffic-analyses}.
+Core Python dependencies: GeoPandas, Shapely, PyProj (spatial I/O); OSMnx 2.0, NetworkX (street network analysis); esda, libpysal, spreg (spatial statistics and regression); h3 v4.4 (Uber H3 hexagonal indexing); SciPy, statsmodels (hypothesis testing); Matplotlib, Seaborn, contextily (visualisation); requests (HERE API collection). The package is available at \url{https://github.com/firmanhadi21/traffic-analyses}.
 
 
 
