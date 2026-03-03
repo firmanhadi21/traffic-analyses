@@ -441,33 +441,36 @@ Not Significant & 13,014 (89.5\%) & 2,749 (89.6\%) & 998 (92.8\%) \\
 \label{tab:table_lisa}
 \end{longtable}
 
-\textbf{Jakarta} hotspots concentrate in: the Sudirman-Thamrin CBD corridor; the Tangerang-Jakarta western approach; and the Bekasi-Jakarta eastern approach. \textbf{Bandung} hotspots include the Dago/Setiabudhi northern corridors, Asia-Afrika city center, and Soekarno-Hatta eastern industrial zone. \textbf{Semarang} hotspots appear along Pandanaran/Pemuda central corridors, Siliwangi coastal road, and the Majapahit eastern approach.
+\textbf{Jakarta} hotspots concentrate in: the Sudirman-Thamrin CBD corridor; the Tangerang-Jakarta western approach; and the Bekasi-Jakarta eastern approach (Figure~\ref{fig:jkt_hotspots}). \textbf{Bandung} hotspots include the Dago/Setiabudhi northern corridors, Asia-Afrika city center, and Soekarno-Hatta eastern industrial zone (Figure~\ref{fig:bdg_hotspots}). \textbf{Semarang} hotspots appear along Pandanaran/Pemuda central corridors, Siliwangi coastal road, and the Majapahit eastern approach (Figure~\ref{fig:smg_hotspots}).
 
 \begin{figure}
 \centering
 \includegraphics[width=\textwidth]{figures/jkt_hotspots_evening_peak.png}
 \caption{Spatial distribution of congestion hotspots --- Jakarta}
+\label{fig:jkt_hotspots}
 \end{figure}
 
 \begin{figure}
 \centering
 \includegraphics[width=\textwidth]{figures/bdg_hotspots_evening_peak.png}
 \caption{Spatial distribution of congestion hotspots --- Bandung}
+\label{fig:bdg_hotspots}
 \end{figure}
 
 \begin{figure}
 \centering
 \includegraphics[width=\textwidth]{figures/smg_hotspots_evening_peak.png}
 \caption{Spatial distribution of congestion hotspots --- Semarang}
+\label{fig:smg_hotspots}
 \end{figure}
 
 \subsection{Network Topology--Congestion Relationships}
 
 \subsubsection{Betweenness Centrality}
 
-Traffic segments were spatially joined to OSMnx edges using centroid-based nearest-neighbor matching (200m threshold). Match quality is high: median centroid distances are under 20m, with over 85\% of matches within 50m. Correlation analysis reveals \textbf{negligible correlations} between betweenness centrality and jam factor across all cities (Table 10). Despite Bandung's statistically significant Spearman $\rho$ = 0.040 (p = 0.009), the effect size is trivially small, contradicting the common assumption that topologically important roads experience greater congestion.
+Traffic segments were spatially joined to OSMnx edges using centroid-based nearest-neighbor matching (200m threshold). Match quality is high: median centroid distances are under 20m, with over 85\% of matches within 50m. Correlation analysis reveals \textbf{negligible correlations} between betweenness centrality and jam factor across all cities (Table~\ref{tab:table10}; Figures~\ref{fig:jkt_centrality}--\ref{fig:smg_centrality}). Despite Bandung's statistically significant Spearman $\rho$ = 0.040 (p = 0.009), the effect size is trivially small, contradicting the common assumption that topologically important roads experience greater congestion.
 
-\textbf{Table 10.} Centrality--congestion correlations
+\textbf{Table~\ref{tab:table10}.} Centrality--congestion correlations
 
 \begin{longtable}[]{@{}llllll@{}}
 \toprule\noalign{}
@@ -479,31 +482,35 @@ City & n matched & Pearson r & p-value & Spearman $\rho$ & p-value \\
 Jakarta & 20,822 & 0.002 & 0.828 & -0.001 & 0.946 \\
 Bandung & 4,336 & 0.012 & 0.442 & 0.040 & 0.009 \\
 Semarang & 1,507 & -0.011 & 0.667 & -0.030 & 0.252 \\
+\label{tab:table10}
 \end{longtable}
 
 \begin{figure}
 \centering
 \includegraphics[width=\textwidth]{figures/jkt_traffic_maps.png}
 \caption{Edge betweenness centrality --- Jakarta}
+\label{fig:jkt_centrality}
 \end{figure}
 
 \begin{figure}
 \centering
 \includegraphics[width=\textwidth]{figures/bdg_traffic_maps.png}
 \caption{Edge betweenness centrality --- Bandung}
+\label{fig:bdg_centrality}
 \end{figure}
 
 \begin{figure}
 \centering
 \includegraphics[width=\textwidth]{figures/smg_traffic_maps.png}
 \caption{Edge betweenness centrality --- Semarang}
+\label{fig:smg_centrality}
 \end{figure}
 
 \subsubsection{POI Density Analysis}
 
-Point of Interest density was computed using network-distance analysis (400m walking network distance, approximately a 5-minute walk; Moudon et al., 2006). Sensitivity analyses across 200m, 400m, 800m, and 1200m thresholds confirm results are robust. POI density shows \textbf{no meaningful correlation} with congestion (Table 10a). Categorical comparison of high-POI activity centers (top quartile) versus peripheral areas (bottom quartile) confirms this: differences are negligible ($|d|$ < 0.05, p > 0.3) for all cities, demonstrating that congestion is location-independent. Spatial regression (OLS, Spatial Lag, and Spatial Error models) corroborates these results, with $R^2$ < 0.3\% across all specifications; accounting for spatial structure reveals no hidden centrality--congestion relationships.
+Point of Interest density was computed using network-distance analysis (400m walking network distance, approximately a 5-minute walk; Moudon et al., 2006). Sensitivity analyses across 200m, 400m, 800m, and 1200m thresholds confirm results are robust. POI density shows \textbf{no meaningful correlation} with congestion (Table~\ref{tab:table11}). Categorical comparison of high-POI activity centers (top quartile) versus peripheral areas (bottom quartile) confirms this: differences are negligible ($|d|$ < 0.05, p > 0.3) for all cities, demonstrating that congestion is location-independent. Spatial regression (OLS, Spatial Lag, and Spatial Error models) corroborates these results, with $R^2$ < 0.3\% across all specifications; accounting for spatial structure reveals no hidden centrality--congestion relationships.
 
-\textbf{Table 10a.} POI density--congestion correlations
+\textbf{Table~\ref{tab:table11}.} POI density--congestion correlations
 
 \begin{longtable}[]{@{}llllll@{}}
 \toprule\noalign{}
@@ -515,6 +522,7 @@ City & Total POIs & Pearson r & p-value & Spearman $\rho$ & p-value \\
 Jakarta & --- & 0.008 & 0.284 & -0.001 & 0.946 \\
 Bandung & --- & 0.005 & 0.770 & 0.004 & 0.820 \\
 Semarang & --- & -0.012 & 0.640 & -0.030 & 0.252 \\
+\label{tab:table11}
 \end{longtable}
 
 \subsection{Robustness Check: Spatial Scale Sensitivity}
@@ -578,9 +586,9 @@ Jakarta  & 9 ($\approx$174\,m) & 5,319 & $-$0.014 (0.314) & $-$0.003 (0.836) & +
 
 \subsubsection{Aggregate Capacity--Congestion Relationship}
 
-Spatial join between HERE segments and filtered OSMnx networks achieved 95--98\% match rates. Contrary to the bottleneck hypothesis, \textbf{high-capacity roads show marginally higher congestion} than low-capacity roads in all cities (Table 10c)---the opposite of capacity constraint predictions. All differences are non-significant (p > 0.05) with trivial effect sizes ($|d|$ < 0.08). This reversal reflects the HERE jam factor's normalization to free-flow speed: capacity effects are divided out by design. Pearson and Spearman correlations between capacity score and jam factor confirm near-zero relationships (Table 10d).
+Spatial join between HERE segments and filtered OSMnx networks achieved 95--98\% match rates. Contrary to the bottleneck hypothesis, \textbf{high-capacity roads show marginally higher congestion} than low-capacity roads in all cities (Table~\ref{tab:table13})---the opposite of capacity constraint predictions. All differences are non-significant (p > 0.05) with trivial effect sizes ($|d|$ < 0.08). This reversal reflects the HERE jam factor's normalization to free-flow speed: capacity effects are divided out by design. Pearson and Spearman correlations between capacity score and jam factor confirm near-zero relationships (Table~\ref{tab:table14}).
 
-\textbf{Table 10c.} Congestion comparison: Low- vs.\ high-capacity road segments
+\textbf{Table~\ref{tab:table13}.} Congestion comparison: Low- vs.\ high-capacity road segments
 
 \begin{longtable}[]{@{}
   >{\raggedright\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.0732}}
@@ -599,9 +607,10 @@ City & Low Capacity JF & High Capacity JF & Difference & t-stat & p-value & Cohe
 Semarang & 1.651 & 1.655 & -0.26\% & -0.87 & 0.382 & -0.056 \\
 Bandung & 1.920 & 1.925 & -0.25\% & -1.84 & 0.066 & -0.072 \\
 Jakarta & 2.005 & 2.007 & -0.10\% & -1.88 & 0.060 & -0.033 \\
+\label{tab:table13}
 \end{longtable}
 
-\textbf{Table 10d.} Capacity score--congestion correlations
+\textbf{Table~\ref{tab:table14}.} Capacity score--congestion correlations
 
 \begin{longtable}[]{@{}lllll@{}}
 \toprule\noalign{}
@@ -613,13 +622,14 @@ City & Pearson r & p-value & Spearman $\rho$ & p-value \\
 Semarang & 0.027 & 0.394 & 0.031 & 0.326 \\
 Bandung & 0.034 & 0.074 & 0.032 & 0.087 \\
 Jakarta & 0.017 & 0.051 & 0.016 & 0.066 \\
+\label{tab:table14}
 \end{longtable}
 
 \subsubsection{Spatial Capacity Drop Analysis}
 
-Graph-based detection identified capacity drops scaling with network size (Table 10e). Proximity to drops shows \textbf{no significant effect on congestion} (p = 0.095--0.830, $|d|$ < 0.09). Distance-to-drop correlations are similarly negligible (Pearson r: $-$0.008 to 0.019).
+Graph-based detection identified capacity drops scaling with network size (Table~\ref{tab:table15}; Figure~\ref{fig:capacity_drop}). Proximity to drops shows \textbf{no significant effect on congestion} (p = 0.095--0.830, $|d|$ < 0.09). Distance-to-drop correlations are similarly negligible (Pearson r: $-$0.008 to 0.019).
 
-\textbf{Table 10e.} Capacity drop detection and proximity analysis
+\textbf{Table~\ref{tab:table15}.} Capacity drop detection and proximity analysis
 
 \begin{longtable}[]{@{}
   >{\raggedright\arraybackslash}p{(\linewidth - 12\tabcolsep) * \real{0.0789}}
@@ -638,19 +648,21 @@ City & Capacity Drops & Near-Drop JF & Far-Drop JF & t-stat & p-value & Cohen's 
 Semarang & 78 & 1.649 & 1.656 & -1.08 & 0.283 & -0.083 \\
 Bandung & 245 & 1.922 & 1.923 & -0.22 & 0.830 & -0.010 \\
 Jakarta & 1,443 & 2.008 & 2.006 & 1.67 & 0.095 & 0.035 \\
+\label{tab:table15}
 \end{longtable}
 
 \begin{figure}
 \centering
 \includegraphics[width=\textwidth]{figures/capacity_drop_spatial_analysis.png}
 \caption{Spatial capacity drop analysis: capacity drop proximity and local bottleneck effects across three cities}
+\label{fig:capacity_drop}
 \end{figure}
 
 \subsubsection{Local Bottleneck Gradient}
 
-The local gradient analysis (K=10 nearest neighbors) provides the finest-grained test (Table 10f). Segments classified as local bottlenecks exhibit \textbf{no meaningful congestion difference} from non-bottleneck segments (all p > 0.4, $|d|$ < 0.05).
+The local gradient analysis (K=10 nearest neighbors) provides the finest-grained test (Table~\ref{tab:table16}). Segments classified as local bottlenecks exhibit \textbf{no meaningful congestion difference} from non-bottleneck segments (all p > 0.4, $|d|$ < 0.05).
 
-\textbf{Table 10f.} Local bottleneck gradient analysis
+\textbf{Table~\ref{tab:table16}.} Local bottleneck gradient analysis
 
 \begin{longtable}[]{@{}llllll@{}}
 \toprule\noalign{}
@@ -662,6 +674,7 @@ City & Local BN JF & Non-BN JF & t-stat & p-value & Cohen's d \\
 Semarang & 1.650 & 1.654 & -0.65 & 0.517 & -0.047 \\
 Bandung & 1.920 & 1.922 & -0.62 & 0.534 & -0.027 \\
 Jakarta & 2.007 & 2.006 & 0.80 & 0.426 & 0.016 \\
+\label{tab:table16}
 \end{longtable}
 
 \subsubsection{HERE Jam Factor Normalization}
@@ -674,9 +687,9 @@ Because each segment's congestion is measured relative to its own free-flow base
 
 \subsection{Temporal vs Spatial Predictors: A Critical Comparison}
 
-Table 11a presents variance explained by each predictor type. Temporal period explains \textbf{1,000--4,000$\times$ more variance} than any spatial predictor. We note that $\eta^2$ (ANOVA) and $R^2$ (bivariate correlation) are not strictly comparable, but the magnitude of the difference (three orders of magnitude) cannot be attributed to methodological artifacts.
+Table~\ref{tab:table17} presents variance explained by each predictor type. Temporal period explains \textbf{1,000--4,000$\times$ more variance} than any spatial predictor. We note that $\eta^2$ (ANOVA) and $R^2$ (bivariate correlation) are not strictly comparable, but the magnitude of the difference (three orders of magnitude) cannot be attributed to methodological artifacts.
 
-\textbf{Table 11a.} Variance explained by predictor type
+\textbf{Table~\ref{tab:table17}.} Variance explained by predictor type
 
 \begin{longtable}[]{@{}
   >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2292}}
@@ -696,27 +709,30 @@ Network Centrality & $R^2$ & 0.0004\% & 0.014\% & 0.012\% \\
 Road Capacity & $R^2$ & 0.028\% & 0.115\% & 0.072\% \\
 Capacity Drop Proximity & $R^2$ & 0.006\% & 0.002\% & 0.001\% \\
 \textbf{Ratio (Temporal/Spatial)} & --- & \textbf{$\sim$4000x} & \textbf{$\sim$1400x} & \textbf{$\sim$1100x} \\
+\label{tab:table17}
 \end{longtable}
 
 \begin{figure}
 \centering
 \includegraphics[width=\textwidth]{figures/temporal_vs_spatial_effect_size.png}
-\caption{Temporal vs spatial effect sizes}
+\caption{Temporal vs spatial effect sizes (Table~\ref{tab:table17})}
+\label{fig:temporal_spatial}
 \end{figure}
 
 This result fundamentally reframes urban congestion as a \textbf{temporal synchronization problem}: congestion occurs because everyone travels at the same times, not because certain locations inherently generate more traffic. The LISA hotspots identified above represent temporal bottlenecks---locations where capacity is insufficient during synchronized peak demand---rather than inherently problematic spatial characteristics.
 
 \subsection{Comparative City Analysis}
 
-Cross-city comparison reveals scaling relationships (Figure 6 and Tables 11--12). Congestion does not scale linearly with population: larger cities show both higher absolute congestion and greater peak/off-peak variability, suggesting urban scale amplifies temporal fluctuations.
+Cross-city comparison reveals scaling relationships (Figure~\ref{fig:boxplot_comparison} and Tables~\ref{tab:table18}--\ref{tab:table19}). Congestion does not scale linearly with population: larger cities show both higher absolute congestion and greater peak/off-peak variability, suggesting urban scale amplifies temporal fluctuations.
 
 \begin{figure}
 \centering
 \includegraphics[width=\textwidth]{figures/boxplot_comparison.png}
 \caption{Cross-city comparison of congestion metrics}
+\label{fig:boxplot_comparison}
 \end{figure}
 
-\textbf{Table 11.} Comparative metrics
+\textbf{Table~\ref{tab:table18}.} Comparative metrics
 
 \begin{longtable}[]{@{}llll@{}}
 \toprule\noalign{}
@@ -731,9 +747,10 @@ Off-Peak Period Mean & 1.223 & 1.180 & 1.034 \\
 Peak/Off-peak ratio & 1.31x & 1.30x & 1.26x \\
 Peak increase (\%) & 30.8\% & 30.2\% & 25.6\% \\
 Hotspot density (/km$^2$) & 4.30 & 3.12 & 0.42 \\
+\label{tab:table18}
 \end{longtable}
 
-\textbf{Table 12.} Peak vs Off-Peak Congestion Analysis
+\textbf{Table~\ref{tab:table19}.} Peak vs Off-Peak Congestion Analysis
 
 \begin{longtable}[]{@{}
   >{\raggedright\arraybackslash}p{(\linewidth - 10\tabcolsep) * \real{0.0909}}
@@ -751,6 +768,7 @@ City & Peak Mean & Off-Peak Mean & Absolute Diff & Ratio & \% Increase \\
 Jakarta & 1.599 & 1.223 & 0.376 & 1.31x & 30.8\% \\
 Bandung & 1.537 & 1.180 & 0.357 & 1.30x & 30.2\% \\
 Semarang & 1.299 & 1.034 & 0.265 & 1.26x & 25.6\% \\
+\label{tab:table19}
 \end{longtable}
 
 Jakarta exhibits the largest peak/off-peak differential (30.8\%), reflecting massive daily commuter flows; Bandung shows similar intensification (30.2\%) despite its smaller size, likely due to constrained network geometry; and Semarang the smallest differential (25.6\%), reflecting more distributed logistics-oriented commercial activity.
