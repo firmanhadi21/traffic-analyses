@@ -45,3 +45,6 @@ site/
 *.synctex.gz
 *.bbl
 *.blg
+
+# Paper/ manuscript files
+paper/
