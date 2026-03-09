@@ -17,29 +17,57 @@ Universitas Diponegoro\\
 Semarang 50275, Indonesia\\
 \url{firmanhadi21@lecturer.undip.ac.id}}
 
-\date{March 4, 2026}
+\date{March 9, 2026}
 
 \begin{document}
 
 \begin{letter}{%
 Editors\\
-\emph{Computers, Environment and Urban Systems}\\
-Special Issue: Open Urban Data Science}
+\emph{Transportation Research Interdisciplinary Perspectives}}
 
 \opening{Dear Editors,}
 
 We are pleased to submit our manuscript, ``Spatiotemporal Analysis of Urban Traffic Congestion,
 Network Topology, and Capacity Constraints in Indonesian Metropolitan Cities,'' for
-consideration in the \emph{Computers, Environment and Urban Systems} special issue on
-\textbf{Open Urban Data Science}.
+consideration in \emph{Transportation Research Interdisciplinary Perspectives}.
 
-\textbf{Relevance to the special issue.}
-This manuscript directly addresses the special issue's call for open, reproducible tools and
-workflows for urban data science. We present a complete, modular, and installable Python
-pipeline (\texttt{pip install traffic-congestion-pipeline}) that integrates the HERE Traffic
-API, OSMnx, and PySAL into a unified workflow for spatiotemporal traffic congestion analysis.
-The pipeline, source code, API documentation, and aggregated datasets are all released openly:
+\textbf{Relevance to the journal.}
+This manuscript bridges multiple transportation research domains---spatial analysis, network
+science, traffic engineering, and urban planning---making it a natural fit for TRIP's
+interdisciplinary scope. A central outcome of this work is a well-evidenced null result:
+four independent spatial predictors fail to explain congestion variance, while temporal
+factors dominate by three orders of magnitude. We believe this finding aligns with TRIP's
+stated openness to negative and controversial results, and carries important policy
+implications for rapidly urbanising cities in the Global South.
 
+\textbf{Summary.}
+We analyze 264 million traffic observations collected at 15-minute intervals over 11 months
+across three Indonesian metropolitan cities---Jakarta (metro pop.\ 34M), Bandung (2.5M), and
+Semarang (1.8M)---spanning a 20$\times$ population range. Using an open-source Python pipeline
+that integrates the HERE Traffic API, OSMnx, and PySAL, we combine geostatistical methods
+(Moran's I, LISA, Getis-Ord Gi*), network topology analysis, and a novel graph-based capacity
+drop detection framework.
+
+Our primary finding is that time-of-day ($\eta^2$ = 15--24\%) explains 1,000--4,000$\times$
+more congestion variance than any spatial predictor---including network centrality, POI density,
+road capacity, and bottleneck proximity (all $R^2$ < 0.01\%). H3 hexagonal aggregation at
+multiple scales confirms these null findings are not modifiable areal unit artefacts. We argue
+that congestion is fundamentally a demand synchronization problem, supporting demand management
+interventions (congestion pricing, flexible work schedules, transit expansion) over capacity
+expansion alone.
+
+\textbf{Contributions.}
+\begin{enumerate}
+\item The first systematic multi-city comparison of temporal versus spatial congestion predictors
+in Southeast Asia, using continuous high-resolution monitoring data.
+\item A novel graph-based capacity drop detection module using directed OSMnx road networks.
+\item Evidence that normalized congestion metrics (e.g., jam factor) inherently remove capacity
+effects, with methodological implications for capacity--congestion studies.
+\item A fully open, installable Python pipeline (\texttt{pip install traffic-congestion-pipeline})
+bridging commercial traffic data with the OSMnx/PySAL ecosystem.
+\end{enumerate}
+
+\textbf{Open science resources:}
 \begin{itemize}
 \item \textbf{Source code:} \url{https://github.com/firmanhadi21/traffic-analyses} (MIT licence)
 \item \textbf{PyPI package:} \url{https://pypi.org/project/traffic-congestion-pipeline/}
@@ -47,37 +75,12 @@ The pipeline, source code, API documentation, and aggregated datasets are all re
 \item \textbf{Archived datasets:} Zenodo DOI: \href{https://doi.org/10.5281/zenodo.18650759}{10.5281/zenodo.18650759}
 \end{itemize}
 
-\textbf{Summary.}
-We demonstrate the pipeline across three Indonesian metropolitan cities---Jakarta (metro pop.\ 34M),
-Bandung (2.5M), and Semarang (1.8M)---analyzing 264 million traffic observations over 11 months
-across 18,694 road segments. The pipeline is city-agnostic: adding a new city requires only a
-bounding box and API key.
-
-Our primary empirical finding is that time-of-day ($\eta^2$ = 15--24\%) explains 1,000--4,000$\times$
-more traffic congestion variance than any spatial predictor---including network centrality,
-POI density, road capacity, and a novel graph-based capacity drop detection metric. Four
-independent spatial tests converge on null results, reframing relative congestion as a demand
-synchronization problem rather than a spatial infrastructure problem.
-
-\textbf{Contributions.}
-\begin{enumerate}
-\item A fully open, installable pipeline bridging commercial traffic data with the OSMnx/PySAL
-ecosystem---filling a gap identified in recent calls for integrated urban data science tools.
-\item A novel graph-based capacity drop detection module using directed OSMnx road networks.
-\item The first systematic multi-city comparison of temporal versus spatial congestion predictors
-across a 20$\times$ population range.
-\item Evidence that normalized congestion metrics inherently remove capacity effects, with
-methodological implications for capacity--congestion studies.
-\end{enumerate}
-
 \textbf{Confirmations.}
 This manuscript is original and has not been published or submitted elsewhere. All authors have
-approved the manuscript and agree with submission to \emph{Computers, Environment and Urban
-Systems}. We have no competing interests to declare. The use of generative AI (Claude, Anthropic)
-for code development and statistical automation is disclosed in the manuscript per Elsevier policy.
-
-We believe this work aligns closely with the special issue's vision of advancing open,
-reproducible urban science, and we hope the editors and reviewers find it suitable for consideration.
+approved the manuscript and agree with submission to \emph{Transportation Research
+Interdisciplinary Perspectives}. We have no competing interests to declare. The use of
+generative AI (Claude, Anthropic) for code development and statistical automation is disclosed
+in the manuscript per Elsevier policy.
 
 \closing{Sincerely,}
 
