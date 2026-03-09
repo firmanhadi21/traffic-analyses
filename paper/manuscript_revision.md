@@ -58,13 +58,35 @@ Unique references from deleted Literature Review (Batty 2013, Saberi 2020, Kirkl
 
 ---
 
-## Track B — Methodological Improvements (PENDING)
+## Track B — Methodological Improvements (IN PROGRESS)
 
-Requires HPC. Two key analyses:
+Colab notebook prepared: `speed_aggregation_colab.ipynb`
 
-1. **Rerun correlations using absolute speed** (not jam factor) as alternative dependent variable — addresses the circularity critique. If null results hold with absolute speed, the finding is genuine.
+### B1 — Speed aggregation & ANOVA (Steps 1–5)
+- Streaming aggregation (Welford's algorithm) — safe for 264M rows on Colab 12 GB RAM
+- ANOVA on absolute speed, speed reduction, free-flow speed, and jam factor
+- If eta² values are similar across metrics → circularity critique refuted
 
-2. **Multilevel model** — time as Level 1 (within-segment), spatial predictors as Level 2 (between-segment) — for proper variance decomposition instead of ANOVA eta-squared vs OLS R-squared comparison.
+### B2 — Speed-based spatial correlations (Steps 6–7)
+- Downloads OSM networks, computes edge betweenness centrality
+- Correlates centrality against jam factor, current speed, speed reduction, free-flow speed
+- If R² remains < 0.01 for absolute speed → null spatial finding is genuine
+
+### B3 — Multilevel model (Steps 8–9)
+- Mixed-effects model: `speed_mean ~ C(time_period) + betweenness + free_flow_mean + (1|fid)`
+- Null model → ICC (between-segment vs within-segment variance)
+- Temporal model → pseudo-R² for time period
+- Full model → incremental R² for spatial predictors beyond temporal
+- Replaces the unfair eta-squared vs R-squared comparison
+
+### Output (Step 10)
+- Ready-to-paste LaTeX tables for all three analyses
+- CSV exports: `anova_comparison_all_metrics.csv`, `centrality_correlations_all_metrics.csv`, `multilevel_model_results.csv`
+
+### Status
+- [ ] Run notebook on Colab (raw data on Google Drive)
+- [ ] Review results and integrate into manuscript
+- [ ] Update Discussion section with multilevel model findings
 
 ---
 
