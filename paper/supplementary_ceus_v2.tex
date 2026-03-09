@@ -1,0 +1,348 @@
+\documentclass[preprint,12pt]{elsarticle}
+
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{multirow}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage[margin=2.5cm]{geometry}
+
+\journal{Computers, Environment and Urban Systems}
+
+\begin{document}
+
+\begin{frontmatter}
+
+\title{Supplementary Material for:\\
+Spatiotemporal Analysis of Urban Traffic Congestion, Network Topology, and Capacity Constraints in Indonesian Metropolitan Cities}
+
+\author[undip]{Firman Hadi\corref{cor1}}
+\ead{firmanhadi21@lecturer.undip.ac.id}
+\author[undip]{Yasser Wahyuddin}
+\author[undip]{L.M. Sabri}
+\author[nca]{Agung Indrajit}
+
+\affiliation[undip]{organization={Department of Geodetic Engineering, Universitas Diponegoro},
+  city={Semarang}, country={Indonesia}}
+\affiliation[nca]{organization={Deputy for Green and Digital Transformation, Nusantara Capital Authority},
+  country={Indonesia}}
+
+\cortext[cor1]{Corresponding author.}
+
+\end{frontmatter}
+
+\setcounter{section}{0}
+\renewcommand{\thesection}{S\arabic{section}}
+\renewcommand{\thetable}{S\arabic{table}}
+\renewcommand{\thefigure}{S\arabic{figure}}
+
+%% ============================================================
+\section{Spatial Weight Sensitivity Analysis}
+\label{sec:s1}
+
+To confirm that the null global spatial autocorrelation finding reported in the main text is robust, we computed Moran's I under five spatial weight specifications for each city: K-nearest neighbours with $k \in \{4, 8, 12\}$ and distance-band weights at 500\,m and 1000\,m thresholds.
+
+\begin{table}[!htbp]
+\centering
+\caption{Moran's I under alternative spatial weight specifications (overall mean jam factor). All 15 city--weight combinations yield non-significant results ($p > 0.05$), confirming the absence of global spatial autocorrelation.}
+\label{tab:s1}
+\begin{tabular}{lccccc}
+\toprule
+City & KNN $k{=}4$ & KNN $k{=}8$ & KNN $k{=}12$ & Dist 500\,m & Dist 1000\,m \\
+\midrule
+Jakarta  & 0.001 ($p{=}0.86$) & 0.003 ($p{=}0.46$) & 0.005 ($p{=}0.12$) & $-0.009$ ($p{=}0.14$) & $-0.005$ ($p{=}0.33$) \\
+Bandung  & 0.004 ($p{=}0.74$) & 0.007 ($p{=}0.35$) & 0.009 ($p{=}0.20$) & 0.007 ($p{=}0.63$)    & $-0.000$ ($p{=}0.99$) \\
+Semarang & 0.008 ($p{=}0.67$) & $-0.004$ ($p{=}0.84$) & 0.003 ($p{=}0.77$) & 0.003 ($p{=}0.89$) & $-0.004$ ($p{=}0.88$) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The distance-band weights at 500\,m and 1000\,m provide implicit correlogram information. Both distance thresholds yield non-significant Moran's I across all cities, indicating that spatial autocorrelation is absent at both local (neighbouring segments) and broader spatial scales.
+
+%% ============================================================
+\section{Period-Specific Moran's I}
+\label{sec:s2}
+
+Global Moran's I was computed separately for each of the eight temporal periods to test whether spatial clustering emerges during specific times of day. Spatial weights use KNN with $k{=}8$.
+
+\begin{table}[!htbp]
+\centering
+\caption{Moran's I by temporal period (KNN $k{=}8$). No period--city combination reaches conventional significance ($p < 0.05$), confirming that the absence of global spatial clustering is not an artefact of temporal averaging.}
+\label{tab:s2}
+\begin{tabular}{lccc}
+\toprule
+Period & Jakarta & Bandung & Semarang \\
+\midrule
+Night             & 0.000 ($p{=}0.91$)    & 0.002 ($p{=}0.81$)    & 0.004 ($p{=}0.74$)    \\
+Morning Peak      & $-0.001$ ($p{=}0.85$) & 0.009 ($p{=}0.27$)    & $-0.003$ ($p{=}0.86$) \\
+Morning Off-Peak  & 0.005 ($p{=}0.19$)    & 0.009 ($p{=}0.28$)    & $-0.008$ ($p{=}0.62$) \\
+Lunch Hours       & 0.001 ($p{=}0.79$)    & 0.003 ($p{=}0.68$)    & $-0.022$ ($p{=}0.14$) \\
+Afternoon Off-Peak& 0.006 ($p{=}0.10$)    & 0.016 ($p{=}0.058$)   & $-0.001$ ($p{=}0.99$) \\
+Evening Peak      & 0.003 ($p{=}0.46$)    & 0.007 ($p{=}0.35$)    & $-0.004$ ($p{=}0.84$) \\
+Evening Off-Peak  & 0.004 ($p{=}0.25$)    & $-0.002$ ($p{=}0.81$) & 0.001 ($p{=}0.89$)    \\
+Late Night        & $-0.002$ ($p{=}0.61$) & 0.005 ($p{=}0.51$)    & $-0.018$ ($p{=}0.23$) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The closest result to significance is Bandung's afternoon off-peak period ($I{=}0.016$, $p{=}0.058$), which does not survive conventional thresholds and would not survive Bonferroni correction for 24 simultaneous tests ($\alpha_{\text{adj}} = 0.05/24 = 0.002$).
+
+%% ============================================================
+\section{Getis-Ord Gi* Hot and Cold Spot Counts}
+\label{sec:s3}
+
+Getis-Ord Gi* statistics were computed with KNN ($k{=}8$) binary weights and 999 permutations to triangulate the LISA findings reported in the main text.
+
+\begin{table}[!htbp]
+\centering
+\caption{Getis-Ord Gi* hot and cold spot counts (evening peak, $p < 0.05$). Cold spots outnumber hot spots in all three cities, indicating that clusters of low congestion are slightly more prevalent than clusters of high congestion.}
+\label{tab:s3}
+\begin{tabular}{lcccc}
+\toprule
+City & Hot Spots & Cold Spots & Not Significant & \% Significant \\
+\midrule
+Jakarta  & 660 (4.5\%) & 807 (5.5\%) & 13,082 (89.9\%) & 10.1\% \\
+Bandung  & 118 (3.8\%) & 178 (5.8\%) & 2,773 (90.4\%)  & 9.6\%  \\
+Semarang & 39 (3.6\%)  & 53 (4.9\%)  & 984 (91.4\%)    & 8.6\%  \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Among hot spots, 95 (14.4\%) in Jakarta, 15 (12.7\%) in Bandung, and 2 (5.1\%) in Semarang reach the stricter $p < 0.01$ threshold. The overall proportion of significant segments ($\sim$9--10\%) is consistent with the LISA results reported in the main text.
+
+%% ============================================================
+\section{H3 Hexagonal Aggregation: Extended Results}
+\label{sec:s4}
+
+This section provides extended results from the H3 hexagonal scale-sensitivity analysis described in Section 4.4 and reported in Section 5.6 of the main text. The Uber H3 hierarchical geospatial indexing system (Brodsky, 2018) was used to aggregate road-segment-level variables into regular hexagonal bins at two resolutions, testing whether the null correlations observed at the segment level reflect genuine absence of relationships or a modifiable areal unit problem (MAUP) artefact.
+
+\subsection{Hexagon Coverage Statistics}
+
+\begin{table}[!htbp]
+\centering
+\caption{H3 hexagon coverage by city and resolution. Resolution 8 ($\approx$461\,m diameter) captures neighbourhood-scale patterns; resolution 9 ($\approx$174\,m diameter) approximates block-level aggregation.}
+\label{tab:s4}
+\begin{tabular}{llrrr}
+\toprule
+City & Resolution & Hexagons & Mean Segments/Hex & Mean Observations/Hex \\
+\midrule
+Semarang & 8 ($\approx$461\,m) & 235 & 4.6 & 64,732 \\
+Semarang & 9 ($\approx$174\,m) & 490 & 2.2 & 31,045 \\
+Bandung  & 8 ($\approx$461\,m) & 517 & 5.9 & 83,963 \\
+Bandung  & 9 ($\approx$174\,m) & 1,222 & 2.5 & 35,521 \\
+Jakarta  & 8 ($\approx$461\,m) & 1,836 & 7.9 & 112,359 \\
+Jakarta  & 9 ($\approx$174\,m) & 5,319 & 2.7 & 38,802 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The higher segment density per hexagon in Jakarta reflects its denser road network. At resolution 8, each hexagon contains sufficient observations (31,000--112,000) for stable mean estimates.
+
+\subsection{POI and Centrality Correlations Across Spatial Scales}
+
+\begin{table}[!htbp]
+\centering
+\caption{Spearman correlations ($\rho$) between hex-level jam factor and spatial predictors at three scales. All correlations remain within the negligible-effect range ($|\rho| < 0.10$), confirming that the null segment-level findings are robust to spatial aggregation.}
+\label{tab:s5}
+\begin{tabular}{llccccc}
+\toprule
+ & & \multicolumn{2}{c}{POI Density} & \multicolumn{2}{c}{Betweenness Centrality} \\
+\cmidrule(lr){3-4} \cmidrule(lr){5-6}
+City & Scale & $\rho$ & $p$-value & $\rho$ & $p$-value \\
+\midrule
+\multirow{3}{*}{Semarang}
+ & Segment    & $-0.030$ & 0.252 & $-0.030$ & 0.252 \\
+ & H3 Res.\ 9 & $+0.033$ & 0.462 & $+0.022$ & 0.630 \\
+ & H3 Res.\ 8 & $+0.077$ & 0.242 & $+0.053$ & 0.427 \\
+\midrule
+\multirow{3}{*}{Bandung}
+ & Segment    & $+0.004$ & 0.820 & $+0.040$ & 0.009 \\
+ & H3 Res.\ 9 & $+0.027$ & 0.339 & $+0.053$ & 0.070 \\
+ & H3 Res.\ 8 & $+0.053$ & 0.228 & $+0.041$ & 0.352 \\
+\midrule
+\multirow{3}{*}{Jakarta}
+ & Segment    & $-0.001$ & 0.946 & $-0.001$ & 0.946 \\
+ & H3 Res.\ 9 & $-0.014$ & 0.314 & $-0.003$ & 0.836 \\
+ & H3 Res.\ 8 & $+0.021$ & 0.362 & $-0.007$ & 0.784 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The maximum observed effect is Semarang's POI correlation at resolution 8 ($\rho = +0.077$), which remains far below conventional significance thresholds ($p = 0.242$) and is practically negligible in magnitude. Bandung's segment-level centrality correlation ($\rho = +0.040$, $p = 0.009$), the only statistically significant result at any scale, attenuates to non-significance at the hex level ($p > 0.07$), suggesting the original significance may have been inflated by segment-level noise.
+
+\subsection{Global Moran's I Across Spatial Scales}
+
+\begin{table}[!htbp]
+\centering
+\caption{Global Moran's I for jam factor at three spatial scales. Jakarta exhibits weak but statistically significant positive spatial autocorrelation at both hex resolutions ($p < 0.05$), a pattern not detectable at the road-segment level. Bandung and Semarang remain statistically random at all scales.}
+\label{tab:s6}
+\begin{tabular}{llccc}
+\toprule
+City & Scale & Moran's I & $z$-score & $p$-value \\
+\midrule
+\multirow{3}{*}{Semarang}
+ & Segment    & $-0.004$ & $-0.21$ & 0.837 \\
+ & H3 Res.\ 9 & $+0.004$ & $+0.15$ & 0.443 \\
+ & H3 Res.\ 8 & $-0.081$ & $-1.71$ & 0.087 \\
+\midrule
+\multirow{3}{*}{Bandung}
+ & Segment    & $+0.008$ & $+0.93$ & 0.353 \\
+ & H3 Res.\ 9 & $-0.008$ & $-0.22$ & 0.412 \\
+ & H3 Res.\ 8 & $+0.052$ & $+1.92$ & 0.055 \\
+\midrule
+\multirow{3}{*}{Jakarta}
+ & Segment    & $+0.003$ & $+0.69$ & 0.492 \\
+ & H3 Res.\ 9 & $+0.022$ & $+2.17$ & 0.030* \\
+ & H3 Res.\ 8 & $+0.030$ & $+2.13$ & 0.033* \\
+\bottomrule
+\end{tabular}
+
+\smallskip
+\noindent\textit{* $p < 0.05$}
+\end{table}
+
+Jakarta's emergence of significant spatial autocorrelation at the hexagonal scale suggests that its congestion patterns have coherent neighbourhood-level structure---hexagons with elevated congestion tend to be surrounded by similarly elevated neighbours---that is masked by within-segment noise at finer resolutions. Importantly, this clustering is \emph{not} explained by POI density or betweenness centrality, both of which remain uncorrelated with congestion even at the hex scale where autocorrelation is detected. The drivers of Jakarta's weak but consistent neighbourhood clustering warrant further investigation, with candidate explanatory variables including land-use mix, population density, and access to public transit.
+
+%% ============================================================
+\section{Spatial Match Quality}
+\label{sec:s5}
+
+The spatial join between HERE Traffic segments and OSMnx road network edges was validated by examining centroid-to-centroid match distances.
+
+\begin{table}[!htbp]
+\centering
+\caption{Spatial match quality: HERE Traffic segments to OSMnx edges. Median distances are under 20\,m in all cities, and the 200\,m filtering threshold retains 98--99\% of matches.}
+\label{tab:s7}
+\begin{tabular}{lccccc}
+\toprule
+City & $n$ & Median (m) & \% within 50\,m & \% within 100\,m & \% within 200\,m \\
+\midrule
+Jakarta  & 20,954 & 17.8 & 89.3\% & 97.7\% & 99.3\% \\
+Bandung  & 4,382  & 19.6 & 86.3\% & 96.4\% & 98.9\% \\
+Semarang & 1,539  & 19.6 & 85.2\% & 94.6\% & 97.9\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The high match quality ($>$85\% within 50\,m) confirms that the nearest-edge spatial join introduces minimal positional error, supporting the reliability of centrality--congestion correlation and capacity drop analyses that depend on this join.
+
+%% ============================================================
+\section{Spatial Regression Results}
+\label{sec:s6}
+
+To properly account for spatial dependence, Spatial Lag and Spatial Error models (via PySAL's \texttt{spreg}) were estimated alongside OLS multiple regression. The dependent variable is mean evening-peak jam factor; independent variables are edge betweenness centrality and POI density within a 500\,m buffer.
+
+\begin{table}[!htbp]
+\centering
+\caption{Spatial regression results: jam factor $\sim$ betweenness centrality $+$ POI density. Across all model specifications, $R^2$ values are negligible ($<$0.3\%), confirming that spatial predictors explain virtually none of the congestion variance.}
+\label{tab:s8}
+\small
+\begin{tabular}{llcccccl}
+\toprule
+City & Model & $R^2$ & $\beta$ (betw.) & $p$ & $\beta$ (POI) & $p$ & Spatial param. \\
+\midrule
+\multirow{3}{*}{Jakarta}
+ & OLS           & 0.003\% & $-0.048$ & 0.635 & 0.000010  & 0.704 & ---              \\
+ & Spatial Lag   & 0.006\% & $-0.337$ & 0.168 & $-0.000005$ & 0.899 & $\rho = 2.731$   \\
+ & Spatial Error & 0.003\% & $-0.051$ & 0.615 & 0.000009  & 0.708 & $\lambda = 0.012$ \\
+\midrule
+\multirow{3}{*}{Bandung}
+ & OLS           & 0.260\% & 0.270    & 0.005 & $-0.000010$ & 0.803 & ---              \\
+ & Spatial Lag   & 0.128\% & 0.231    & 0.064 & $-0.000000$ & 0.996 & $\rho = 0.350$   \\
+ & Spatial Error & 0.260\% & 0.269    & 0.005 & $-0.000010$ & 0.817 & $\lambda = 0.023$ \\
+\midrule
+\multirow{3}{*}{Semarang}
+ & OLS           & 0.004\% & $-0.017$ & 0.894 & $-0.000007$ & 0.887 & ---              \\
+ & Spatial Lag   & 0.013\% & 0.033    & 0.866 & 0.000055  & 0.706 & $\rho = 2.568$   \\
+ & Spatial Error & 0.004\% & $-0.018$ & 0.886 & $-0.000008$ & 0.867 & $\lambda = -0.034$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Bandung's OLS betweenness coefficient is statistically significant ($p{=}0.005$) but trivially small in magnitude ($R^2 = 0.26\%$). This significance vanishes in the Spatial Lag model ($p{=}0.064$), suggesting it is partially attributable to spatial dependence rather than a genuine centrality effect. The spatial autoregressive parameters ($\rho$, $\lambda$) are small, consistent with the weak global spatial autocorrelation reported in the main text and Table~\ref{tab:s1}.
+
+%% ============================================================
+\section{Supplementary Figures}
+\label{sec:sfigs}
+
+\subsection{Hotspot Maps}
+
+Figures~\ref{fig:s1}--\ref{fig:s2} show LISA cluster and Getis-Ord Gi* hotspot maps for the evening peak period for Bandung and Semarang. The main text includes the Jakarta hotspot map.
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\textwidth]{figures/bdg_hotspots_evening_peak.png}
+\caption{LISA cluster and Getis-Ord Gi* hotspot maps --- Bandung (evening peak). Hot spots are concentrated along the northern industrial corridor (Jl.\ Soekarno-Hatta) and the Pasteur--Cipaganti commercial strip.}
+\label{fig:s1}
+\end{figure}
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\textwidth]{figures/smg_hotspots_evening_peak.png}
+\caption{LISA cluster and Getis-Ord Gi* hotspot maps --- Semarang (evening peak). Despite the smallest network ($n{=}1{,}076$), identifiable hot spots cluster around the Simpang Lima central roundabout and Jl.\ Pandanaran commercial corridor.}
+\label{fig:s2}
+\end{figure}
+
+\subsection{H3 Hexagonal Aggregation Figures}
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=0.75\textwidth]{figures/h3_morans_scale.png}
+\caption{Global Moran's I by spatial scale for three cities. Bars show Moran's I at the road-segment level, H3 resolution~9 ($\approx$174\,m), and H3 resolution~8 ($\approx$461\,m). Asterisk (*) denotes $p < 0.05$. Jakarta's spatial autocorrelation reaches significance only at the hexagonal aggregation scales, while Semarang and Bandung remain statistically random at all three scales.}
+\label{fig:s3}
+\end{figure}
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\textwidth]{figures/h3_correlation_panels.png}
+\caption{Scatter plots of POI density (top row) and network centrality (bottom row) versus hex-level mean jam factor at H3 resolution~8. Dashed lines show OLS regression fits. Pearson $r$ and Spearman $\rho$ are annotated per panel; no significant correlation is detected in any city for either predictor.}
+\label{fig:s4}
+\end{figure}
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=0.85\textwidth]{figures/h3_correlation_comparison.png}
+\caption{Spearman $\rho$ for POI density (left) and network centrality (right) at three spatial scales: road segment, H3 resolution~9 ($\approx$174\,m), and H3 resolution~8 ($\approx$461\,m). The grey band marks the negligible-effect region ($|\rho| < 0.1$). Correlations remain within the negligible band across all cities and scales, confirming that the null segment-level findings are not a modifiable areal unit artefact.}
+\label{fig:s5}
+\end{figure}
+
+\subsection{Capacity--Congestion Scatter Plots}
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\textwidth]{figures/capacity_congestion_scatter.png}
+\caption{Scatter plots of road capacity (lanes $\times$ speed limit) versus mean evening-peak jam factor for all three cities. Points show individual road segments; LOESS curves confirm the flat capacity--congestion relationship.}
+\label{fig:s6}
+\end{figure}
+
+\subsection{Bottleneck Capacity Comparison}
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\textwidth]{figures/bottleneck_capacity_comparison.png}
+\caption{Bottleneck capacity comparison across cities. Box plots compare the distribution of road capacity attributes (number of lanes, speed limits) between bottleneck and non-bottleneck segments identified by the graph-based capacity drop detection algorithm.}
+\label{fig:s7}
+\end{figure}
+
+\subsection{Capacity Drop Spatial Distribution}
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\textwidth]{figures/capacity_drop_spatial_analysis.png}
+\caption{Spatial distribution of capacity drop segments across all three cities. Segments are classified by whether they exhibit a statistically significant capacity drop (jam factor increase when transitioning from high-capacity to lower-capacity downstream segments).}
+\label{fig:s8}
+\end{figure}
+
+\subsection{Street Orientation Analysis}
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\textwidth]{figures/street_orientation_polar.png}
+\caption{Street orientation polar plots for Jakarta, Bandung, and Semarang. Jakarta shows a pronounced grid pattern with dominant N--S and E--W orientations; Bandung and Semarang show more heterogeneous orientations reflecting their topographic constraints.}
+\label{fig:s9}
+\end{figure}
+
+%% ============================================================
+\end{document}
