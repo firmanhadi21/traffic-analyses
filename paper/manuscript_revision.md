@@ -84,9 +84,42 @@ Colab notebook prepared: `speed_aggregation_colab.ipynb`
 - CSV exports: `anova_comparison_all_metrics.csv`, `centrality_correlations_all_metrics.csv`, `multilevel_model_results.csv`
 
 ### Status
-- [ ] Run notebook on Colab (raw data on Google Drive)
-- [ ] Review results and integrate into manuscript
-- [ ] Update Discussion section with multilevel model findings
+- [x] B1: Speed aggregation & ANOVA — completed via `run_speed_aggregation.py` (Feb 16)
+- [x] B2: Speed-based spatial correlations — completed via `speed_spatial_analysis.py` (Mar 10)
+- [x] B3: Multilevel model — completed via `speed_spatial_analysis.py` (Mar 10)
+- [x] Results integrated into `paper/ceus_manuscript.tex`
+
+### B2 + B3 Results Summary (March 10, 2026)
+
+**B1 ANOVA results (all cities):**
+- jam_factor η² = 8.2–9.4%, speed η² = 5.1–5.9%, speed_reduction η² = 8.2–9.6%, free_flow η² ≈ 0%
+- Temporal dominance confirmed for absolute speed metrics — not a normalization artifact
+
+**B2 Centrality correlations (evening peak):**
+| Metric | SMG R² | BDG R² | JKT R² |
+|--------|--------|--------|--------|
+| Jam factor | 0.084 | 0.136 | 0.064 |
+| Current speed | 0.003 | 0.000 | 0.001 |
+| Speed reduction | 0.108 | 0.130 | 0.067 |
+| Free-flow speed | 0.019 | 0.049 | 0.031 |
+
+Key finding: Centrality correlates moderately with jam factor and speed reduction (which incorporate free-flow normalization) but NOT with absolute current speed (R² < 0.003). This confirms centrality's "effect" on jam factor is mediated through free-flow speed (road design), not congestion severity.
+
+**B3 Multilevel model (absolute speed):**
+| City | ICC | Temporal R² | Spatial ΔR² | β_centrality |
+|------|-----|-------------|-------------|--------------|
+| Semarang | 89.4% | 67.0% | 79.1% | −2,379*** |
+| Bandung | 87.8% | 63.1% | 74.0% | −5,632*** |
+| Jakarta | 89.1% | 56.5% | 77.6% | −27,605*** |
+
+Key finding: ICC ~88-89% means most speed variance is between segments (road type differences). Time explains 57–67% of within-segment fluctuations. Spatial ΔR² of 74–79% is driven almost entirely by free_flow_mean (road capacity proxy); centrality alone adds <1%.
+
+### Manuscript changes made
+- Methods: Added speed validation paragraph in Section 3.2; new Multilevel Variance Decomposition subsection
+- Results: Added Table speed_validation (cross-metric ANOVA); replaced centrality table with cross-metric version; replaced η² vs R² table with multilevel decomposition table
+- Discussion: Transformed circularity from limitation to resolved concern; updated limitations (removed 2 addressed items); updated future work (removed 2 completed items)
+- Conclusion: Replaced "1,000–4,000×" framing with multilevel model results
+- Abstract: Updated to reflect multilevel model framing
 
 ---
 

@@ -1,0 +1,13 @@
+city,metric,metric_label,pearson_r,R_squared,pearson_p,spearman_rho,spearman_p,n
+Semarang,jam_factor_mean,Jam factor,0.2889,0.083482,5.6e-19,0.2691,5.6e-19,1059
+Semarang,speed_mean,Current speed (km/h),-0.0514,0.002642,0.094,-0.0884,0.00405,1059
+Semarang,free_flow_mean,Free-flow speed (km/h),0.1392,0.019369,4.6e-06,0.1141,0.000203,1059
+Semarang,speed_reduction_mean,Speed reduction (km/h),0.3291,0.108312,8.55e-28,0.2892,8.55e-22,1059
+Bandung,jam_factor_mean,Jam factor,0.3681,0.135511,1.25e-82,0.339,1.25e-82,3039
+Bandung,speed_mean,Current speed (km/h),-0.0125,0.000157,0.49,-0.0989,4.65e-08,3039
+Bandung,free_flow_mean,Free-flow speed (km/h),0.2221,0.049337,2.23e-34,0.1752,2.23e-22,3039
+Bandung,speed_reduction_mean,Speed reduction (km/h),0.3603,0.129818,3.31e-75,0.324,3.31e-75,3039
+Jakarta,jam_factor_mean,Jam factor,0.252821,0.063918,5.61e-209,0.250146,1.77e-204,14453
+Jakarta,speed_mean,Current speed (km/h),0.030442,0.000927,0.000257,0.031336,0.000168,14453
+Jakarta,free_flow_mean,Free-flow speed (km/h),0.175789,0.030902,2.31e-100,0.185024,3.67e-111,14453
+Jakarta,speed_reduction_mean,Speed reduction (km/h),0.258551,0.066849,8.51e-219,0.248184,3.26e-201,14453

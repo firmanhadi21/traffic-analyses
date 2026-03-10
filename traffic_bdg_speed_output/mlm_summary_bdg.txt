@@ -1,0 +1,69 @@
+Multilevel Model Results for Bandung
+============================================================
+
+Null Model (ICC):
+          Mixed Linear Model Regression Results
+=========================================================
+Model:            MixedLM Dependent Variable: speed_mean 
+No. Observations: 24311   Method:             REML       
+No. Groups:       3039    Scale:              0.6614     
+Min. group size:  7       Log-Likelihood:     -35651.5892
+Max. group size:  8       Converged:          Yes        
+Mean group size:  8.0                                    
+----------------------------------------------------------
+           Coef.  Std.Err.     z     P>|z|  [0.025  0.975]
+----------------------------------------------------------
+Intercept  6.138     0.040  154.043  0.000   6.060   6.217
+Group Var  4.743     0.163                                
+=========================================================
+
+
+Temporal Model:
+                    Mixed Linear Model Regression Results
+=============================================================================
+Model:                    MixedLM       Dependent Variable:       speed_mean 
+No. Observations:         24311         Method:                   REML       
+No. Groups:               3039          Scale:                    0.2441     
+Min. group size:          7             Log-Likelihood:           -25073.0411
+Max. group size:          8             Converged:                Yes        
+Mean group size:          8.0                                                
+-----------------------------------------------------------------------------
+                                  Coef.  Std.Err.    z    P>|z| [0.025 0.975]
+-----------------------------------------------------------------------------
+Intercept                          5.573    0.041 136.857 0.000  5.493  5.653
+C(time_period)[T.evening_offpeak]  0.440    0.013  34.744 0.000  0.416  0.465
+C(time_period)[T.evening_peak]    -0.040    0.013  -3.147 0.002 -0.065 -0.015
+C(time_period)[T.late_night]       1.236    0.013  97.533 0.000  1.211  1.261
+C(time_period)[T.lunch_hours]      0.143    0.013  11.318 0.000  0.119  0.168
+C(time_period)[T.morning_offpeak]  0.205    0.013  16.185 0.000  0.180  0.230
+C(time_period)[T.morning_peak]     0.783    0.013  61.800 0.000  0.758  0.808
+C(time_period)[T.night]            1.755    0.013 138.433 0.000  1.730  1.780
+Group Var                          4.795    0.268                            
+=============================================================================
+
+
+Full Model:
+                        Mixed Linear Model Regression Results
+======================================================================================
+Model:                       MixedLM          Dependent Variable:          speed_mean 
+No. Observations:            24311            Method:                      REML       
+No. Groups:                  3039             Scale:                       0.2433     
+Min. group size:             7                Log-Likelihood:              -23017.0661
+Max. group size:             8                Converged:                   Yes        
+Mean group size:             8.0                                                      
+--------------------------------------------------------------------------------------
+                                    Coef.   Std.Err.    z    P>|z|   [0.025    0.975] 
+--------------------------------------------------------------------------------------
+Intercept                             0.669    0.058  11.484 0.000     0.555     0.783
+C(time_period)[T.evening_offpeak]     0.439    0.013  34.673 0.000     0.414     0.464
+C(time_period)[T.evening_peak]       -0.042    0.013  -3.346 0.001    -0.067    -0.018
+C(time_period)[T.late_night]          1.233    0.013  97.453 0.000     1.208     1.258
+C(time_period)[T.lunch_hours]         0.144    0.013  11.398 0.000     0.119     0.169
+C(time_period)[T.morning_offpeak]     0.205    0.013  16.187 0.000     0.180     0.230
+C(time_period)[T.morning_peak]        0.784    0.013  61.938 0.000     0.759     0.809
+C(time_period)[T.night]               1.752    0.013 138.454 0.000     1.727     1.777
+betweenness                       -5631.762  344.153 -16.364 0.000 -6306.290 -4957.235
+free_flow_mean                        0.680    0.007  92.081 0.000     0.666     0.695
+Group Var                             1.249    0.071                                  
+======================================================================================
+

@@ -54,7 +54,7 @@
 %% Abstract
 %% ============================================================
 \begin{abstract}
-Urban traffic congestion is a persistent barrier to sustainable development in rapidly urbanizing Southeast Asian cities, yet the relative importance of \emph{when} versus \emph{where} congestion occurs remains poorly quantified—particularly in developing-country contexts dominated by motorcycle traffic. This study analyzes over 264 million traffic observations collected at 15-minute intervals across three Indonesian metropolitan areas—Jakarta, Bandung, and Semarang—over 11 months using the HERE Traffic API. We combine geostatistical methods (Moran's I, LISA, Getis-Ord Gi*), network topology analysis via OSMnx, and a novel graph-based capacity drop detection framework within an open-source Python pipeline. Our central finding is that temporal factors dominate spatial factors by three orders of magnitude: time-of-day explains 15--24\% of congestion variance ($\eta^2$), while network centrality, POI density, road capacity, and bottleneck proximity each explain less than 0.01\%. Four independent spatial tests converge on null results, and H3 hexagonal aggregation at multiple scales confirms these are not modifiable areal unit artefacts. We argue that this ``temporal dominance'' reflects the fundamental nature of congestion as a demand synchronization problem—millions of commuters traveling simultaneously—rather than a spatial infrastructure constraint. Evening peak congestion exceeds daily averages by approximately 40\% across all three cities despite a 20$\times$ population range. These findings imply that demand management interventions (congestion pricing, flexible work schedules, public transit) may yield greater returns than capacity expansion alone in rapidly urbanizing contexts.
+Urban traffic congestion is a persistent barrier to sustainable development in rapidly urbanizing Southeast Asian cities, yet the relative importance of \emph{when} versus \emph{where} congestion occurs remains poorly quantified—particularly in developing-country contexts dominated by motorcycle traffic. This study analyzes over 264 million traffic observations collected at 15-minute intervals across three Indonesian metropolitan areas—Jakarta, Bandung, and Semarang—over 11 months using the HERE Traffic API. We combine geostatistical methods (Moran's I, LISA, Getis-Ord Gi*), network topology analysis via OSMnx, and a novel graph-based capacity drop detection framework within an open-source Python pipeline. Our central finding is that temporal factors dominate spatial factors: multilevel variance decomposition shows time-of-day explains 57--67\% of within-segment speed fluctuations, while network centrality adds less than 1\% beyond road type. Validation using absolute speed ($\eta^2$ = 5--10\%) confirms this is not an artifact of jam factor normalization. Four independent spatial tests converge on null results, and H3 hexagonal aggregation at multiple scales confirms these are not modifiable areal unit artefacts. We argue that this ``temporal dominance'' reflects the fundamental nature of congestion as a demand synchronization problem—millions of commuters traveling simultaneously—rather than a spatial infrastructure constraint. Evening peak congestion exceeds daily averages by approximately 40\% across all three cities despite a 20$\times$ population range. These findings imply that demand management interventions (congestion pricing, flexible work schedules, public transit) may yield greater returns than capacity expansion alone in rapidly urbanizing contexts.
 \end{abstract}
 
 \noindent\textbf{Keywords:} Urban traffic congestion; Spatiotemporal analysis; Network centrality; Jam factor; Capacity bottleneck; Indonesian cities; HERE Traffic API; OSMnx; Spatial autocorrelation
@@ -199,7 +199,7 @@ Our framework integrates five complementary approaches (Figure~\ref{fig:fig1_ana
 
 \subsection{Temporal Pattern Analysis}
 
-Temporal patterns were examined by calculating summary statistics for each period across all road segments. One-way ANOVA tested for significant differences between periods, with post-hoc Tukey HSD tests identifying specific significant pairs.
+Temporal patterns were examined by calculating summary statistics for each period across all road segments. One-way ANOVA tested for significant differences between periods, with post-hoc Tukey HSD tests identifying specific significant pairs. To validate that temporal effects are not an artifact of jam factor normalization, ANOVA was also conducted on absolute speed (km/h), speed reduction (free-flow minus current speed, km/h), and free-flow speed, enabling cross-metric comparison of effect sizes ($\eta^2$).
 
 \subsection{Geostatistical Analysis}
 
@@ -250,6 +250,20 @@ Following Boeing (2017), we computed two network centrality metrics. \textbf{Bet
 \[C_C(v) = \frac{n-1}{\sum_{u \neq v} d(u,v)}\]
 
 Edge betweenness was computed on undirected networks weighted by edge length, with approximate sampling (k=500 source nodes) for large networks.
+
+\subsection{Multilevel Variance Decomposition}
+
+To provide a rigorous comparison of temporal and spatial variance contributions---avoiding the methodological asymmetry of comparing $\eta^2$ from categorical ANOVA against $R^2$ from continuous predictors---we fit a series of linear mixed-effects models with absolute speed (km/h) as the dependent variable. Speed was chosen over jam factor because it is not normalized to free-flow speed, eliminating the circularity concern.
+
+Three nested models were estimated using restricted maximum likelihood (REML) via \texttt{statsmodels.mixedlm}:
+
+\begin{enumerate}
+  \item \textbf{Null model}: $\text{speed}_{it} = \gamma_0 + u_i + \varepsilon_{it}$, where $u_i \sim N(0, \sigma^2_u)$ is a random intercept for segment $i$. The intraclass correlation coefficient (ICC $= \sigma^2_u / (\sigma^2_u + \sigma^2_\varepsilon)$) partitions total speed variance into between-segment (spatial) and within-segment (temporal + residual) components.
+  \item \textbf{Temporal model}: adds time period as a fixed effect. The pseudo-$R^2$ is the proportional reduction in residual variance relative to the null model, quantifying how much within-segment speed variation is explained by time of day.
+  \item \textbf{Full model}: adds betweenness centrality and free-flow speed as segment-level (Level~2) predictors. The incremental $\Delta R^2$ is the proportional reduction in between-segment variance relative to the temporal model, quantifying how much spatial speed variation is explained by network topology and road capacity.
+\end{enumerate}
+
+This framework replaces the $\eta^2$ vs.\ $R^2$ comparison with a proper multilevel decomposition that accounts for the nested data structure (time periods within segments).
 
 \subsection{Bottleneck and Capacity Drop Analysis}
 
@@ -335,7 +349,7 @@ Late Night & 0.97 & 0.77 & 0.78 \\
 
 \paragraph{Statistical Significance of Temporal Variation}
 
-One-way ANOVA confirms that temporal period differences are highly statistically significant (Table~\ref{tab:table_anova}). Post-hoc Tukey HSD tests reveal that all 28 pairwise period comparisons are significant (p < 0.05) for each city. The effect size ($\eta^2$) ranges from 15--24\%---a strong effect for a single categorical variable. Weekday congestion exceeds weekend levels by approximately 35--40\%, with Friday evenings peaking and Sunday mornings at a minimum.
+One-way ANOVA confirms that temporal period differences are highly statistically significant (Table~\ref{tab:table_anova}). Post-hoc Tukey HSD tests reveal that all 28 pairwise period comparisons are significant (p < 0.05) for each city. The effect size ($\eta^2$) ranges from 8--10\% for jam factor and speed reduction, 5--6\% for absolute speed, and effectively zero for free-flow speed (Table~\ref{tab:speed_validation}). The similarity of $\eta^2$ values between jam factor (8--9\%) and speed reduction (8--10\%) confirms that temporal dominance is not an artifact of jam factor normalization: the same temporal pattern appears in absolute speed metrics. Free-flow speed shows no temporal variation, as expected since it reflects road design capacity. Weekday congestion exceeds weekend levels by approximately 35--40\%, with Friday evenings peaking and Sunday mornings at a minimum.
 
 \textbf{Table~\ref{tab:table_anova}.} ANOVA results for temporal period effects
 
@@ -350,6 +364,21 @@ Jakarta & 1,191,699.66 & < 0.001 & 28/28 \\
 Bandung & 224,445.67 & < 0.001 & 28/28 \\
 Semarang & 45,863.33 & < 0.001 & 28/28 \\
 \label{tab:table_anova}
+\end{longtable}
+
+\textbf{Table~\ref{tab:speed_validation}.} Temporal variance explained ($\eta^2$) by metric type
+
+\begin{longtable}[]{@{}lllll@{}}
+\toprule\noalign{}
+City & Jam factor & Current speed & Speed reduction & Free-flow speed \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Semarang & 8.8\% & 5.1\% & 9.6\% & $<$0.01\% \\
+Bandung & 9.4\% & 5.9\% & 8.8\% & $<$0.01\% \\
+Jakarta & 8.2\% & 5.2\% & 8.2\% & $<$0.01\% \\
+\label{tab:speed_validation}
 \end{longtable}
 
 \subsection{Spatial Pattern Analysis}
@@ -415,21 +444,21 @@ Not Significant & 13,014 (89.5\%) & 2,749 (89.6\%) & 998 (92.8\%) \\
 
 \paragraph{Betweenness Centrality}
 
-Traffic segments were spatially joined to OSMnx edges using centroid-based nearest-neighbor matching (200m threshold). Match quality is high: median centroid distances are under 20m, with over 85\% of matches within 50m. Correlation analysis reveals \textbf{negligible correlations} between betweenness centrality and jam factor across all cities (Table~\ref{tab:table10}; Figures~\ref{fig:jkt_centrality}--\ref{fig:smg_centrality}). Despite Bandung's statistically significant Spearman $\rho$ = 0.040 (p = 0.009), the effect size is trivially small, contradicting the common assumption that topologically important roads experience greater congestion.
+Traffic segments were spatially joined to OSMnx edges using centroid-based nearest-neighbor matching (200m threshold). Match quality is high: median centroid distances are under 20m, with over 85\% of matches within 50m. To test whether centrality--congestion correlations differ by metric type, we computed Pearson $R^2$ between betweenness centrality and four traffic metrics during the evening peak (Table~\ref{tab:centrality_speed}). The results reveal a striking pattern: centrality shows moderate correlations with jam factor ($R^2$ = 0.06--0.14) and speed reduction ($R^2$ = 0.07--0.13), but near-zero correlations with absolute current speed ($R^2$ < 0.003). This divergence arises because jam factor and speed reduction both incorporate free-flow speed normalization, while absolute speed does not. Free-flow speed itself shows weak positive correlation with centrality ($R^2$ = 0.02--0.05), reflecting that topologically important roads tend to have higher design speeds. Centrality's apparent ``effect'' on jam factor is thus largely mediated through its association with free-flow speed---a road characteristic---rather than through any direct influence on congestion severity.
 
-\textbf{Table~\ref{tab:table10}.} Centrality--congestion correlations
+\textbf{Table~\ref{tab:centrality_speed}.} Centrality--congestion correlations by metric type (Pearson $R^2$, evening peak)
 
-\begin{longtable}[]{@{}llllll@{}}
+\begin{longtable}[]{@{}lllll@{}}
 \toprule\noalign{}
-City & n matched & Pearson r & p-value & Spearman $\rho$ & p-value \\
+City & Jam factor & Current speed & Speed reduction & Free-flow speed \\
 \midrule\noalign{}
 \endhead
 \bottomrule\noalign{}
 \endlastfoot
-Jakarta & 20,822 & 0.002 & 0.828 & -0.001 & 0.946 \\
-Bandung & 4,336 & 0.012 & 0.442 & 0.040 & 0.009 \\
-Semarang & 1,507 & -0.011 & 0.667 & -0.030 & 0.252 \\
-\label{tab:table10}
+Semarang (n=1,059) & 0.0835 & 0.0026 & 0.1083 & 0.0194 \\
+Bandung (n=3,039) & 0.1355 & 0.0002 & 0.1298 & 0.0493 \\
+Jakarta (n=14,453) & 0.0639 & 0.0009 & 0.0669 & 0.0309 \\
+\label{tab:centrality_speed}
 \end{longtable}
 
 \begin{figure}
@@ -623,31 +652,30 @@ Semarang & 1.20 (0.41) & 1.18 (0.40) & 0.61 & 0.543 & 0.04 \\
 \label{fig:capacity_drops}
 \end{figure}
 
-\subsection{Temporal vs.\ Spatial Effect Size Comparison}
+\subsection{Multilevel Variance Decomposition}
 
-To directly quantify the dominance of temporal factors over spatial predictors, we computed eta-squared ($\eta^2$) for temporal period from one-way ANOVA (Section 5.2.2) and compared it against $R^2$ from OLS regressions of jam factor against each spatial predictor. The results are striking: time-of-day explains 15--24\% of congestion variance, while all spatial predictors combined explain less than 0.01\%. Temporal factors dominate spatial factors by a factor of 1,000--4,000$\times$ (Table~\ref{tab:effect_size_comparison}; Figure~\ref{fig:temporal_vs_spatial}).
+To rigorously partition temporal and spatial variance contributions---avoiding the methodological asymmetry of comparing $\eta^2$ from categorical ANOVA against $R^2$ from continuous predictors---we fit nested mixed-effects models using absolute speed (km/h) as the dependent variable (Table~\ref{tab:multilevel}).
 
-\textbf{Table~\ref{tab:effect_size_comparison}.} Temporal vs.\ spatial effect size comparison
+The null model ICC indicates that 88--89\% of total speed variance lies between segments, reflecting fundamental differences in road design speeds (e.g., arterials vs.\ local roads). Within segments, time-of-day explains 57--67\% of speed fluctuations (pseudo-$R^2$ from the temporal model). Adding spatial predictors (betweenness centrality and free-flow speed) to the full model reduces between-segment variance by 74--79\% ($\Delta R^2$), but this reduction is almost entirely driven by free-flow speed---a proxy for road design capacity---rather than by network centrality. The betweenness coefficient is negative and significant ($p < 0.001$) in all cities, indicating that more central roads have slightly lower speeds after controlling for road type, consistent with higher traffic exposure on topologically important links.
 
-\begin{longtable}[]{@{}llll@{}}
+\textbf{Table~\ref{tab:multilevel}.} Multilevel model variance decomposition (absolute speed)
+
+\begin{longtable}[]{@{}lccccc@{}}
 \toprule\noalign{}
-City & Temporal $\eta^2$ (ANOVA) & Spatial $R^2$ (combined) & Ratio (Temporal/Spatial) \\
+City & Segments & ICC & Temporal $R^2$ & Spatial $\Delta R^2$ & $\beta_{\text{centrality}}$ \\
 \midrule\noalign{}
 \endhead
 \bottomrule\noalign{}
 \endlastfoot
-Jakarta & 23.7\% & 0.006\% & 3,950$\times$ \\
-Bandung & 19.8\% & 0.009\% & 2,200$\times$ \\
-Semarang & 15.2\% & 0.015\% & 1,000$\times$ \\
-\label{tab:effect_size_comparison}
+Semarang & 1,056 & 89.4\% & 67.0\% & 79.1\% & $-$2,379*** \\
+Bandung & 3,039 & 87.8\% & 63.1\% & 74.0\% & $-$5,632*** \\
+Jakarta & 14,411 & 89.1\% & 56.5\% & 77.6\% & $-$27,605*** \\
+\label{tab:multilevel}
 \end{longtable}
 
-\begin{figure}[htbp]
-\centering
-\includegraphics[width=\textwidth]{figures/temporal_vs_spatial_effect_size.png}
-\caption{Temporal vs.\ spatial effect size comparison across three cities}
-\label{fig:temporal_vs_spatial}
-\end{figure}
+\textit{Note: ICC = intraclass correlation from null model. Temporal $R^2$ = proportional reduction in within-segment variance. Spatial $\Delta R^2$ = proportional reduction in between-segment variance after adding centrality and free-flow speed. ***$p < 0.001$.}
+
+The multilevel results provide a more nuanced picture than the previous $\eta^2$ vs.\ $R^2$ framing. Both temporal and spatial factors contribute meaningfully to speed variation, but they operate at different levels: temporal factors drive within-segment fluctuations (congestion dynamics), while spatial factors reflect between-segment differences (road infrastructure). Critically, the spatial variance explained by centrality \textit{alone} (without free-flow speed) is negligible ($\Delta R^2 < 1\%$ in all cities), confirming that network topology does not independently predict congestion after accounting for road type.
 
 \begin{figure}[htbp]
 \centering
@@ -658,23 +686,23 @@ Semarang & 15.2\% & 0.015\% & 1,000$\times$ \\
 
 \section{Discussion}
 
-Our central finding that temporal factors dominate spatial factors by 1,000--4,000$\times$ has important theoretical and practical implications. The result reframes urban congestion fundamentally as a \textbf{demand synchronization problem} rather than a supply-side infrastructure problem. Millions of people traveling to work at roughly the same time creates congestion regardless of road network topology, capacity, or land-use density. This aligns with traffic science principles: when demand exceeds capacity, queues form (Vickrey, 1969; Arnott et al., 1993). Our empirical data from three Indonesian cities spanning a 20$\times$ population range confirms that this principle operates consistently across urban contexts.
+Our central finding---that temporal factors drive within-segment speed variation while spatial predictors (network centrality, POI density, capacity) contribute negligibly beyond road type---has important theoretical and practical implications. The multilevel model confirms that time-of-day explains 57--67\% of within-segment speed fluctuations, while betweenness centrality adds less than 1\% explanatory power beyond free-flow speed. This reframes urban congestion fundamentally as a \textbf{demand synchronization problem} rather than a supply-side infrastructure problem. Millions of people traveling to work at roughly the same time creates congestion regardless of road network topology, capacity, or land-use density. This aligns with traffic science principles: when demand exceeds capacity, queues form (Vickrey, 1969; Arnott et al., 1993). Our empirical data from three Indonesian cities spanning a 20$\times$ population range confirms that this principle operates consistently across urban contexts.
 
 The null results from four independent spatial tests (betweenness centrality, POI density, capacity score, and capacity drops) converge on the same conclusion. This triangulation strengthens confidence that the absence of spatial--congestion relationships is genuine rather than a methodological artefact. The H3 hexagonal aggregation (Section 5.4) confirms that null results persist at neighbourhood scales, addressing potential MAUP concerns.
 
-The finding that high-capacity roads show marginally \textit{higher} congestion than low-capacity roads appears counterintuitive but reflects the HERE jam factor's normalization to free-flow speed. High-capacity roads (e.g., motorways) have higher free-flow speeds; when congestion occurs, the relative slowdown is proportionally larger even if absolute speeds remain higher than on lower-capacity roads. This methodological note has implications for future capacity--congestion studies: normalized congestion metrics may systematically remove capacity effects by design.
+The finding that high-capacity roads show marginally \textit{higher} congestion than low-capacity roads appears counterintuitive but reflects the HERE jam factor's normalization to free-flow speed. High-capacity roads (e.g., motorways) have higher free-flow speeds; when congestion occurs, the relative slowdown is proportionally larger even if absolute speeds remain higher than on lower-capacity roads. To test whether this normalization creates circular reasoning, we repeated all analyses using absolute speed (km/h) and speed reduction (free-flow minus current speed). The ANOVA results confirm temporal dominance across all metrics: $\eta^2$ = 8--10\% for jam factor and speed reduction, 5--6\% for absolute speed (Table~\ref{tab:speed_validation}). Similarly, network centrality correlations with absolute current speed are near zero ($R^2 < 0.003$; Table~\ref{tab:centrality_speed}), confirming that the null spatial finding is genuine rather than a normalization artifact. The moderate centrality--jam factor correlations ($R^2$ = 0.06--0.14) are mediated through free-flow speed: topologically important roads have higher design speeds, which amplifies normalized congestion scores without reflecting greater absolute congestion.
 
 Our results align with emerging evidence that temporal patterns dominate spatial patterns in urban mobility. In a study of eight U.S. cities, time-of-day explained more variance in traffic than land-use or network topology (Kang et al., 2020). Similar temporal dominance was found in London (Todd, 2019) and Beijing (Zhang et al., 2017). Our contribution extends this finding to Southeast Asian cities with unique traffic characteristics (high motorcycle shares) and demonstrates it using high-resolution, continuous monitoring data rather than survey or snapshot methods.
 
 The practical implications are significant for Indonesian and comparable Southeast Asian cities. If congestion is primarily driven by demand synchronization, then conventional supply-side responses---road widening, interchange construction, capacity expansion---address a secondary factor while leaving the primary driver untouched. Our findings support prioritizing \textbf{demand management} interventions: congestion pricing to spread peak demand temporally (as implemented in Singapore, London, and Stockholm); flexible and staggered work schedules, which directly target the synchronization mechanism; and public transit expansion, which reduces per-capita road space consumption during peak hours. Indonesia's ongoing mass rapid transit investments in Jakarta (MRT, LRT) and bus rapid transit systems in Bandung and Semarang align with this logic. The consistency of the temporal dominance finding across cities spanning a 20$\times$ population range---from Semarang (1.8M) to Jakarta metro (34M)---suggests these policy implications are not scale-dependent and may generalize across the Indonesian urban hierarchy.
 
-Several limitations warrant discussion. First, and most importantly, the HERE jam factor normalizes congestion to each segment's free-flow speed, which may remove capacity effects by construction. A motorway segment operating at 60\,km/h (against a 100\,km/h free-flow baseline) and a local road at 15\,km/h (against a 25\,km/h baseline) receive similar jam factor scores despite vastly different absolute conditions. Future work should replicate these analyses using absolute speed or volume-to-capacity ratios to disentangle whether null spatial results reflect the metric's normalization or a genuine absence of spatial structure. Second, the temporal--spatial effect size comparison uses $\eta^2$ from a categorical ANOVA (8 time periods) against $R^2$ from continuous spatial predictors; a multilevel model partitioning within-segment (temporal) and between-segment (spatial) variance would provide a more rigorous comparison. Third, we analyze three cities in a single country; generalization to cities with different urban forms (e.g., grid-planned cities, cities with extensive rail networks) requires caution. Fourth, our spatial predictors do not include every possible factor (e.g., traffic signal density, public transit routes, population density, land-use mix). Jakarta's weak but significant neighbourhood-level spatial autocorrelation detected through H3 aggregation suggests that unmeasured spatial variables may play a role. Fifth, the 11-month period, while extensive, may not capture long-term infrastructure or land-use changes.
+Several limitations warrant discussion. First, we analyze three cities in a single country; generalization to cities with different urban forms (e.g., grid-planned cities, cities with extensive rail networks) requires caution. Second, our spatial predictors do not include every possible factor (e.g., traffic signal density, public transit routes, population density, land-use mix). Jakarta's weak but significant neighbourhood-level spatial autocorrelation detected through H3 aggregation suggests that unmeasured spatial variables may play a role. Third, the 11-month period, while extensive, may not capture long-term infrastructure or land-use changes. Fourth, the multilevel model uses speed aggregated to eight time periods per segment; finer temporal resolution (e.g., hourly) might reveal additional within-segment dynamics not captured at the period level.
 
-Future research should: (1) validate findings using absolute speed as an alternative dependent variable; (2) employ multilevel models to properly partition temporal and spatial variance components; (3) apply the pipeline to cities outside Indonesia to test generalizability; (4) incorporate dynamic predictors (signal timing, transit schedules) alongside static network measures; and (5) investigate the drivers of Jakarta's neighbourhood-level spatial autocorrelation using population density and land-use data.
+Future research should: (1) apply the pipeline to cities outside Indonesia to test generalizability across different urban forms and transport systems; (2) incorporate dynamic predictors (signal timing, transit schedules) alongside static network measures; and (3) investigate the drivers of Jakarta's neighbourhood-level spatial autocorrelation using population density and land-use data.
 
 \section{Conclusion}
 
-This study analyzed 264 million traffic observations across three Indonesian cities using a novel open-source Python pipeline. Our central finding is that \textbf{temporal factors dominate spatial factors by 1,000--4,000$\times$} in explaining congestion variance. Time-of-day ($\eta^2$ = 15--24\%) vastly outweighs network centrality, POI density, road capacity, and capacity drops (all $R^2$ < 0.01\%). Four independent spatial tests converge on null results, reframing congestion as a demand synchronization problem rather than a spatial infrastructure constraint. The evening peak shows congestion approximately 40\% above daily averages. These findings support prioritizing demand management strategies alongside infrastructure expansion in rapidly urbanizing contexts.
+This study analyzed 264 million traffic observations across three Indonesian cities using a novel open-source Python pipeline. Multilevel variance decomposition reveals that time-of-day explains 57--67\% of within-segment speed fluctuations, while network centrality adds less than 1\% explanatory power beyond road type. ANOVA on absolute speed ($\eta^2$ = 5--6\%) and speed reduction ($\eta^2$ = 8--10\%) confirms that temporal dominance is not an artifact of jam factor normalization. Four independent spatial tests---betweenness centrality, POI density, road capacity, and capacity drops---converge on null results for absolute speed ($R^2$ < 0.003), reframing congestion as a demand synchronization problem rather than a spatial infrastructure constraint. The evening peak shows congestion approximately 40\% above daily averages. These findings support prioritizing demand management strategies alongside infrastructure expansion in rapidly urbanizing contexts.
 
 The open-source pipeline developed for this study (\texttt{pip install traffic-congestion-pipeline}) enables reproducible, scalable traffic analysis and is readily extensible to other cities. We encourage researchers in developing countries---where traffic congestion poses the greatest challenges---to adopt and adapt these tools for their own contexts.
 

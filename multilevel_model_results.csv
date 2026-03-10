@@ -1,0 +1,4 @@
+city,n_obs,n_segments,ICC_null,ICC_pct,var_between,var_within,R2_temporal,R2_temporal_pct,R2_spatial_incremental,R2_spatial_pct,var_segment_after_time,var_segment_after_full,beta_betweenness,p_betweenness,beta_free_flow,p_free_flow
+Semarang,8448,1056,0.8937,89.4%,6.33,0.75,0.6701,67.0%,0.7905,79.05%,6.33,1.33,-2378.7213,7.1e-22,0.8048,0.0
+Bandung,24311,3039,0.8776,87.8%,4.74,0.66,0.6309,63.1%,0.7396,73.96%,4.74,1.23,-5631.7624,3.45e-60,0.6802,0.0
+Jakarta,115271,14411,0.8911,89.1%,5.63,0.69,0.5651,56.5%,0.7756,77.56%,5.68,1.27,-27605.4289,3.63e-104,0.6806,0.0
