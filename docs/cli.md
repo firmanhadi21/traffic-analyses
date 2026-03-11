@@ -179,3 +179,106 @@ traffic-pipeline synthesis [OPTIONS]
 |--------|------|---------|-------------|
 | `--figures-dir` | PATH | `figures` | Directory for output figures |
 | `--output-dir` | PATH | `analysis_results` | Directory for CSV results |
+
+---
+
+## `multilevel`
+
+Run multilevel variance decomposition using mixed-effects models.
+Fits null → temporal → full models on absolute speed (km/h) to partition
+within-segment (temporal) and between-segment (spatial) variance.
+
+```bash
+traffic-pipeline multilevel [OPTIONS]
+```
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `--figures-dir` | PATH | `figures` | Directory for output figures |
+| `--output-dir` | PATH | `analysis_results` | Directory for CSV results |
+
+### Outputs
+
+- `multilevel_results.csv` — ICC, temporal R², spatial ΔR² per city
+- `multilevel_variance_decomposition.png` — grouped bar chart
+
+!!! note "Dependency"
+    Requires `statsmodels` (included in core dependencies since v0.4.0).
+
+---
+
+## `markov`
+
+Run LISA Markov and Spatial Markov transition analysis. Computes LISA
+categories per segment per time period, then fits classic and spatial
+Markov models to quantify hotspot persistence and spatial contagion.
+
+```bash
+traffic-pipeline markov [OPTIONS]
+```
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `--figures-dir` | PATH | `figures` | Directory for output figures |
+| `--output-dir` | PATH | `analysis_results` | Directory for CSV results |
+
+### Outputs
+
+- `markov_analysis_results.csv` — persistence probabilities, contagion test results
+- `markov/<city>_transition_matrix.png` — heatmap per city
+- `markov/persistence_comparison.png` — cross-city comparison
+- `markov/spatial_contagion_test.png` — chi-squared results
+
+!!! note "Dependency"
+    Requires PySAL extras: `pip install traffic-congestion-pipeline[pysal]`
+
+---
+
+## `speed-validation`
+
+Run speed-based validation across multiple congestion metrics (jam factor,
+current speed, speed reduction, free-flow speed). Confirms that temporal
+dominance is not an artifact of jam factor normalization.
+
+```bash
+traffic-pipeline speed-validation [OPTIONS]
+```
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `--figures-dir` | PATH | `figures` | Directory for output figures |
+| `--output-dir` | PATH | `analysis_results` | Directory for CSV results |
+
+### Outputs
+
+- `speed_validation_anova.csv` — η² per city × metric
+- `centrality_by_metric.csv` — centrality R² per metric type
+- `speed_validation_eta_squared.png` — grouped bar chart
+- `centrality_r2_by_metric.png` — centrality correlation comparison
+
+---
+
+## `h3-robustness`
+
+Run H3 hexagonal aggregation at multiple spatial resolutions to test whether
+null spatial autocorrelation results persist at neighbourhood scales
+(MAUP robustness check).
+
+```bash
+traffic-pipeline h3-robustness [OPTIONS]
+```
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `--figures-dir` | PATH | `figures` | Directory for output figures |
+| `--output-dir` | PATH | `analysis_results` | Directory for CSV results |
+| `--period` | TEXT | `evening_peak` | Time period to analyze |
+
+### Outputs
+
+- `h3_robustness_results.csv` — Moran's I at each resolution per city
+- `h3_resolution_sweep.png` — line plot of Moran's I and p-values across scales
+- `h3_map_<city>_res8.png` — choropleth per city at resolution 8
+
+!!! note "Dependency"
+    Requires H3 extras: `pip install traffic-congestion-pipeline[h3]`

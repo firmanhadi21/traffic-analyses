@@ -37,6 +37,9 @@ build/
 # MkDocs build output
 site/
 
+# Paper (manuscripts, submissions, binary docs)
+paper/
+
 # LaTeX intermediates
 *.aux
 *.out

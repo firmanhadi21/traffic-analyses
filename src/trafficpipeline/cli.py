@@ -310,5 +310,73 @@ def synthesis(ctx: click.Context, figures_dir: str, output_dir: str) -> None:
     )
 
 
+# ── multilevel ────────────────────────────────────────────────
+
+@main.command()
+@click.option("--figures-dir", default="figures", show_default=True)
+@click.option("--output-dir", default="analysis_results", show_default=True)
+@click.pass_context
+def multilevel(ctx: click.Context, figures_dir: str, output_dir: str) -> None:
+    """Run multilevel variance decomposition (mixed-effects models)."""
+    from trafficpipeline.multilevel import run_analysis
+    run_analysis(
+        base_dir=ctx.obj["base_dir"],
+        figures_dir=figures_dir,
+        output_dir=output_dir,
+    )
+
+
+# ── markov ────────────────────────────────────────────────────
+
+@main.command()
+@click.option("--figures-dir", default="figures", show_default=True)
+@click.option("--output-dir", default="analysis_results", show_default=True)
+@click.pass_context
+def markov(ctx: click.Context, figures_dir: str, output_dir: str) -> None:
+    """Run LISA Markov and Spatial Markov transition analysis."""
+    from trafficpipeline.markov import run_analysis
+    run_analysis(
+        base_dir=ctx.obj["base_dir"],
+        figures_dir=figures_dir,
+        output_dir=output_dir,
+    )
+
+
+# ── speed-validation ─────────────────────────────────────────
+
+@main.command(name="speed-validation")
+@click.option("--figures-dir", default="figures", show_default=True)
+@click.option("--output-dir", default="analysis_results", show_default=True)
+@click.pass_context
+def speed_validation(ctx: click.Context, figures_dir: str, output_dir: str) -> None:
+    """Run speed-based validation across multiple congestion metrics."""
+    from trafficpipeline.speed_validation import run_analysis
+    run_analysis(
+        base_dir=ctx.obj["base_dir"],
+        figures_dir=figures_dir,
+        output_dir=output_dir,
+    )
+
+
+# ── h3-robustness ────────────────────────────────────────────
+
+@main.command(name="h3-robustness")
+@click.option("--figures-dir", default="figures", show_default=True)
+@click.option("--output-dir", default="analysis_results", show_default=True)
+@click.option("--period", default="evening_peak", show_default=True,
+              help="Time period to analyze.")
+@click.pass_context
+def h3_robustness(ctx: click.Context, figures_dir: str, output_dir: str,
+                  period: str) -> None:
+    """Run H3 hexagonal aggregation for MAUP robustness testing."""
+    from trafficpipeline.h3_robustness import run_analysis
+    run_analysis(
+        base_dir=ctx.obj["base_dir"],
+        figures_dir=figures_dir,
+        output_dir=output_dir,
+        period=period,
+    )
+
+
 if __name__ == "__main__":
     main()
