@@ -17,9 +17,25 @@ import pandas as pd
 import numpy as np
 from scipy import stats
 import matplotlib.pyplot as plt
+import contextily as ctx
 from pathlib import Path
 import warnings
 warnings.filterwarnings('ignore')
+
+
+def add_basemap(ax, gdf, zoom='auto', alpha=0.4):
+    """Add OSM basemap to a matplotlib axes with geodata in EPSG:4326."""
+    bounds = gdf.total_bounds
+    ax.set_xlim(bounds[0], bounds[2])
+    ax.set_ylim(bounds[1], bounds[3])
+    try:
+        ctx.add_basemap(
+            ax, crs=gdf.crs,
+            source=ctx.providers.CartoDB.Positron,
+            zoom=zoom, alpha=alpha,
+        )
+    except Exception:
+        pass
 
 # Configure OSMnx
 ox.settings.use_cache = True
@@ -267,15 +283,17 @@ def plot_poi_congestion_map(traffic, city_code):
 
     # Left: POI density
     ax1 = axes[0]
+    add_basemap(ax1, traffic)
     traffic.plot(column='poi_density', cmap='YlOrRd', linewidth=0.8, ax=ax1,
-                legend=True, legend_kwds={'label': 'POI Count', 'shrink': 0.7})
+                legend=True, legend_kwds={'label': 'POI Count', 'shrink': 0.7}, alpha=0.85)
     ax1.set_title(f'{city_name} - POI Density', fontsize=12, fontweight='bold')
     ax1.set_axis_off()
 
     # Right: Congestion
     ax2 = axes[1]
+    add_basemap(ax2, traffic)
     traffic.plot(column='jam_factor_mean', cmap='RdYlGn_r', linewidth=0.8, ax=ax2,
-                legend=True, legend_kwds={'label': 'Jam Factor', 'shrink': 0.7})
+                legend=True, legend_kwds={'label': 'Jam Factor', 'shrink': 0.7}, alpha=0.85)
     ax2.set_title(f'{city_name} - Traffic Congestion', fontsize=12, fontweight='bold')
     ax2.set_axis_off()
 

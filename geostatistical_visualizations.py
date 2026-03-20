@@ -15,9 +15,25 @@ import geopandas as gpd
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from matplotlib.colors import LinearSegmentedColormap, BoundaryNorm
+import contextily as ctx
 from pathlib import Path
 import warnings
 warnings.filterwarnings('ignore')
+
+
+def add_basemap(ax, gdf, zoom='auto', alpha=0.4):
+    """Add OSM basemap to a matplotlib axes with geodata in EPSG:4326."""
+    bounds = gdf.total_bounds  # [minx, miny, maxx, maxy]
+    ax.set_xlim(bounds[0], bounds[2])
+    ax.set_ylim(bounds[1], bounds[3])
+    try:
+        ctx.add_basemap(
+            ax, crs=gdf.crs,
+            source=ctx.providers.CartoDB.Positron,
+            zoom=zoom, alpha=alpha,
+        )
+    except Exception:
+        pass  # Silently skip if tiles unavailable
 
 # Import spatial statistics
 try:
@@ -195,6 +211,7 @@ def plot_lisa_significance_map(gdf, w, column='jam_factor_mean', city_code='smg'
         if len(subset) > 0:
             subset.plot(ax=ax1, color=colors_map[cluster_type], linewidth=0.5)
 
+    add_basemap(ax1, gdf)
     ax1.set_title(f'{city_name} - LISA Cluster Map\n(α = {alpha})', fontsize=12, fontweight='bold')
     ax1.set_axis_off()
 
@@ -212,6 +229,7 @@ def plot_lisa_significance_map(gdf, w, column='jam_factor_mean', city_code='smg'
     gdf.plot(column='lisa_p', ax=ax2, cmap=cmap, norm=norm, linewidth=0.5,
              legend=True, legend_kwds={'label': 'p-value', 'shrink': 0.7})
 
+    add_basemap(ax2, gdf)
     ax2.set_title(f'{city_name} - LISA Significance (p-values)', fontsize=12, fontweight='bold')
     ax2.set_axis_off()
 
@@ -286,6 +304,7 @@ def plot_getis_ord_gi(gdf, w, column='jam_factor_mean', city_code='smg'):
         if len(subset) > 0:
             subset.plot(ax=ax1, color=colors_map[gi_class], linewidth=0.5)
 
+    add_basemap(ax1, gdf)
     ax1.set_title(f'{city_name} - Getis-Ord Gi* Hotspot Analysis', fontsize=12, fontweight='bold')
     ax1.set_axis_off()
 
@@ -303,6 +322,7 @@ def plot_getis_ord_gi(gdf, w, column='jam_factor_mean', city_code='smg'):
     gdf.plot(column='gi_z', ax=ax2, cmap='RdBu_r', vmin=-vmax, vmax=vmax,
              linewidth=0.5, legend=True, legend_kwds={'label': 'Gi* Z-score', 'shrink': 0.7})
 
+    add_basemap(ax2, gdf)
     ax2.set_title(f'{city_name} - Gi* Z-scores', fontsize=12, fontweight='bold')
     ax2.set_axis_off()
 

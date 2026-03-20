@@ -10,10 +10,27 @@ import geopandas as gpd
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from matplotlib.colors import LinearSegmentedColormap
+import contextily as ctx
 import os
 from pathlib import Path
 import warnings
 warnings.filterwarnings('ignore')
+
+
+def add_basemap(ax, gdf, zoom='auto', alpha=0.4):
+    """Add OSM basemap to a matplotlib axes with geodata in EPSG:4326."""
+    # Set extent from data before adding basemap
+    bounds = gdf.total_bounds  # [minx, miny, maxx, maxy]
+    ax.set_xlim(bounds[0], bounds[2])
+    ax.set_ylim(bounds[1], bounds[3])
+    try:
+        ctx.add_basemap(
+            ax, crs=gdf.crs,
+            source=ctx.providers.CartoDB.Positron,
+            zoom=zoom, alpha=alpha,
+        )
+    except Exception:
+        pass  # Silently skip if tiles unavailable
 
 # Create output directory for figures
 FIGURES_DIR = Path("figures")
@@ -159,6 +176,9 @@ def plot_city_traffic_maps(city_code, data, figsize=(20, 10)):
         ax = axes[idx]
         gdf = data[period]
 
+        # Add OSM basemap first
+        add_basemap(ax, gdf)
+
         # Plot the traffic data
         gdf.plot(column='jam_factor_mean',
                  cmap=TRAFFIC_CMAP,
@@ -166,7 +186,8 @@ def plot_city_traffic_maps(city_code, data, figsize=(20, 10)):
                  ax=ax,
                  vmin=0,
                  vmax=4,
-                 legend=False)
+                 legend=False,
+                 alpha=0.85)
 
         ax.set_title(TIME_PERIOD_LABELS[period], fontsize=10, fontweight='bold')
         ax.set_axis_off()
@@ -271,9 +292,20 @@ def plot_peak_vs_offpeak(all_city_data, figsize=(12, 5)):
         ax = axes[idx]
         city_name = CITIES[city_code]['name']
 
-        # Calculate peak and off-peak means per segment
-        peak_values = np.mean([data[p]['jam_factor_mean'].values for p in peak_periods], axis=0)
-        offpeak_values = np.mean([data[p]['jam_factor_mean'].values for p in offpeak_periods], axis=0)
+        # Calculate peak and off-peak means per segment (aligned by osm_composite_id)
+        id_col = 'osm_composite_id' if 'osm_composite_id' in data[peak_periods[0]].columns else None
+        if id_col:
+            # Merge on stable ID to align segments across periods
+            peak_dfs = [data[p].set_index(id_col)[['jam_factor_mean']].rename(columns={'jam_factor_mean': p}) for p in peak_periods if p in data]
+            offpeak_dfs = [data[p].set_index(id_col)[['jam_factor_mean']].rename(columns={'jam_factor_mean': p}) for p in offpeak_periods if p in data]
+            peak_merged = pd.concat(peak_dfs, axis=1).dropna()
+            offpeak_merged = pd.concat(offpeak_dfs, axis=1).dropna()
+            common = peak_merged.index.intersection(offpeak_merged.index)
+            peak_values = peak_merged.loc[common].mean(axis=1).values
+            offpeak_values = offpeak_merged.loc[common].mean(axis=1).values
+        else:
+            peak_values = np.mean([data[p]['jam_factor_mean'].values for p in peak_periods], axis=0)
+            offpeak_values = np.mean([data[p]['jam_factor_mean'].values for p in offpeak_periods], axis=0)
 
         ax.scatter(offpeak_values, peak_values, alpha=0.3, s=10,
                    color=CITIES[city_code]['color'])
@@ -310,16 +342,24 @@ def plot_variability_analysis(all_city_data, figsize=(14, 5)):
         city_name = CITIES[city_code]['name']
 
         # Calculate coefficient of variation for each segment across time periods
-        segment_values = []
-        for period in TIME_PERIODS:
-            segment_values.append(data[period]['jam_factor_mean'].values)
-
-        segment_values = np.array(segment_values)
+        # Align segments by osm_composite_id across periods
+        id_col = 'osm_composite_id' if 'osm_composite_id' in data[TIME_PERIODS[0]].columns else None
+        if id_col:
+            period_dfs = []
+            for period in TIME_PERIODS:
+                if period in data:
+                    df = data[period].set_index(id_col)[['jam_factor_mean']].rename(
+                        columns={'jam_factor_mean': period})
+                    period_dfs.append(df)
+            merged = pd.concat(period_dfs, axis=1).dropna()
+            segment_values = merged.values.T
+        else:
+            segment_values = np.array([data[p]['jam_factor_mean'].values for p in TIME_PERIODS])
 
         # Mean and std across time periods for each segment
         segment_means = np.mean(segment_values, axis=0)
         segment_stds = np.std(segment_values, axis=0)
-        cv = segment_stds / segment_means  # Coefficient of variation
+        cv = segment_stds / (segment_means + 1e-10)  # Coefficient of variation
 
         ax.scatter(segment_means, cv, alpha=0.3, s=10,
                    color=CITIES[city_code]['color'])
@@ -347,6 +387,7 @@ def plot_congestion_hotspots(city_code, data, period='evening_peak', figsize=(12
 
     # Left: Traffic intensity map
     ax1 = axes[0]
+    add_basemap(ax1, gdf)
     gdf.plot(column='jam_factor_mean',
              cmap=TRAFFIC_CMAP,
              linewidth=0.8,
@@ -354,13 +395,15 @@ def plot_congestion_hotspots(city_code, data, period='evening_peak', figsize=(12
              vmin=0,
              vmax=4,
              legend=True,
-             legend_kwds={'label': 'Jam Factor', 'shrink': 0.8})
+             legend_kwds={'label': 'Jam Factor', 'shrink': 0.8},
+             alpha=0.85)
     ax1.set_title(f'{city_name} - Traffic Intensity\n({TIME_PERIOD_LABELS[period]})',
                   fontsize=12, fontweight='bold')
     ax1.set_axis_off()
 
     # Right: Hotspot classification
     ax2 = axes[1]
+    add_basemap(ax2, gdf)
 
     # Classify hotspots
     gdf['hotspot'] = 'Normal'
@@ -372,7 +415,7 @@ def plot_congestion_hotspots(city_code, data, period='evening_peak', figsize=(12
     for hotspot_type, color in colors.items():
         subset = gdf[gdf['hotspot'] == hotspot_type]
         if len(subset) > 0:
-            subset.plot(ax=ax2, color=color, linewidth=0.8, label=hotspot_type)
+            subset.plot(ax=ax2, color=color, linewidth=0.8, label=hotspot_type, alpha=0.85)
 
     ax2.set_title(f'{city_name} - Congestion Hotspots\n({TIME_PERIOD_LABELS[period]})',
                   fontsize=12, fontweight='bold')
@@ -448,17 +491,27 @@ def plot_heatmap_summary(all_city_data, figsize=(12, 8)):
         ax = axes[idx]
         city_name = CITIES[city_code]['name']
 
-        # Create matrix: segments x time periods
-        # Sample 100 segments for visualization
-        n_segments = len(data[TIME_PERIODS[0]])
-        sample_size = min(100, n_segments)
-        sample_idx = np.random.choice(n_segments, sample_size, replace=False)
-        sample_idx = np.sort(sample_idx)
-
-        matrix = np.zeros((sample_size, len(TIME_PERIODS)))
-        for j, period in enumerate(TIME_PERIODS):
-            values = data[period]['jam_factor_mean'].values
-            matrix[:, j] = values[sample_idx]
+        # Create matrix: segments x time periods (aligned by osm_composite_id)
+        id_col = 'osm_composite_id' if 'osm_composite_id' in data[TIME_PERIODS[0]].columns else None
+        if id_col:
+            period_dfs = []
+            for period in TIME_PERIODS:
+                if period in data:
+                    df = data[period].set_index(id_col)[['jam_factor_mean']].rename(
+                        columns={'jam_factor_mean': period})
+                    period_dfs.append(df)
+            merged = pd.concat(period_dfs, axis=1).dropna()
+            sample_size = min(100, len(merged))
+            sample_idx = np.sort(np.random.choice(len(merged), sample_size, replace=False))
+            matrix = merged.values[sample_idx]
+        else:
+            n_segments = len(data[TIME_PERIODS[0]])
+            sample_size = min(100, n_segments)
+            sample_idx = np.sort(np.random.choice(n_segments, sample_size, replace=False))
+            matrix = np.zeros((sample_size, len(TIME_PERIODS)))
+            for j, period in enumerate(TIME_PERIODS):
+                values = data[period]['jam_factor_mean'].values
+                matrix[:, j] = values[sample_idx]
 
         im = ax.imshow(matrix, aspect='auto', cmap=TRAFFIC_CMAP, vmin=0, vmax=3)
 

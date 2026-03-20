@@ -36,17 +36,17 @@ warnings.filterwarnings('ignore')
 CITIES = {
     'smg': {
         'name': 'Semarang',
-        'output_folder': 'traffic_smg_speed_output',
+        'output_folder': 'traffic_smg_output',
         'bbox': (-7.105, 110.227, -6.919, 110.528),  # south, west, north, east
     },
     'bdg': {
         'name': 'Bandung',
-        'output_folder': 'traffic_bdg_speed_output',
+        'output_folder': 'traffic_bdg_output',
         'bbox': (-7.0848, 107.4688, -6.8294, 107.8261),
     },
     'jkt': {
         'name': 'Jakarta',
-        'output_folder': 'traffic_jkt_speed_output',
+        'output_folder': 'traffic_jkt_output',
         'bbox': (-6.4096, 106.6036, -6.0911, 107.11),
     },
 }
@@ -61,10 +61,15 @@ OUTPUT_DIR = BASE_DIR  # CSVs and LaTeX go to project root
 
 
 def load_speed_gpkg(filepath):
-    """Load a speed GeoPackage, adding fid column if missing."""
+    """Load a speed GeoPackage, ensuring a segment_id column exists."""
     gdf = gpd.read_file(filepath)
-    if 'fid' not in gdf.columns:
-        gdf['fid'] = range(1, len(gdf) + 1)
+    # Prefer osm_composite_id (OSM-based pipeline), fall back to fid (legacy)
+    if 'osm_composite_id' in gdf.columns:
+        gdf['segment_id'] = gdf['osm_composite_id']
+    elif 'fid' in gdf.columns:
+        gdf['segment_id'] = gdf['fid']
+    else:
+        gdf['segment_id'] = range(1, len(gdf) + 1)
     return gdf
 
 
@@ -113,16 +118,16 @@ def compute_centrality(city_code, cfg):
 
     # Load reference geometry from any period file
     out_folder = os.path.join(BASE_DIR, cfg['output_folder'])
-    ref_file = os.path.join(out_folder, f'evening_peak_{city_code}_speed.gpkg')
+    ref_file = os.path.join(out_folder, f'evening_peak_{city_code}.gpkg')
     if not os.path.exists(ref_file):
         # Fallback to any available period
         for p in TIME_PERIODS:
-            ref_file = os.path.join(out_folder, f'{p}_{city_code}_speed.gpkg')
+            ref_file = os.path.join(out_folder, f'{p}_{city_code}.gpkg')
             if os.path.exists(ref_file):
                 break
 
     ref_gdf = load_speed_gpkg(ref_file)
-    ref_centroids = ref_gdf[['fid', 'geometry']].copy()
+    ref_centroids = ref_gdf[['segment_id', 'geometry']].copy()
     ref_centroids['geometry'] = ref_centroids.geometry.centroid
 
     osm_centroids = edges_gdf.copy()
@@ -130,12 +135,12 @@ def compute_centrality(city_code, cfg):
 
     print(f"  Spatial joining traffic segments to OSM edges...")
     joined = gpd.sjoin_nearest(
-        ref_centroids[['fid', 'geometry']],
+        ref_centroids[['segment_id', 'geometry']],
         osm_centroids[['geometry', 'betweenness']],
         how='left',
         max_distance=0.002,  # ~200m in degrees
     )
-    centrality_df = joined.groupby('fid')['betweenness'].first().reset_index()
+    centrality_df = joined.groupby('segment_id')['betweenness'].first().reset_index()
     matched = centrality_df['betweenness'].notna().sum()
     print(f"  Matched {matched}/{len(ref_gdf)} segments to OSM edges")
 
@@ -147,13 +152,13 @@ def run_centrality_correlations(city_code, cfg, centrality_df):
     name = cfg['name']
     out_folder = os.path.join(BASE_DIR, cfg['output_folder'])
 
-    speed_file = os.path.join(out_folder, f'evening_peak_{city_code}_speed.gpkg')
+    speed_file = os.path.join(out_folder, f'evening_peak_{city_code}.gpkg')
     if not os.path.exists(speed_file):
         print(f"  {name}: evening_peak speed file not found, skipping correlations")
         return []
 
     speed_gdf = load_speed_gpkg(speed_file)
-    merged = speed_gdf.merge(centrality_df, on='fid', how='inner')
+    merged = speed_gdf.merge(centrality_df, on='segment_id', how='inner')
     merged = merged.dropna(subset=['betweenness'])
 
     print(f"\n  {name}: Centrality vs traffic metrics (evening peak, n={len(merged)})")
@@ -220,11 +225,11 @@ def run_multilevel_model(city_code, cfg, centrality_df):
     # Stack all 8 periods into long format
     frames = []
     for period in TIME_PERIODS:
-        speed_file = os.path.join(out_folder, f'{period}_{city_code}_speed.gpkg')
+        speed_file = os.path.join(out_folder, f'{period}_{city_code}.gpkg')
         if not os.path.exists(speed_file):
             continue
         gdf = load_speed_gpkg(speed_file)
-        cols = ['fid']
+        cols = ['segment_id']
         for metric in ['jam_factor_mean', 'speed_mean', 'free_flow_mean',
                         'jam_factor_count']:
             if metric in gdf.columns:
@@ -238,21 +243,21 @@ def run_multilevel_model(city_code, cfg, centrality_df):
         return None
 
     long_df = pd.concat(frames, ignore_index=True)
-    long_df = long_df.merge(centrality_df, on='fid', how='left')
+    long_df = long_df.merge(centrality_df, on='segment_id', how='left')
 
     if 'speed_mean' in long_df.columns and 'free_flow_mean' in long_df.columns:
         long_df['speed_reduction'] = long_df['free_flow_mean'] - long_df['speed_mean']
 
-    model_cols = ['speed_mean', 'time_period', 'betweenness', 'free_flow_mean', 'fid']
+    model_cols = ['speed_mean', 'time_period', 'betweenness', 'free_flow_mean', 'segment_id']
     model_df = long_df.dropna(subset=[c for c in model_cols if c in long_df.columns])
     print(f"  Dataset: {len(model_df)} rows "
-          f"({model_df['fid'].nunique()} segments x "
+          f"({model_df['segment_id'].nunique()} segments x "
           f"{model_df['time_period'].nunique()} periods)")
 
     # ---- Model 1: Null ----
     print(f"  Fitting null model (random intercept only)...")
     null_model = smf.mixedlm(
-        'speed_mean ~ 1', data=model_df, groups=model_df['fid']
+        'speed_mean ~ 1', data=model_df, groups=model_df['segment_id']
     ).fit(reml=True)
 
     var_segment = null_model.cov_re.iloc[0, 0]
@@ -266,7 +271,7 @@ def run_multilevel_model(city_code, cfg, centrality_df):
     # ---- Model 2: Temporal ----
     print(f"  Fitting temporal model...")
     temporal_model = smf.mixedlm(
-        'speed_mean ~ C(time_period)', data=model_df, groups=model_df['fid']
+        'speed_mean ~ C(time_period)', data=model_df, groups=model_df['segment_id']
     ).fit(reml=True)
 
     var_seg_t = temporal_model.cov_re.iloc[0, 0]
@@ -279,7 +284,7 @@ def run_multilevel_model(city_code, cfg, centrality_df):
     print(f"  Fitting full model (time + betweenness + free_flow)...")
     full_model = smf.mixedlm(
         'speed_mean ~ C(time_period) + betweenness + free_flow_mean',
-        data=model_df, groups=model_df['fid']
+        data=model_df, groups=model_df['segment_id']
     ).fit(reml=True)
 
     var_seg_f = full_model.cov_re.iloc[0, 0]
@@ -302,7 +307,7 @@ def run_multilevel_model(city_code, cfg, centrality_df):
     result = {
         'city': name,
         'n_obs': len(model_df),
-        'n_segments': model_df['fid'].nunique(),
+        'n_segments': model_df['segment_id'].nunique(),
         'ICC_null': round(icc, 4),
         'ICC_pct': f'{icc*100:.1f}%',
         'var_between': round(var_segment, 2),

@@ -1,4 +1,4 @@
 city,n_segments,sig_original_p05,expected_by_chance,sig_fdr_corrected,HH_fdr,LL_fdr,HL_fdr,LH_fdr,NS_fdr
-Semarang,1076,89,53,0,0,0,0,0,1076
-Bandung,3069,296,153,0,0,0,0,0,3069
-Jakarta,14549,1393,727,0,0,0,0,0,14549
+Semarang,924,338,46,167,47,109,2,9,757
+Bandung,2583,969,129,635,176,380,23,56,1948
+Jakarta,13201,4847,660,2477,731,1496,80,170,10724

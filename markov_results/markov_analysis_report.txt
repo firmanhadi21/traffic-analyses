@@ -13,42 +13,42 @@ JAKARTA
 
 Transition Probability Matrix:
 From/To       NS      HH      LL      LH      HL
-NS         0.904   0.024   0.025   0.025   0.023
-HH         0.879   0.065   0.004   0.042   0.010
-LL         0.881   0.004   0.061   0.008   0.047
-LH         0.870   0.051   0.007   0.064   0.008
-HL         0.887   0.009   0.040   0.006   0.058
+NS         0.641   0.096   0.202   0.047   0.013
+HH         0.657   0.101   0.185   0.046   0.011
+LL         0.630   0.099   0.215   0.042   0.014
+LH         0.652   0.093   0.192   0.047   0.015
+HL         0.652   0.094   0.208   0.038   0.008
 
 Steady-State Distribution:
-  NS: 90.1%
-  HH: 2.5%
-  LL: 2.5%
-  LH: 2.5%
-  HL: 2.4%
+  NS: 64.1%
+  HH: 9.7%
+  LL: 20.3%
+  LH: 4.6%
+  HL: 1.3%
 
 Diagonal Dominance (Persistence Probability):
-  P(NS → NS): 90.4%
-  P(HH → HH): 6.5%
-  P(LL → LL): 6.1%
-  P(LH → LH): 6.4%
-  P(HL → HL): 5.8%
+  P(NS → NS): 64.1%
+  P(HH → HH): 10.1%
+  P(LL → LL): 21.5%
+  P(LH → LH): 4.7%
+  P(HL → HL): 0.8%
 
 2. PERSISTENCE ANALYSIS
 ----------------------------------------
 
 Category   Ever (%)     Always (%)   Avg Periods 
-HH         16.5         0.0          1.2         
-LL         16.6         0.0          1.2         
-HL         15.9         0.0          1.2         
-LH         17.0         0.0          1.2         
-NS         100.0        46.0         7.2         
+HH         53.0         0.0          1.4         
+LL         81.6         0.0          2.0         
+HL         9.4          0.0          1.0         
+LH         31.9         0.0          1.2         
+NS         100.0        3.3          5.2         
 
 3. SPATIAL MARKOV (Contagion Test)
 ----------------------------------------
 
 Chi-squared test for spatial homogeneity:
   H0: Transition probabilities do not depend on neighbors' states
-  χ² = 2.54
+  χ² = 1.23
 
 ==================================================
 BANDUNG
@@ -59,42 +59,42 @@ BANDUNG
 
 Transition Probability Matrix:
 From/To       NS      HH      LL      LH      HL
-NS         0.908   0.021   0.026   0.023   0.021
-HH         0.794   0.120   0.004   0.082   0.000
-LL         0.819   0.002   0.109   0.005   0.065
-LH         0.763   0.098   0.002   0.137   0.000
-HL         0.783   0.004   0.062   0.010   0.141
+NS         0.656   0.095   0.198   0.041   0.011
+HH         0.628   0.105   0.213   0.044   0.011
+LL         0.589   0.096   0.262   0.040   0.013
+LH         0.601   0.105   0.211   0.073   0.011
+HL         0.562   0.099   0.296   0.031   0.012
 
 Steady-State Distribution:
-  NS: 89.6%
-  HH: 2.5%
-  LL: 2.8%
-  LH: 2.7%
-  HL: 2.4%
+  NS: 63.5%
+  HH: 9.7%
+  LL: 21.5%
+  LH: 4.2%
+  HL: 1.1%
 
 Diagonal Dominance (Persistence Probability):
-  P(NS → NS): 90.8%
-  P(HH → HH): 12.0%
-  P(LL → LL): 10.9%
-  P(LH → LH): 13.7%
-  P(HL → HL): 14.1%
+  P(NS → NS): 65.6%
+  P(HH → HH): 10.5%
+  P(LL → LL): 26.2%
+  P(LH → LH): 7.3%
+  P(HL → HL): 1.2%
 
 2. PERSISTENCE ANALYSIS
 ----------------------------------------
 
 Category   Ever (%)     Always (%)   Avg Periods 
-HH         14.5         0.0          1.3         
-LL         16.2         0.0          1.4         
-HL         14.2         0.0          1.4         
-LH         15.2         0.0          1.4         
-NS         99.9         50.6         7.2         
+HH         53.2         0.0          1.4         
+LL         82.9         0.0          2.1         
+HL         8.2          0.0          1.0         
+LH         28.1         0.0          1.2         
+NS         100.0        4.9          5.1         
 
 3. SPATIAL MARKOV (Contagion Test)
 ----------------------------------------
 
 Chi-squared test for spatial homogeneity:
   H0: Transition probabilities do not depend on neighbors' states
-  χ² = 4.51
+  χ² = 8.68
 
 ==================================================
 SEMARANG
@@ -105,42 +105,42 @@ SEMARANG
 
 Transition Probability Matrix:
 From/To       NS      HH      LL      LH      HL
-NS         0.936   0.013   0.015   0.017   0.019
-HH         0.789   0.188   0.000   0.023   0.000
-LL         0.661   0.000   0.251   0.000   0.087
-LH         0.753   0.053   0.000   0.193   0.000
-HL         0.706   0.000   0.091   0.000   0.203
+NS         0.668   0.077   0.207   0.040   0.008
+HH         0.577   0.172   0.204   0.041   0.006
+LL         0.605   0.071   0.281   0.033   0.010
+LH         0.661   0.081   0.191   0.064   0.004
+HL         0.612   0.061   0.265   0.020   0.041
 
 Steady-State Distribution:
-  NS: 91.9%
-  HH: 1.6%
-  LL: 2.1%
-  LH: 1.9%
-  HL: 2.5%
+  NS: 64.6%
+  HH: 8.4%
+  LL: 22.3%
+  LH: 3.9%
+  HL: 0.9%
 
 Diagonal Dominance (Persistence Probability):
-  P(NS → NS): 93.6%
-  P(HH → HH): 18.8%
-  P(LL → LL): 25.1%
-  P(LH → LH): 19.3%
-  P(HL → HL): 20.3%
+  P(NS → NS): 66.8%
+  P(HH → HH): 17.2%
+  P(LL → LL): 28.1%
+  P(LH → LH): 6.4%
+  P(HL → HL): 4.1%
 
 2. PERSISTENCE ANALYSIS
 ----------------------------------------
 
 Category   Ever (%)     Always (%)   Avg Periods 
-HH         9.2          0.0          1.4         
-LL         11.6         0.0          1.6         
-HL         13.0         0.0          1.6         
-LH         10.1         0.0          1.6         
-NS         99.8         62.0         7.3         
+HH         41.6         0.0          1.5         
+LL         77.6         0.5          2.3         
+HL         5.7          0.0          1.1         
+LH         26.3         0.0          1.2         
+NS         99.1         6.9          5.2         
 
 3. SPATIAL MARKOV (Contagion Test)
 ----------------------------------------
 
 Chi-squared test for spatial homogeneity:
   H0: Transition probabilities do not depend on neighbors' states
-  χ² = 3.59
+  χ² = 4.87
 
 ======================================================================
 END OF REPORT

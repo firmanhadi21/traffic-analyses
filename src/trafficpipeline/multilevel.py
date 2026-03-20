@@ -47,8 +47,14 @@ def load_speed_panel(
             if not fp.exists():
                 continue
             gdf = gpd.read_file(str(fp))
+            # Use osm_composite_id if available (OSM-based pipeline),
+            # fall back to row index (legacy)
+            if "osm_composite_id" in gdf.columns:
+                seg_ids = gdf["osm_composite_id"].values
+            else:
+                seg_ids = range(len(gdf))
             df = pd.DataFrame({
-                "segment_id": range(len(gdf)),
+                "segment_id": seg_ids,
                 "period": period,
                 "speed_mean": gdf["speed_mean"].values
                     if "speed_mean" in gdf.columns else np.nan,

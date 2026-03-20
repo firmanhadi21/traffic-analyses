@@ -8,28 +8,32 @@ SEMARANG
 ========================================
 
 Overall Statistics:
-  Total segments: 1076
-  Overall mean jam factor: 1.1879
-  Overall std: 0.3958
-  Overall median: 1.3448
+  Total segments: 822
+  Overall mean jam factor: 2.0734
+  Overall std: 2.3949
+  Overall median: 1.2348
 
 Statistics by Time Period:
 ------------------------------------------------------------
 Period                   Mean      Std      Min      Max       CV
 ------------------------------------------------------------
-night                   0.451    0.042    0.358    0.623    0.092
-morning_peak            0.945    0.056    0.801    1.150    0.059
-morning_offpeak         1.385    0.065    1.219    1.610    0.047
-lunch_hours             1.445    0.070    1.242    1.703    0.048
-afternoon_offpeak       1.521    0.072    1.291    1.771    0.047
-evening_peak            1.653    0.076    1.411    1.981    0.046
-evening_offpeak         1.325    0.068    1.129    1.585    0.052
-late_night              0.778    0.056    0.630    0.970    0.072
+night                   0.921    1.756    0.000    9.400    1.907
+morning_peak            1.932    2.485    0.000    9.600    1.286
+morning_offpeak         2.434    2.505    0.000    9.700    1.029
+lunch_hours             2.388    2.400    0.000    9.500    1.005
+afternoon_offpeak       2.526    2.453    0.000    9.800    0.971
+evening_peak            2.742    2.552    0.000    9.500    0.930
+evening_offpeak         2.212    2.367    0.000    9.400    1.070
+late_night              1.237    1.802    0.000    9.350    1.456
 
 Congestion Classification (Evening Peak):
-  Light Traffic: 1076 segments (100.0%)
+  Free Flow: 238 segments (25.8%)
+  Light Traffic: 246 segments (26.6%)
+  Moderate: 262 segments (28.4%)
+  Heavy: 32 segments (3.5%)
+  Severe: 146 segments (15.8%)
 
-Spatial Clustering Indicator: 0.0165
+Spatial Clustering Indicator: 0.5129
   (Values close to 1 indicate strong spatial clustering)
 
 ========================================
@@ -37,29 +41,32 @@ BANDUNG
 ========================================
 
 Overall Statistics:
-  Total segments: 3069
-  Overall mean jam factor: 1.3617
-  Overall std: 0.5001
-  Overall median: 1.5164
+  Total segments: 2161
+  Overall mean jam factor: 2.3701
+  Overall std: 2.6954
+  Overall median: 1.2879
 
 Statistics by Time Period:
 ------------------------------------------------------------
 Period                   Mean      Std      Min      Max       CV
 ------------------------------------------------------------
-night                   0.456    0.035    0.000    0.703    0.077
-morning_peak            1.151    0.059    0.982    1.650    0.051
-morning_offpeak         1.627    0.066    1.396    1.959    0.041
-lunch_hours             1.699    0.073    1.470    2.060    0.043
-afternoon_offpeak       1.867    0.075    1.628    2.204    0.040
-evening_peak            1.922    0.067    1.673    2.285    0.035
-evening_offpeak         1.402    0.062    1.209    1.805    0.044
-late_night              0.770    0.050    0.612    1.274    0.065
+night                   0.909    1.829    0.000    9.400    2.012
+morning_peak            2.215    2.694    0.000    9.500    1.217
+morning_offpeak         2.751    2.756    0.000    9.700    1.002
+lunch_hours             2.785    2.718    0.000    9.700    0.976
+afternoon_offpeak       2.972    2.760    0.000    9.700    0.928
+evening_peak            3.222    2.897    0.000    9.662    0.899
+evening_offpeak         2.404    2.645    0.000    9.900    1.100
+late_night              1.379    2.123    0.000    9.700    1.540
 
 Congestion Classification (Evening Peak):
-  Light Traffic: 2705 segments (88.1%)
-  Moderate: 364 segments (11.9%)
+  Free Flow: 728 segments (28.2%)
+  Light Traffic: 495 segments (19.2%)
+  Moderate: 591 segments (22.9%)
+  Heavy: 201 segments (7.8%)
+  Severe: 568 segments (22.0%)
 
-Spatial Clustering Indicator: 0.0319
+Spatial Clustering Indicator: 0.5189
   (Values close to 1 indicate strong spatial clustering)
 
 ========================================
@@ -67,29 +74,32 @@ JAKARTA
 ========================================
 
 Overall Statistics:
-  Total segments: 14549
-  Overall mean jam factor: 1.4266
-  Overall std: 0.4712
-  Overall median: 1.6253
+  Total segments: 11312
+  Overall mean jam factor: 2.6408
+  Overall std: 2.8033
+  Overall median: 1.5067
 
 Statistics by Time Period:
 ------------------------------------------------------------
 Period                   Mean      Std      Min      Max       CV
 ------------------------------------------------------------
-night                   0.496    0.028    0.409    1.058    0.056
-morning_peak            1.191    0.051    1.009    1.441    0.043
-morning_offpeak         1.632    0.059    1.410    1.899    0.036
-lunch_hours             1.659    0.065    1.395    1.924    0.039
-afternoon_offpeak       1.791    0.067    1.514    2.040    0.038
-evening_peak            2.006    0.061    1.768    2.248    0.030
-evening_offpeak         1.666    0.054    1.461    1.958    0.032
-late_night              0.970    0.047    0.771    1.218    0.048
+night                   1.314    2.342    0.000    9.850    1.783
+morning_peak            2.424    2.778    0.000    9.900    1.146
+morning_offpeak         2.908    2.804    0.000    9.900    0.964
+lunch_hours             2.856    2.741    0.000    9.900    0.960
+afternoon_offpeak       3.000    2.769    0.000    9.900    0.923
+evening_peak            3.433    2.921    0.000    9.850    0.851
+evening_offpeak         2.994    2.851    0.000    9.900    0.952
+late_night              1.974    2.551    0.000    9.850    1.292
 
 Congestion Classification (Evening Peak):
-  Light Traffic: 6766 segments (46.5%)
-  Moderate: 7783 segments (53.5%)
+  Free Flow: 3314 segments (25.1%)
+  Light Traffic: 2490 segments (18.9%)
+  Moderate: 3051 segments (23.1%)
+  Heavy: 1105 segments (8.4%)
+  Severe: 3241 segments (24.6%)
 
-Spatial Clustering Indicator: 0.0143
+Spatial Clustering Indicator: 0.5330
   (Values close to 1 indicate strong spatial clustering)
 
 
@@ -98,11 +108,11 @@ COMPARATIVE ANALYSIS
 ========================================
 
 Peak Hour Comparison (Evening Peak):
-  Semarang: 1.653
-  Bandung: 1.922
-  Jakarta: 2.006
+  Semarang: 2.742
+  Bandung: 3.222
+  Jakarta: 3.433
 
 Most Congested Period by City:
-  Semarang: evening_peak (1.653)
-  Bandung: evening_peak (1.922)
-  Jakarta: evening_peak (2.006)
+  Semarang: evening_peak (2.742)
+  Bandung: evening_peak (3.222)
+  Jakarta: evening_peak (3.433)

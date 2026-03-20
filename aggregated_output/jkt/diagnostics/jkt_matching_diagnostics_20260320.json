@@ -1,0 +1,18 @@
+{
+  "total_segments": 14552,
+  "intersection_matched": 12652,
+  "intersection_match_rate": 0.8694337548103354,
+  "nearest_neighbor_matched": 1878,
+  "nearest_neighbor_match_rate": 0.12905442550852117,
+  "synthetic_ids": 22,
+  "synthetic_rate": 0.0015118196811434853,
+  "overall_osm_match_rate": 0.9984881803188566,
+  "nearest_neighbor_mean_distance_m": 1.2567914252277725,
+  "nearest_neighbor_max_distance_m": 49.57043015991687,
+  "nearest_neighbor_median_distance_m": 0.8228161365540483,
+  "city_code": "jkt",
+  "city_name": "Jakarta",
+  "date_str": "20260320",
+  "osm_reference_path": "/Users/geodesiundip/Documents/Micro-mobility/traffic-data/osm_reference/jkt_osm_reference_20260320.gpkg",
+  "mapping_path": "/Users/geodesiundip/Documents/Micro-mobility/traffic-data/osm_reference/jkt_here_to_osm_mapping_20260320.csv"
+}

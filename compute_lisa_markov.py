@@ -41,7 +41,7 @@ except ImportError:
 warnings.filterwarnings('ignore')
 
 # Configuration
-BASE_DIR = Path("/Users/macbook/Dropbox/GitHub/traffic-analyses")
+BASE_DIR = Path(__file__).parent
 LISA_DIR = BASE_DIR / "lisa_results"
 OUTPUT_DIR = BASE_DIR / "markov_results"
 FIGURES_DIR = BASE_DIR / "figures" / "markov"

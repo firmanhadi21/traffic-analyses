@@ -3,6 +3,9 @@ traffic_data_smg/
 traffic_data_bdg/
 traffic_data_jkt/
 
+# Large OSM reference files (>100MB, use Zenodo instead)
+osm_reference/*.gpkg
+
 # Log files
 *.log
 error.log

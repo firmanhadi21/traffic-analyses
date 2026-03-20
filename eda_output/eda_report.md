@@ -1,11 +1,11 @@
 # Exploratory Data Analysis Report
-Generated: 2026-02-06 10:07:23
+Generated: 2026-03-20 21:21:11
 
 ## Executive Summary
 
-**DATA VALIDATION: PASSED**
+**DATA VALIDATION: ISSUES FOUND**
 
-All data quality checks passed. The dataset is ready for analysis.
+Some data quality issues were detected. Review details below.
 
 ## 1. Null Value Check
 
@@ -15,17 +15,17 @@ PASS: No null values in key columns (jam_factor_mean, jam_factor_count, geometry
 
 | City | Segments | Consistent | Total Observations |
 |------|----------|------------|-------------------|
-| Semarang | 1,076 | Yes | 15,195,013 |
-| Bandung | 3,069 | Yes | 43,349,750 |
-| Jakarta | 14,549 | Yes | 205,554,714 |
+| Semarang | 822 | No | 18,166,779 |
+| Bandung | 2,161 | No | 51,844,382 |
+| Jakarta | 11,312 | No | 246,220,516 |
 
 ## 3. Value Range Validation
 
 | City | Min JF | Max JF | Valid Range |
 |------|--------|--------|-------------|
-| Semarang | 0.358 | 1.981 | Yes |
-| Bandung | 0.000 | 2.285 | Yes |
-| Jakarta | 0.409 | 2.248 | Yes |
+| Semarang | 0.000 | 9.800 | Yes |
+| Bandung | 0.000 | 9.900 | Yes |
+| Jakarta | 0.000 | 9.900 | Yes |
 
 ## 4. Segment Count Justification
 

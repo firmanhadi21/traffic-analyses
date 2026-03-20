@@ -203,9 +203,13 @@ def analyze_temporal_by_zone(city_code, traffic_with_zones):
     city = CITIES[city_code]
     city_name = city['name']
 
-    # Get segment IDs and their zones
-    segment_zones = traffic_with_zones[['poi_zone']].copy()
-    segment_zones['segment_idx'] = range(len(segment_zones))
+    # Get segment IDs and their zones using osm_composite_id as key
+    id_col = 'osm_composite_id' if 'osm_composite_id' in traffic_with_zones.columns else None
+    if id_col is None:
+        # Fall back to index-based assignment if no ID column
+        segment_zones = traffic_with_zones[['poi_zone']].copy()
+    else:
+        segment_zones = traffic_with_zones[[id_col, 'poi_zone']].copy()
 
     results = []
 
@@ -213,7 +217,13 @@ def analyze_temporal_by_zone(city_code, traffic_with_zones):
         traffic_path = f"{city['traffic_folder']}/{period}_{city_code}.gpkg"
         try:
             gdf = gpd.read_file(traffic_path)
-            gdf['poi_zone'] = segment_zones['poi_zone'].values
+            if id_col and id_col in gdf.columns:
+                # Merge zones by segment ID
+                gdf = gdf.merge(segment_zones[[id_col, 'poi_zone']], on=id_col, how='inner')
+            elif len(gdf) == len(segment_zones):
+                gdf['poi_zone'] = segment_zones['poi_zone'].values
+            else:
+                continue
 
             for zone in ['High Activity (Center)', 'Low Activity (Peripheral)']:
                 zone_data = gdf[gdf['poi_zone'] == zone]['jam_factor_mean']
@@ -223,7 +233,7 @@ def analyze_temporal_by_zone(city_code, traffic_with_zones):
                         'zone': zone,
                         'mean_jf': zone_data.mean()
                     })
-        except:
+        except Exception:
             continue
 
     return pd.DataFrame(results)
@@ -295,8 +305,10 @@ def plot_temporal_by_zone(all_temporal_data):
             zone_df = df[df['zone'] == zone]
             if len(zone_df) > 0:
                 # Order by time period
-                zone_df = zone_df.set_index('period').loc[TIME_PERIODS].reset_index()
-                ax.plot(range(len(TIME_PERIODS)), zone_df['mean_jf'], 'o-',
+                available_periods = [p for p in TIME_PERIODS if p in zone_df['period'].values]
+                zone_df = zone_df.set_index('period').loc[available_periods].reset_index()
+                x_positions = [TIME_PERIODS.index(p) for p in available_periods]
+                ax.plot(x_positions, zone_df['mean_jf'], 'o-',
                        label=zone.split(' (')[0], color=color, linewidth=2, markersize=6)
 
         ax.set_xticks(range(len(TIME_PERIODS)))

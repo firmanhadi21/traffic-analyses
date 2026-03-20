@@ -23,7 +23,7 @@ import argparse
 from pathlib import Path
 from datetime import datetime
 
-BASE_DIR = Path("/Users/macbook/Dropbox/GitHub/traffic-analyses")
+BASE_DIR = Path(__file__).parent
 
 # Required data files
 REQUIRED_DATA = {

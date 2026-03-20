@@ -46,6 +46,10 @@ The original system collected traffic data for Indonesian cities using the `here
 
 The new Python system addresses these limitations while maintaining backward compatibility with the GeoPackage data format.
 
+## Aggregation Pipeline
+
+As of March 2026, the aggregation pipeline uses **OSM-based segment matching** (`osm_composite_id`) instead of the legacy FID-based approach. The primary key in all aggregated GeoPackages is `osm_composite_id`, which is a composite identifier derived from the OSM reference network. See `run_osm_aggregation.py` and `src/trafficpipeline/aggregate.py` for implementation.
+
 ---
 
 **For current usage, see the main [README.md](README.md) and [docs/](docs/).**

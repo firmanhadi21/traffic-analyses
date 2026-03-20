@@ -12,9 +12,25 @@ import geopandas as gpd
 import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
 from scipy import stats
+import contextily as ctx
 from pathlib import Path
 import warnings
 warnings.filterwarnings('ignore')
+
+
+def add_basemap(ax, gdf, zoom='auto', alpha=0.4):
+    """Add OSM basemap to a matplotlib axes with geodata in EPSG:4326."""
+    bounds = gdf.total_bounds
+    ax.set_xlim(bounds[0], bounds[2])
+    ax.set_ylim(bounds[1], bounds[3])
+    try:
+        ctx.add_basemap(
+            ax, crs=gdf.crs,
+            source=ctx.providers.CartoDB.Positron,
+            zoom=zoom, alpha=alpha,
+        )
+    except Exception:
+        pass
 
 # Try to import spatial statistics libraries
 try:
@@ -177,21 +193,24 @@ def plot_lisa_map(gdf, city_code, period='evening_peak'):
 
     # Left: Traffic intensity
     ax1 = axes[0]
+    add_basemap(ax1, gdf)
     gdf.plot(column='jam_factor_mean', cmap='RdYlGn_r', linewidth=0.8, ax=ax1,
-             legend=True, legend_kwds={'label': 'Jam Factor', 'shrink': 0.7})
+             legend=True, legend_kwds={'label': 'Jam Factor', 'shrink': 0.7}, alpha=0.85)
     ax1.set_title(f'{city_name} - Traffic Intensity\n(Evening Peak)', fontsize=12, fontweight='bold')
     ax1.set_axis_off()
 
     # Right: LISA clusters
     ax2 = axes[1]
+    add_basemap(ax2, gdf)
 
     # Define colors for each cluster type
-    colors = {'HH': '#d7191c', 'LL': '#2c7bb6', 'HL': '#fdae61', 'LH': '#abd9e9', 'NS': '#eeeeee'}
+    colors = {'HH': '#d7191c', 'LL': '#2c7bb6', 'HL': '#fdae61', 'LH': '#abd9e9', 'NS': '#cccccc'}
 
     for cluster_type, color in colors.items():
         subset = gdf[gdf['lisa_cluster'] == cluster_type]
         if len(subset) > 0:
-            subset.plot(ax=ax2, color=color, linewidth=0.8, label=f'{cluster_type} ({len(subset)})')
+            a = 0.3 if cluster_type == 'NS' else 0.9
+            subset.plot(ax=ax2, color=color, linewidth=0.8, label=f'{cluster_type} ({len(subset)})', alpha=a)
 
     ax2.set_title(f'{city_name} - LISA Clusters\n(p < 0.05)', fontsize=12, fontweight='bold')
     ax2.legend(loc='lower right', title='Cluster Type')

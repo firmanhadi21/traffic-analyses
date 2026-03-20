@@ -20,7 +20,7 @@ traffic_smg_output/
 
 | Column | Type | Description |
 |--------|------|-------------|
-| `fid` | string | Feature ID (unique segment identifier) |
+| `osm_composite_id` | string | OSM-based composite segment identifier |
 | `geometry` | MULTILINESTRING | Road segment geometry (EPSG:4326) |
 | `jam_factor_mean` | float | Average jam factor for the time period |
 | `jam_factor_std` | float | Standard deviation of jam factor |

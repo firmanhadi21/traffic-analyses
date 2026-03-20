@@ -71,7 +71,7 @@ Coordinate reference system: **WGS 84 (EPSG:4326)**.
 
 | Column | Type | Description |
 |--------|------|-------------|
-| `fid` | string | Feature ID (unique segment identifier) |
+| `osm_composite_id` | string | OSM-based composite segment identifier |
 | `geometry` | MULTILINESTRING | Road segment geometry |
 | `jam_factor_mean` | float | Mean jam factor for the time period (0–10 scale) |
 | `jam_factor_std` | float | Standard deviation of jam factor |
@@ -96,7 +96,7 @@ import geopandas as gpd
 
 # Load evening peak traffic for Jakarta
 gdf = gpd.read_file("traffic_jkt_output/evening_peak_jkt.gpkg")
-print(gdf[["fid", "jam_factor_mean", "jam_factor_std"]].describe())
+print(gdf[["osm_composite_id", "jam_factor_mean", "jam_factor_std"]].describe())
 
 # Or install the pipeline and run analysis directly:
 # pip install -e ".[all]"

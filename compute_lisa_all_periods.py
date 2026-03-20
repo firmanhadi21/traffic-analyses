@@ -35,8 +35,8 @@ except ImportError:
 
 
 # Configuration
-BASE_DIR = Path("/Users/macbook/Dropbox/GitHub/traffic-analyses")
-INPUT_DIR = BASE_DIR / "zenodo_data"
+BASE_DIR = Path(__file__).parent
+INPUT_DIR = BASE_DIR
 OUTPUT_DIR = BASE_DIR / "lisa_results"
 
 CITIES = {
