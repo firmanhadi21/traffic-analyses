@@ -136,17 +136,18 @@ Key finding: ICC ~88-89% means most speed variance is between segments (road typ
 ### TRIP Requirements
 | Requirement | Status |
 |-------------|--------|
-| Abstract max 250 words | Fits |
-| Keywords 1-7 | Have 9, need to reduce |
-| Author-year (Harvard) citations | In-text matches; reference list needs minor format adjustment |
-| Highlights | Already have |
+| Abstract max 250 words | Done |
+| Keywords 1-7 | Done (reduced to 7) |
+| Author-year (Harvard) citations | Done (reference list reformatted) |
+| Highlights | Done (reframed to multilevel model) |
 | Graphical abstract | Already have (`paper/graphical-abstract.png`) |
-| Cover letter | Updated for TRIP (commit afbee44) |
+| Cover letter | Done (reframed to multilevel model, dated March 20) |
 
-### Reference format adjustment needed
-- Current: `Anselin, L. (1995). Local indicators...`
-- TRIP wants: `Anselin, L., 1995. Local indicators...`
-- (Year without parentheses, comma before year, period after year)
+### Changes applied (March 20, 2026)
+- Reference format: `(1995).` → `, 1995.` across all 50 references
+- Keywords: Reduced from 9 to 7 (added "Demand synchronization", "Multilevel model", "OpenStreetMap"; removed "Jam factor", "Capacity bottleneck", "HERE Traffic API", "Spatial autocorrelation", "OSMnx")
+- Cover letter: Replaced η²/R² framing with multilevel model language (57–67% temporal, <1% spatial); added positive-control and cross-metric validation; updated date
+- Highlights: Reframed around multilevel model findings and positive-control test
 
 ---
 

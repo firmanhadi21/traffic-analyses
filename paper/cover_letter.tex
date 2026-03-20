@@ -17,7 +17,7 @@ Universitas Diponegoro\\
 Semarang 50275, Indonesia\\
 \url{firmanhadi21@lecturer.undip.ac.id}}
 
-\date{March 9, 2026}
+\date{March 20, 2026}
 
 \begin{document}
 
@@ -32,37 +32,37 @@ Network Topology, and Capacity Constraints in Indonesian Metropolitan Cities,'' 
 consideration in \emph{Transportation Research Interdisciplinary Perspectives}.
 
 \textbf{Relevance to the journal.}
-This manuscript bridges multiple transportation research domains---spatial analysis, network
-science, traffic engineering, and urban planning---making it a natural fit for TRIP's
-interdisciplinary scope. A central outcome of this work is a well-evidenced null result:
-four independent spatial predictors fail to explain congestion variance, while temporal
-factors dominate by three orders of magnitude. We believe this finding aligns with TRIP's
-stated openness to negative and controversial results, and carries important policy
-implications for rapidly urbanising cities in the Global South.
+This manuscript bridges spatial analysis, network science, traffic engineering, and urban
+planning---making it a natural fit for TRIP's interdisciplinary scope. Our central finding---that
+congestion operates as a demand synchronization phenomenon rather than a spatial infrastructure
+problem---challenges conventional supply-side responses and carries important policy implications
+for rapidly urbanising cities in the Global South. We believe this aligns with TRIP's stated
+openness to results that question established assumptions.
 
 \textbf{Summary.}
 We analyze 264 million traffic observations collected at 15-minute intervals over 11 months
 across three Indonesian metropolitan cities---Jakarta (metro pop.\ 34M), Bandung (2.5M), and
-Semarang (1.8M)---spanning a 20$\times$ population range. Using an open-source Python pipeline
-that integrates the HERE Traffic API, OSMnx, and PySAL, we combine geostatistical methods
-(Moran's I, LISA, Getis-Ord Gi*), network topology analysis, and a novel graph-based capacity
-drop detection framework.
+Semarang (1.8M)---spanning a 20$\times$ population range. Using multilevel mixed-effects models
+on absolute speed, combined with geostatistical methods (Moran's I, LISA, Getis-Ord Gi*),
+network topology analysis, and graph-based capacity drop detection, we empirically decompose
+congestion into its temporal and spatial components.
 
-Our primary finding is that time-of-day ($\eta^2$ = 15--24\%) explains 1,000--4,000$\times$
-more congestion variance than any spatial predictor---including network centrality, POI density,
-road capacity, and bottleneck proximity (all $R^2$ < 0.01\%). H3 hexagonal aggregation at
-multiple scales confirms these null findings are not modifiable areal unit artefacts. We argue
-that congestion is fundamentally a demand synchronization problem, supporting demand management
-interventions (congestion pricing, flexible work schedules, transit expansion) over capacity
-expansion alone.
+Time-of-day explains 57--67\% of within-segment speed fluctuations, while network centrality
+adds less than 1\% beyond road type. A positive-control test confirms that the same analytical
+pipeline detects spatial structure in road design ($R^2 = 0.60$--$0.71$ for free-flow speed)
+but not in congestion ($R^2 < 0.003$), ruling out methodological artefacts. Cross-metric
+validation using absolute speed, jam factor, and speed reduction confirms these patterns are
+not normalization artefacts. H3 hexagonal aggregation at multiple scales further confirms
+the null spatial findings are not modifiable areal unit artefacts.
 
 \textbf{Contributions.}
 \begin{enumerate}
-\item The first systematic multi-city comparison of temporal versus spatial congestion predictors
-in Southeast Asia, using continuous high-resolution monitoring data.
-\item A novel graph-based capacity drop detection module using directed OSMnx road networks.
-\item Evidence that normalized congestion metrics (e.g., jam factor) inherently remove capacity
-effects, with methodological implications for capacity--congestion studies.
+\item Empirical evidence that congestion is a demand synchronization phenomenon, with temporal
+factors explaining 57--67\% of speed variation while network topology adds less than 1\%.
+\item A positive-control methodology demonstrating that the analytical pipeline detects spatial
+structure in road design but not in congestion, ruling out methodological artefacts.
+\item Cross-metric validation showing results hold for absolute speed, addressing the circularity
+inherent in capacity-normalized congestion metrics.
 \item A fully open, installable Python pipeline (\texttt{pip install traffic-congestion-pipeline})
 bridging commercial traffic data with the OSMnx/PySAL ecosystem.
 \end{enumerate}

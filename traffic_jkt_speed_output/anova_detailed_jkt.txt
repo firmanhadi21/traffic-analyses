@@ -1,0 +1,65 @@
+ANOVA Results for Jakarta
+============================================================
+
+Total observations: 14840 files processed
+Date range: 2025-03-06 22:00:17 to 2026-02-16 09:30:18
+
+============================================================
+Time Period → Metric Analysis
+============================================================
+
+jam_factor:
+  F-statistic = 2,771,945
+  η² (eta-squared) = 0.0822 (8.2%)
+  n = 216,667,652 observations
+  Period means:
+    afternoon_offpeak: 1.8
+    evening_offpeak: 1.67
+    evening_peak: 2.01
+    late_night: 0.97
+    lunch_hours: 1.66
+    morning_offpeak: 1.63
+    morning_peak: 1.19
+    night: 0.49
+
+speed:
+  F-statistic = 1,678,590
+  η² (eta-squared) = 0.0515 (5.2%)
+  n = 216,270,167 observations
+  Period means:
+    afternoon_offpeak: 5.71
+    evening_offpeak: 5.83
+    evening_peak: 5.53
+    late_night: 6.64
+    lunch_hours: 5.84
+    morning_offpeak: 5.87
+    morning_peak: 6.43
+    night: 7.41
+
+free_flow:
+  F-statistic = 138
+  η² (eta-squared) = 0.0000 (0.0%)
+  n = 216,667,652 observations
+  Period means:
+    afternoon_offpeak: 7.58
+    evening_offpeak: 7.58
+    evening_peak: 7.59
+    late_night: 7.57
+    lunch_hours: 7.57
+    morning_offpeak: 7.58
+    morning_peak: 7.57
+    night: 7.57
+
+speed_reduction (free_flow − speed):
+  F-statistic = 2,753,465
+  η² (eta-squared) = 0.0818 (8.2%)
+  n = 216,270,167 observations
+  Period means:
+    afternoon_offpeak: 1.86
+    evening_offpeak: 1.75
+    evening_peak: 2.05
+    late_night: 0.93
+    lunch_hours: 1.74
+    morning_offpeak: 1.7
+    morning_peak: 1.13
+    night: 0.15

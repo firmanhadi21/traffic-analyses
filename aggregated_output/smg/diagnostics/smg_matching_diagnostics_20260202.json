@@ -1,0 +1,18 @@
+{
+  "total_segments": 1079,
+  "intersection_matched": 970,
+  "intersection_match_rate": 0.8989805375347544,
+  "nearest_neighbor_matched": 107,
+  "nearest_neighbor_match_rate": 0.09916589434661724,
+  "synthetic_ids": 2,
+  "synthetic_rate": 0.0018535681186283596,
+  "overall_osm_match_rate": 0.9981464318813716,
+  "nearest_neighbor_mean_distance_m": 1.1938501819750167,
+  "nearest_neighbor_max_distance_m": 5.220822438055469,
+  "nearest_neighbor_median_distance_m": 0.9656856224502897,
+  "city_code": "smg",
+  "city_name": "Semarang",
+  "date_str": "20260202",
+  "osm_reference_path": "/Users/geodesiundip/Documents/Micro-mobility/traffic-data/osm_reference/smg_osm_reference_20260202.gpkg",
+  "mapping_path": "/Users/geodesiundip/Documents/Micro-mobility/traffic-data/osm_reference/smg_here_to_osm_mapping_20260202.csv"
+}
