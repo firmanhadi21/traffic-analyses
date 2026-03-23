@@ -42,7 +42,7 @@ Demand Synchronization Dominates Urban Traffic Congestion: Evidence from 316 Mil
 \section{Spatial Weight Sensitivity Analysis}
 \label{sec:s1}
 
-Following the OSM-based re-aggregation, we computed Moran's I under five spatial weight specifications for each city: K-nearest neighbours with $k \in \{4, 8, 12\}$ and distance-band weights at 500\,m and 1000\,m thresholds. All specifications confirm strong, statistically significant positive spatial autocorrelation.
+Following the OSM-based re-aggregation, we computed Moran's I under five spatial weight specifications for each city: K-nearest neighbors with $k \in \{4, 8, 12\}$ and distance-band weights at 500\,m and 1000\,m thresholds. All specifications confirm strong, statistically significant positive spatial autocorrelation.
 
 \begin{table}[!htbp]
 \centering
@@ -62,7 +62,7 @@ Jakarta  & 0.368*** & 0.310*** & 0.270*** & 0.362*** & 0.276*** \\
 \noindent\textit{*** $p < 0.001$ for all entries. $n$: Semarang = 924, Bandung = 2,583, Jakarta = 13,201 segments.}
 \end{table}
 
-Moran's I values are remarkably consistent across weight specifications (range 0.248--0.378), indicating robust spatial autocorrelation that is not an artefact of a particular neighbourhood definition. The distance-band weights at 500\,m and 1000\,m yield comparable values to KNN specifications, confirming that the spatial structure persists at both local and broader spatial scales.
+Moran's I values are remarkably consistent across weight specifications (range 0.248--0.378), indicating robust spatial autocorrelation that is not an artifact of a particular neighborhood definition. The distance-band weights at 500\,m and 1000\,m yield comparable values to KNN specifications, confirming that the spatial structure persists at both local and broader spatial scales.
 
 %% ============================================================
 \section{Period-Specific Moran's I}
@@ -72,13 +72,13 @@ Global Moran's I was computed separately for each of the eight temporal periods 
 
 \begin{table}[!htbp]
 \centering
-\caption{Moran's I by temporal period (KNN $k{=}8$). All 24 period--city combinations are highly significant ($p \approx 0$), confirming ubiquitous positive spatial autocorrelation across all times of day. Moran's I increases from night to evening peak, mirroring the temporal congestion gradient.}
+\caption{Moran's I by temporal period (KNN $k{=}8$). All 24 period--city combinations are highly significant ($p \approx 0$), confirming ubiquitous positive spatial autocorrelation across all times of day. Moran's I increases from early morning to evening peak, mirroring the temporal congestion gradient.}
 \label{tab:s2}
 \begin{tabular}{lccc}
 \toprule
 Period & Semarang & Bandung & Jakarta \\
 \midrule
-Night             & 0.176*** & 0.196*** & 0.222*** \\
+Early Morning      & 0.176*** & 0.196*** & 0.222*** \\
 Morning Peak      & 0.289*** & 0.224*** & 0.257*** \\
 Morning Off-Peak  & 0.280*** & 0.276*** & 0.280*** \\
 Lunch Hours       & 0.241*** & 0.282*** & 0.294*** \\
@@ -93,7 +93,7 @@ Late Night        & 0.255*** & 0.222*** & 0.260*** \\
 \noindent\textit{*** $p < 0.001$ for all entries.}
 \end{table}
 
-Moran's I ranges from 0.176 (Semarang, night) to 0.310 (Jakarta, evening peak), with a clear temporal gradient: spatial autocorrelation strengthens during peak hours and weakens at night. This pattern suggests that peak-hour congestion is more spatially structured than off-peak congestion, likely reflecting the concentration of commuting flows along predictable corridors.
+Moran's I ranges from 0.176 (Semarang, early morning) to 0.310 (Jakarta, evening peak), with a clear temporal gradient: spatial autocorrelation strengthens during peak hours and weakens in the early morning. This pattern suggests that peak-hour congestion is more spatially structured than off-peak congestion, likely reflecting the concentration of commuting flows along predictable corridors.
 
 %% ============================================================
 \section{Getis-Ord Gi* Hot and Cold Spot Counts}
@@ -122,13 +122,13 @@ Among hot spots, 1,037 (50.3\%) in Jakarta, 170 (43.4\%) in Bandung, and 47 (40.
 \section{H3 Hexagonal Aggregation: Extended Results}
 \label{sec:s4}
 
-This section provides extended results from the H3 hexagonal scale-sensitivity analysis described in Section 4.4 and reported in Section 5.6 of the main text. The Uber H3 hierarchical geospatial indexing system (Brodsky, 2018) was used to aggregate road-segment-level variables into regular hexagonal bins at two resolutions, testing whether the null correlations observed at the segment level reflect genuine absence of relationships or a modifiable areal unit problem (MAUP) artefact.
+This section provides extended results from the H3 hexagonal scale-sensitivity analysis described in Section 4.4 and reported in Section 5.6 of the main text. The Uber H3 hierarchical geospatial indexing system (Brodsky, 2018) was used to aggregate road-segment-level variables into regular hexagonal bins at two resolutions, testing whether the null correlations observed at the segment level reflect genuine absence of relationships or a modifiable areal unit problem (MAUP) artifact.
 
 \subsection{Hexagon Coverage Statistics}
 
 \begin{table}[!htbp]
 \centering
-\caption{H3 hexagon coverage by city and resolution. Resolution 8 ($\approx$461\,m diameter) captures neighbourhood-scale patterns; resolution 9 ($\approx$174\,m diameter) approximates block-level aggregation.}
+\caption{H3 hexagon coverage by city and resolution. Resolution 8 ($\approx$461\,m diameter) captures neighborhood-scale patterns; resolution 9 ($\approx$174\,m diameter) approximates block-level aggregation.}
 \label{tab:s4}
 \begin{tabular}{llrrr}
 \toprule
@@ -176,7 +176,7 @@ City & Scale & $\rho$ & $p$-value & $\rho$ & $p$-value \\
 \noindent\textit{* $p < 0.05$; ** $p < 0.01$}
 \end{table}
 
-At the neighbourhood scale (resolution~8), Semarang shows a significant negative POI correlation ($\rho = -0.193$, $p = 0.001$), while Bandung exhibits the strongest positive associations for both POI density ($\rho = +0.131$) and centrality ($\rho = +0.153$). Jakarta's centrality correlation reaches significance ($\rho = +0.072$, $p = 0.001$) but remains practically negligible. These results suggest that the relationship between spatial predictors and congestion operates at the neighbourhood rather than segment scale, though effect sizes are uniformly modest.
+At the neighborhood scale (resolution~8), Semarang shows a significant negative POI correlation ($\rho = -0.193$, $p = 0.001$), while Bandung exhibits the strongest positive associations for both POI density ($\rho = +0.131$) and centrality ($\rho = +0.153$). Jakarta's centrality correlation reaches significance ($\rho = +0.072$, $p = 0.001$) but remains practically negligible. These results suggest that the relationship between spatial predictors and congestion operates at the neighborhood rather than segment scale, though effect sizes are uniformly modest.
 
 \subsection{Global Moran's I Across Spatial Scales}
 
@@ -209,7 +209,7 @@ City & Scale & Moran's I & $p$-value \\
 \noindent\textit{*** $p < 0.001$}
 \end{table}
 
-Strong spatial autocorrelation is now ubiquitous across all cities and scales (all $I > 0.22$, all $p = 0.001$). Semarang shows the strongest clustering at resolution~8 ($I = 0.486$), suggesting that neighbourhood-level aggregation reveals coherent congestion zones that are partially masked by segment-level heterogeneity. The consistent Moran's I values across scales confirm that congestion is genuinely spatially structured: segments and hexagons with elevated congestion tend to be surrounded by similarly congested neighbours. Importantly, this clustering is largely \emph{not} explained by POI density or betweenness centrality (Table~\ref{tab:s5}), suggesting that other spatial factors---such as land-use mix, population density, and public transit access---drive neighbourhood-level congestion patterns.
+Strong spatial autocorrelation is now ubiquitous across all cities and scales (all $I > 0.22$, all $p = 0.001$). Semarang shows the strongest clustering at resolution~8 ($I = 0.486$), suggesting that neighborhood-level aggregation reveals coherent congestion zones that are partially masked by segment-level heterogeneity. The consistent Moran's I values across scales confirm that congestion is genuinely spatially structured: segments and hexagons with elevated congestion tend to be surrounded by similarly congested neighbors. Importantly, this clustering is largely \emph{not} explained by POI density or betweenness centrality (Table~\ref{tab:s5}), suggesting that other spatial factors---such as land-use mix, population density, and public transit access---drive neighborhood-level congestion patterns.
 
 %% ============================================================
 \section{Spatial Match Quality}
@@ -296,7 +296,7 @@ Figures~\ref{fig:s1}--\ref{fig:s2} show LISA cluster and Getis-Ord Gi* hotspot m
 \begin{figure}[!htbp]
 \centering
 \includegraphics[width=0.75\textwidth]{../figures/h3_morans_scale.png}
-\caption{Global Moran's I by spatial scale for three cities. Bars show Moran's I at the road-segment level, H3 resolution~9 ($\approx$174\,m), and H3 resolution~8 ($\approx$461\,m). All values are highly significant ($p = 0.001$). Spatial autocorrelation is strong at all scales (all $I > 0.22$), with Semarang showing the strongest clustering at the neighbourhood scale ($I = 0.486$ at resolution~8).}
+\caption{Global Moran's I by spatial scale for three cities. Bars show Moran's I at the road-segment level, H3 resolution~9 ($\approx$174\,m), and H3 resolution~8 ($\approx$461\,m). All values are highly significant ($p = 0.001$). Spatial autocorrelation is strong at all scales (all $I > 0.22$), with Semarang showing the strongest clustering at the neighborhood scale ($I = 0.486$ at resolution~8).}
 \label{fig:s3}
 \end{figure}
 
@@ -310,7 +310,7 @@ Figures~\ref{fig:s1}--\ref{fig:s2} show LISA cluster and Getis-Ord Gi* hotspot m
 \begin{figure}[!htbp]
 \centering
 \includegraphics[width=0.85\textwidth]{../figures/h3_correlation_comparison.png}
-\caption{Spearman $\rho$ for POI density (left) and network centrality (right) at three spatial scales: road segment, H3 resolution~9 ($\approx$174\,m), and H3 resolution~8 ($\approx$461\,m). The grey band marks the negligible-effect region ($|\rho| < 0.1$). While most correlations remain within the negligible band, Bandung's centrality ($\rho = +0.153$) and Semarang's POI density ($\rho = -0.193$) exceed this threshold at resolution~8, suggesting modest spatial predictor effects at the neighbourhood scale.}
+\caption{Spearman $\rho$ for POI density (left) and network centrality (right) at three spatial scales: road segment, H3 resolution~9 ($\approx$174\,m), and H3 resolution~8 ($\approx$461\,m). The gray band marks the negligible-effect region ($|\rho| < 0.1$). While most correlations remain within the negligible band, Bandung's centrality ($\rho = +0.153$) and Semarang's POI density ($\rho = -0.193$) exceed this threshold at resolution~8, suggesting modest spatial predictor effects at the neighborhood scale.}
 \label{fig:s5}
 \end{figure}
 
