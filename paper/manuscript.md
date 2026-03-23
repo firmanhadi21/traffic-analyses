@@ -127,7 +127,7 @@ Raw traffic data were aggregated into eight temporal periods reflecting Indonesi
 | Morning Peak | 06:00-08:59 | Commute to work/school |
 | Morning Off-Peak | 09:00-11:59 | Business hours |
 | Lunch Hours | 12:00-13:59 | Midday break period |
-| Afternoon Off-Peak | 14:00-16:59 | Business hours |
+| Afternoon Off-Peak | 14:00-15:59 | Business hours |
 | Evening Peak | 16:00-18:59 | Return commute |
 | Evening Off-Peak | 19:00-21:59 | Evening activities |
 | Late Night | 22:00-23:59 | Reduced activity |
