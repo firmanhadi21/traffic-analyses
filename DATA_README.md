@@ -1,12 +1,12 @@
 # Traffic Congestion Dataset — Semarang, Bandung, Jakarta
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.18650759.svg)](https://doi.org/10.5281/zenodo.18650759)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.19211072.svg)](https://doi.org/10.5281/zenodo.19211072)
 
 
-https://doi.org/10.5281/zenodo.18650759
+https://doi.org/10.5281/zenodo.19211072
 ## Description
 
-Time-period-aggregated traffic congestion data for three Indonesian metropolitan cities, derived from the HERE Traffic API. Data were collected at 15-minute intervals from **March 2025 to February 2026** (11 months) and aggregated into 8 time-of-day periods.
+Time-period-aggregated traffic congestion data for three Indonesian metropolitan cities, derived from the HERE Traffic API. Data were collected at 15-minute intervals from **March 2025 to March 2026** (13 months) and aggregated into 8 time-of-day periods.
 
 This dataset accompanies the paper:
 
@@ -19,8 +19,8 @@ The analysis pipeline is available at: https://github.com/firmanhadi21/traffic-a
 | City | Code | Segments | Raw Observations | Bounding Box (W, S, E, N) |
 |------|------|----------|------------------|---------------------------|
 | Semarang | smg | 1,076 | 15.2 M | 110.227, −7.105, 110.528, −6.919 |
-| Bandung | bdg | 3,069 | 43.4 M | 107.469, −7.085, 107.826, −6.829 |
-| Jakarta | jkt | 14,549 | 206.3 M | 106.604, −6.410, 107.110, −6.091 |
+| Bandung | bdg | 3,063 | 43.4 M | 107.469, −7.085, 107.826, −6.829 |
+| Jakarta | jkt | 14,609 | 206.3 M | 106.604, −6.410, 107.110, −6.091 |
 
 ## Time Periods
 

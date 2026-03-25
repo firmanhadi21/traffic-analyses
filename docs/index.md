@@ -12,9 +12,10 @@ cities: **Semarang**, **Bandung**, and **Jakarta**.
 
 ## Features
 
-- **Six-stage analysis pipeline**: aggregate → EDA → geostatistics → bottleneck → POI → synthesis
+- **Ten-stage analysis pipeline**: aggregate → EDA → geostatistics → bottleneck → POI → synthesis → multilevel → markov → speed-validation → h3-robustness
 - **CLI and Python API**: Use `traffic-pipeline` from the terminal or import modules directly
-- **264 million observations** across 18,694 road segments over 11 months
+- **264 million observations** across 18,748 road segments over 13 months (Mar 2025–Mar 2026)
+- **OSM-based segment matching**: Stable `osm_composite_id` replaces legacy FID approach
 - **Reproducible**: Zenodo-archived dataset + installable package + CI
 
 ## Quick Start
@@ -32,8 +33,8 @@ See the [Installation](getting-started/installation.md) and
 | City | Segments | Coverage |
 |------|----------|----------|
 | Semarang | 1,076 | Urban core |
-| Bandung | 3,069 | Metropolitan area |
-| Jakarta | 14,549 | Greater Jakarta |
+| Bandung | 3,063 | Metropolitan area |
+| Jakarta | 14,609 | Greater Jakarta |
 
 ## Data Availability
 
@@ -41,8 +42,8 @@ The aggregated dataset (24 GeoPackages — 8 time periods × 3 cities) is
 archived on Zenodo:
 
 > **Hadi, F., Wahyuddin, Y., Sabri, L. M., & Indrajit, A.** (2026).
-> Traffic Congestion Dataset: Semarang, Bandung, Jakarta (2025–2026).
-> *Zenodo*. [doi:10.5281/zenodo.18650759](https://doi.org/10.5281/zenodo.18650759)
+> Traffic Congestion Dataset: Semarang, Bandung, Jakarta (Mar 2025–Mar 2026).
+> *Zenodo*. [doi:10.5281/zenodo.19211072](https://doi.org/10.5281/zenodo.19211072)
 
 ## License
 

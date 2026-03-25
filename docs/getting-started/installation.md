@@ -31,7 +31,7 @@ pip install -e ".[dev]"
 
 ```bash
 traffic-pipeline --version
-# traffic-pipeline, version 0.1.0
+# traffic-pipeline, version 0.4.2
 
 traffic-pipeline --help
 ```
@@ -47,4 +47,4 @@ traffic-pipeline --help
 Data collection is now fully Python-based using the `traffic-pipeline collect`
 command. You'll need a traffic API key from one of the supported providers
 (HERE, TomTom, or Google). Pre-aggregated data is available on
-[Zenodo](https://doi.org/10.5281/zenodo.18650759) if you want to skip collection.
+[Zenodo](https://doi.org/10.5281/zenodo.19211072) if you want to skip collection.

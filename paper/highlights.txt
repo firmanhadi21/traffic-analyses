@@ -1,7 +1,0 @@
-Highlights
-
-- Time-of-day explains 57-67% of within-segment speed fluctuations across three cities
-- Network topology adds less than 1% congestion variance beyond road type
-- Positive-control test detects spatial structure in road design but not in congestion
-- Cross-metric validation on absolute speed rules out normalization artefacts
-- 264 million observations support demand management over capacity expansion

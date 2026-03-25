@@ -21,4 +21,4 @@ speed_validation : Speed-based validation across multiple congestion metrics
 h3_robustness    : H3 hexagonal aggregation for MAUP robustness testing
 """
 
-__version__ = "0.4.0"
+__version__ = "0.4.2"

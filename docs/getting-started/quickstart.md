@@ -26,6 +26,10 @@ All commands:
 | `bottleneck` | Road-capacity bottleneck analysis (OSMnx) |
 | `poi` | POI-congestion density analysis |
 | `synthesis` | Temporal vs spatial predictor comparison |
+| `multilevel` | Multilevel variance decomposition (mixed-effects models) |
+| `markov` | LISA Markov & Spatial Markov transition analysis |
+| `speed-validation` | Speed-based validation across congestion metrics |
+| `h3-robustness` | H3 hexagonal aggregation for MAUP robustness |
 
 See the full [CLI Reference](../cli.md) for all options.
 

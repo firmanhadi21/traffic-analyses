@@ -16,7 +16,7 @@ pip install -e ".[all]"
 ## 2. Download data from Zenodo
 
 Download the dataset from
-[doi:10.5281/zenodo.18650759](https://doi.org/10.5281/zenodo.18650759) and
+[doi:10.5281/zenodo.19211072](https://doi.org/10.5281/zenodo.19211072) and
 unzip.  Place the three `traffic_*_output/` directories in the repository root:
 
 ```
@@ -40,6 +40,10 @@ traffic-pipeline geostatistics    # Spatial statistics & hot-spot maps
 traffic-pipeline bottleneck       # Road-capacity bottleneck analysis
 traffic-pipeline poi              # POI-congestion density analysis
 traffic-pipeline synthesis        # Temporal vs spatial comparison
+traffic-pipeline multilevel       # Multilevel variance decomposition
+traffic-pipeline markov           # LISA Markov transition analysis
+traffic-pipeline speed-validation # Speed-based metric validation
+traffic-pipeline h3-robustness    # H3 hexagonal MAUP robustness
 ```
 
 Results are written to `figures/` (PNG) and `analysis_results/` (CSV).
@@ -52,3 +56,7 @@ Results are written to `figures/` (PNG) and `analysis_results/` (CSV).
 | `bottleneck` | 10–30 minutes (downloads OSMnx networks) |
 | `poi` | 5–15 minutes (downloads POI data) |
 | `synthesis` | < 1 minute |
+| `multilevel` | 2–10 minutes |
+| `markov` | 5–15 minutes (LISA permutations) |
+| `speed-validation` | 1–3 minutes |
+| `h3-robustness` | 2–5 minutes |

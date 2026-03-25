@@ -10,23 +10,23 @@ An **open-source, pure-Python pipeline** for spatiotemporal traffic congestion a
 
 ## Overview
 
-This system collects traffic data at 15-minute intervals and processes it into time-period aggregated statistics. The data spans from **March 2025 to February 2026**, providing a full year of traffic patterns for urban planning and transportation research.
+This system collects traffic data at 15-minute intervals and processes it into time-period aggregated statistics. The data spans from **March 2025 to March 2026**, providing 13 months of traffic patterns for urban planning and transportation research.
 
 ### Cities Covered
 
 | City | Segments | Bounding Box | Coverage |
 |------|----------|--------------|----------|
 | Semarang | 1,076 | 110.227-110.528, -7.105 to -6.919 | Urban core |
-| Bandung | 3,069 | 107.469-107.826, -7.085 to -6.829 | Metropolitan area |
-| Jakarta | 14,549 | 106.604-107.110, -6.410 to -6.091 | Greater Jakarta |
+| Bandung | 3,063 | 107.469-107.826, -7.085 to -6.829 | Metropolitan area |
+| Jakarta | 14,609 | 106.604-107.110, -6.410 to -6.091 | Greater Jakarta |
 
 ## Data Summary
 
 | City | Files Processed | Total Records | Date Range |
 |------|-----------------|---------------|------------|
-| Semarang | 14,122 | 15.2 million | Mar 2025 - Feb 2026 |
-| Bandung | 14,136 | 43.4 million | Mar 2025 - Feb 2026 |
-| Jakarta | 14,132 | 206.3 million | Mar 2025 - Feb 2026 |
+| Semarang | 14,122 | 15.2 million | Mar 2025 - Mar 2026 |
+| Bandung | 14,136 | 43.4 million | Mar 2025 - Mar 2026 |
+| Jakarta | 14,132 | 206.3 million | Mar 2025 - Mar 2026 |
 
 ## Time Periods
 
@@ -55,13 +55,18 @@ traffic-analyses/
 │   ├── __init__.py
 │   ├── config.py                # Centralized city/period/constant definitions
 │   ├── utils.py                 # Timestamp extraction, geometry hashing, filters
-│   ├── aggregate.py             # Raw GeoPackage → time-period aggregation
+│   ├── aggregate.py             # OSM-based segment aggregation (osm_composite_id)
 │   ├── eda.py                   # Data validation & exploratory analysis
 │   ├── geostatistics.py         # Spatial statistics & hot-spot analysis
 │   ├── bottleneck.py            # Road-capacity bottleneck analysis (OSMnx)
 │   ├── poi.py                   # POI-congestion density analysis
 │   ├── synthesis.py             # Temporal vs spatial predictor comparison
+│   ├── multilevel.py            # Multilevel variance decomposition (mixed-effects)
+│   ├── markov.py                # LISA Markov & Spatial Markov transition analysis
+│   ├── speed_validation.py      # Speed-based validation across congestion metrics
+│   ├── h3_robustness.py         # H3 hexagonal aggregation for MAUP robustness
 │   ├── collector.py             # Multi-provider traffic data collector
+│   ├── geocoding.py             # City name geocoding via OSM Nominatim
 │   └── cli.py                   # Click CLI entry point
 │
 ├── traffic_collector.py         # Standalone collection script (daemon/cron)
@@ -99,13 +104,15 @@ Each GeoPackage file contains road segments with the following attributes:
 
 | Column | Description |
 |--------|-------------|
-| `fid` | Feature ID (unique segment identifier) |
+| `osm_composite_id` | OSM-derived composite segment identifier (primary key) |
 | `geometry` | Road segment geometry (MULTILINESTRING) |
 | `jam_factor_mean` | Average jam factor for the time period |
 | `jam_factor_std` | Standard deviation of jam factor |
 | `jam_factor_count` | Number of observations |
 | `jam_factor_min` | Minimum jam factor observed |
 | `jam_factor_max` | Maximum jam factor observed |
+
+> **Note:** As of March 2026, aggregation uses OSM-based segment matching (`osm_composite_id`) instead of the legacy FID-based approach. This provides stable segment identity across time periods.
 
 ### Jam Factor Scale
 
@@ -238,6 +245,18 @@ traffic-pipeline poi
 
 # 6. Temporal vs spatial predictor comparison
 traffic-pipeline synthesis
+
+# 7. Multilevel variance decomposition (mixed-effects models)
+traffic-pipeline multilevel
+
+# 8. LISA Markov & Spatial Markov transition analysis
+traffic-pipeline markov
+
+# 9. Speed-based validation across congestion metrics
+traffic-pipeline speed-validation
+
+# 10. H3 hexagonal aggregation for MAUP robustness testing
+traffic-pipeline h3-robustness
 ```
 
 All commands accept `--base-dir` to point at the project root:
@@ -264,7 +283,7 @@ run_analysis(base_dir=".", figures_dir="figures")
 
 The aggregated dataset (24 GeoPackages — 8 time periods × 3 cities, ~115 MB) is archived on Zenodo with a persistent DOI:
 
-> **Hadi, F., Wahyuddin, Y., Sabri, L. M., & Indrajit, A.** (2026). Traffic Congestion Dataset: Semarang, Bandung, Jakarta (2025–2026). *Zenodo*. https://doi.org/10.5281/zenodo.18650759
+> **Hadi, F., Wahyuddin, Y., Sabri, L. M., & Indrajit, A.** (2026). Traffic Congestion Dataset: Semarang, Bandung, Jakarta (Mar 2025–Mar 2026). *Zenodo*. https://doi.org/10.5281/zenodo.19211072
 
 See [DATA_README.md](DATA_README.md) for full schema documentation. To re-create the bundle locally: `./prepare_zenodo.sh`
 
@@ -283,7 +302,7 @@ source venv/bin/activate          # Windows: venv\Scripts\activate
 pip install -e ".[all]"
 
 # 3. Download the dataset from Zenodo and unzip
-#    https://doi.org/10.5281/zenodo.18650759
+#    https://doi.org/10.5281/zenodo.19211072
 #    Place the three traffic_*_output/ directories in the repo root
 
 # 4. Verify the installation
@@ -295,6 +314,10 @@ traffic-pipeline geostatistics    # Spatial statistics & hot-spot maps
 traffic-pipeline bottleneck       # Road-capacity bottleneck analysis
 traffic-pipeline poi              # POI-congestion density analysis
 traffic-pipeline synthesis        # Temporal vs spatial comparison
+traffic-pipeline multilevel       # Multilevel variance decomposition
+traffic-pipeline markov           # LISA Markov transition analysis
+traffic-pipeline speed-validation # Speed-based metric validation
+traffic-pipeline h3-robustness    # H3 hexagonal MAUP robustness
 ```
 
 Results are written to `figures/` (PNG) and `analysis_results/` (CSV).
@@ -544,6 +567,61 @@ Only `jam_factor` was aggregated into the time-period output files. To properly 
 $$\text{delay} = \frac{1}{\text{speed}} - \frac{1}{\text{free\_flow}}$$
 
 This gives **excess travel time per km** — an absolute measure where a motorway at 40 km/h (with 120 km/h free-flow) produces a much higher delay than a residential street at 25 km/h (with 30 km/h free-flow). This metric directly reflects capacity constraints without the normalization that flattens road class differences.
+
+## Multilevel Variance Decomposition
+
+Partitions traffic speed variance into within-segment (temporal) and between-segment (spatial) components using nested mixed-effects models.
+
+### Methodology
+
+1. **Null Model**: Random intercept by segment — estimates Intraclass Correlation (ICC)
+2. **Temporal Model**: Adds time-period fixed effects — quantifies temporal R²
+3. **Full Model**: Adds spatial predictors (centrality, POI density) — quantifies spatial ΔR²
+
+Uses absolute speed (km/h) as the outcome variable to avoid jam factor normalization confounds.
+
+### Output
+
+| File | Description |
+|------|-------------|
+| `analysis_results/multilevel_results.csv` | ICC, R² values, variance components |
+| `figures/multilevel_variance_decomposition.png` | Stacked bar chart of variance partitioning |
+
+## Speed-Based Validation
+
+Validates that the temporal dominance finding is not an artifact of jam factor normalization by re-running analyses across multiple congestion metrics.
+
+### Metrics Compared
+
+| Metric | Description |
+|--------|-------------|
+| `jam_factor` | Normalized congestion (0–10, relative to free-flow) |
+| `speed` | Current speed (km/h) |
+| `speed_reduction` | Speed reduction from free-flow (km/h) |
+| `free_flow` | Free-flow speed baseline (km/h) |
+
+### Analysis
+
+- One-way ANOVA (η²) across time periods for each metric
+- Centrality correlations per metric
+- Confirms temporal effects dominate regardless of metric choice
+
+## H3 Hexagonal Robustness (MAUP)
+
+Tests whether spatial autocorrelation results are sensitive to the Modifiable Areal Unit Problem (MAUP) by re-aggregating segment-level data to Uber H3 hexagons at multiple resolutions.
+
+### Methodology
+
+1. Aggregates segment jam factors into H3 hexagons at resolutions 7, 8, and 9
+2. Re-computes Global Moran's I at each resolution
+3. Compares results to segment-level analysis
+
+### Output
+
+| File | Description |
+|------|-------------|
+| `analysis_results/h3_robustness_results.csv` | Moran's I across resolutions |
+| `figures/h3_robustness_morans_i.png` | Resolution sensitivity comparison |
 
 ## Adding a New City
 

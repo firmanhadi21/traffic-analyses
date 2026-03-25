@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "traffic-congestion-pipeline"
-version = "0.4.0"
+version = "0.4.2"
 description = "An open-source pipeline for spatiotemporal traffic congestion analysis using HERE API, OSMnx, and PySAL"
 readme = "README.md"
 requires-python = ">=3.9"
