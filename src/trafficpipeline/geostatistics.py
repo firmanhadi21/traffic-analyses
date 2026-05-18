@@ -375,8 +375,23 @@ def generate_statistics_report(
 # ---------------------------------------------------------------------------
 
 
-def run_analysis(base_dir: str | Path = ".", figures_dir: str | Path = "figures") -> None:
-    """Run the full geostatistical analysis pipeline."""
+def run_analysis(
+    base_dir: str | Path = ".",
+    figures_dir: str | Path = "figures",
+    output_dir: str | Path | None = None,
+) -> None:
+    """Run the full geostatistical analysis pipeline.
+
+    Parameters
+    ----------
+    base_dir
+        Project root containing the per-period aggregated GeoPackages.
+    figures_dir
+        Output directory for plotted figures.
+    output_dir
+        Output directory for the textual statistics report. Defaults to
+        ``figures_dir`` for backwards compatibility.
+    """
     print("Loading data …")
     all_data = load_all_cities(base_dir)
 
@@ -394,7 +409,8 @@ def run_analysis(base_dir: str | Path = ".", figures_dir: str | Path = "figures"
         plot_congestion_hotspots(code, all_data[code], figures_dir=figures_dir)
 
     print("Generating statistics report …")
-    generate_statistics_report(all_data, figures_dir)
+    report_dir = output_dir if output_dir is not None else figures_dir
+    generate_statistics_report(all_data, report_dir)
     print("Done.")
 
 
