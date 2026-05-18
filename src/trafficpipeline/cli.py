@@ -30,8 +30,8 @@ def main(ctx: click.Context, base_dir: str) -> None:
 @main.command()
 @click.option("--city", type=click.Choice(["smg", "bdg", "jkt"]),
               help="City code (omit for all cities).")
-@click.option("--column", default="JF", show_default=True,
-              help="Traffic column to aggregate.")
+@click.option("--column", default="jam_factor", show_default=True,
+              help="Traffic column to aggregate (column name in the raw GeoPackages).")
 @click.option("--verbose", is_flag=True, help="Print per-file progress.")
 @click.pass_context
 def aggregate(ctx: click.Context, city: str | None, column: str, verbose: bool) -> None:
