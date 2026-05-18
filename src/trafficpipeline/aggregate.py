@@ -188,17 +188,55 @@ def _read_snapshot_osm(
     column: str,
     wkb_cache: dict,
     osm_ref_gdf: gpd.GeoDataFrame,
+    skip_reasons: dict | None = None,
 ) -> pd.DataFrame | None:
-    """Read snapshot, assign OSM IDs, return osm_composite_id + traffic column."""
+    """Read snapshot, assign OSM IDs, return osm_composite_id + traffic column.
+
+    When ``skip_reasons`` (a dict) is supplied, increments the appropriate
+    counter (``missing_column``, ``read_error``, ``no_osm_match``,
+    ``empty_after_dropna``) and records the first offending filename per
+    reason in ``skip_reasons[<reason>+'_first']``.
+    """
+    def _note(reason: str, detail: str | None = None) -> None:
+        if skip_reasons is None:
+            return
+        skip_reasons[reason] = skip_reasons.get(reason, 0) + 1
+        key = reason + "_first"
+        if key not in skip_reasons:
+            skip_reasons[key] = (str(filepath), detail)
+
     try:
         gdf = gpd.read_file(filepath)
-        if column not in gdf.columns:
-            return None
-        gdf = _assign_osm_ids(gdf, wkb_cache, osm_ref_gdf)
-        gdf = gdf.dropna(subset=['osm_composite_id'])
-        return gdf[['osm_composite_id', column]].copy()
-    except Exception:
+    except Exception as e:
+        _note("read_error", f"{type(e).__name__}: {e}")
         return None
+
+    if column not in gdf.columns:
+        _note(
+            "missing_column",
+            f"expected '{column}', got {sorted(gdf.columns)[:8]}",
+        )
+        return None
+
+    try:
+        gdf = _assign_osm_ids(gdf, wkb_cache, osm_ref_gdf)
+    except Exception as e:
+        _note("read_error", f"_assign_osm_ids failed: {type(e).__name__}: {e}")
+        return None
+
+    if "osm_composite_id" not in gdf.columns:
+        _note("no_osm_match", "osm_composite_id column missing after assign")
+        return None
+
+    matched = gdf.dropna(subset=["osm_composite_id"])
+    if len(matched) == 0:
+        _note(
+            "empty_after_dropna",
+            f"loaded {len(gdf)} rows but all osm_composite_id were null",
+        )
+        return None
+
+    return matched[["osm_composite_id", column]].copy()
 
 
 # ---------------------------------------------------------------------------
@@ -271,20 +309,58 @@ def aggregate_city(
 
     # Read all snapshots with OSM ID assignment
     frames: list[pd.DataFrame] = []
+    skip_reasons: dict = {}
+    n_bad_timestamp = 0
+    bad_timestamp_first: str | None = None
     for i, fp in enumerate(gpkg_files, 1):
         if verbose and i % 500 == 0:
             print(f"  Reading {i}/{len(gpkg_files)} …")
-        df = _read_snapshot_osm(fp, traffic_column, wkb_cache, osm_ref_gdf)
+        df = _read_snapshot_osm(
+            fp, traffic_column, wkb_cache, osm_ref_gdf, skip_reasons=skip_reasons,
+        )
         if df is None:
             continue
         ts = _extract_timestamp(fp)
         if ts is None:
+            n_bad_timestamp += 1
+            if bad_timestamp_first is None:
+                bad_timestamp_first = os.path.basename(str(fp))
             continue
         df["timestamp"] = ts
         frames.append(df[["osm_composite_id", traffic_column, "timestamp"]])
 
+    if verbose and (skip_reasons or n_bad_timestamp):
+        print(f"  Skipped snapshots:")
+        for reason in ("read_error", "missing_column", "no_osm_match",
+                       "empty_after_dropna"):
+            n = skip_reasons.get(reason, 0)
+            if n:
+                fname, detail = skip_reasons.get(reason + "_first", ("?", "?"))
+                print(f"    {reason}: {n} (first: {os.path.basename(fname)} — {detail})")
+        if n_bad_timestamp:
+            print(f"    bad_filename_timestamp: {n_bad_timestamp} "
+                  f"(first: {bad_timestamp_first})")
+
     if not frames:
-        raise RuntimeError("No valid data read")
+        diag = [f"{r}={skip_reasons.get(r, 0)}" for r in
+                ("read_error", "missing_column", "no_osm_match",
+                 "empty_after_dropna")]
+        if n_bad_timestamp:
+            diag.append(f"bad_filename_timestamp={n_bad_timestamp}")
+        # Surface the very first failure detail for fast diagnosis.
+        for reason in ("missing_column", "read_error", "no_osm_match",
+                       "empty_after_dropna"):
+            first = skip_reasons.get(reason + "_first")
+            if first:
+                fname, detail = first
+                raise RuntimeError(
+                    f"No valid data read. Counts: {', '.join(diag)}. "
+                    f"First {reason} in {os.path.basename(fname)}: {detail}"
+                )
+        raise RuntimeError(
+            f"No valid data read. Counts: {', '.join(diag)}. "
+            f"First bad-timestamp filename: {bad_timestamp_first}"
+        )
 
     combined = pd.concat(frames, ignore_index=True)
     combined["hour"] = combined["timestamp"].dt.hour
