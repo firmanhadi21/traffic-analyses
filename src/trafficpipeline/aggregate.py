@@ -66,14 +66,25 @@ def _load_osm_mapping(city_code: str, base_dir: Path):
 
     Returns (osm_ref_gdf, wkt_hash_mapping, create_geometry_hash_fn).
     """
-    # Import the root-level utils for WKT-based geometry hashing
+    # Import the root-level utils for WKT-based geometry hashing.
+    # The legacy utils.py does `from config import TIMEZONE`, so the
+    # project base_dir must be on sys.path while it loads.
     import importlib.util
+    import sys as _sys
     utils_path = base_dir / "utils.py"
     if utils_path.exists():
-        spec = importlib.util.spec_from_file_location("utils", utils_path)
-        utils_mod = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(utils_mod)
-        create_geometry_hash = utils_mod.create_geometry_hash
+        base_str = str(base_dir.resolve())
+        added_path = base_str not in _sys.path
+        if added_path:
+            _sys.path.insert(0, base_str)
+        try:
+            spec = importlib.util.spec_from_file_location("utils", utils_path)
+            utils_mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(utils_mod)
+            create_geometry_hash = utils_mod.create_geometry_hash
+        finally:
+            if added_path:
+                _sys.path.remove(base_str)
     else:
         # Fallback: inline implementation
         import re as _re
