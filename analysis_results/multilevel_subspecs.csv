@@ -1,0 +1,4 @@
+city,n_obs,n_segments,icc,var_between_null,var_within_null,var_between_temporal,var_within_temporal,r2_temporal,var_between_ffs_only,dR2_ffs_only,var_between_cent_only,dR2_cent_only,var_between_full,dR2_full,beta_betweenness_full,p_betweenness_full,beta_free_flow_full,p_free_flow_full
+Semarang,6845,922,0.9306,9.102,0.678,8.81,0.247,0.636,3.133,0.6444,8.819,-0.001,3.098,0.6484,-11.1906,0.0016841930423053557,0.7465,0.0
+Bandung,18604,2583,0.9161,6.244,0.572,5.952,0.231,0.5962,2.609,0.5616,5.949,0.0006,2.538,0.5736,-21.4523,2.042042431536252e-15,0.5925,0.0
+Jakarta,95935,13193,0.9236,7.15,0.592,6.911,0.289,0.511,3.146,0.5448,6.908,0.0004,3.13,0.5471,-20.4414,7.800045600424196e-13,0.5334,0.0

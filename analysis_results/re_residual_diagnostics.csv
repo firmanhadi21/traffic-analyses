@@ -1,0 +1,4 @@
+city,n_segments_blups,blups_mean,blups_sd,qq_r,shapiro_W,shapiro_p,residual_moransI,residual_morans_p,qq_plot
+Semarang,922,0.0,2.9616,0.9762,0.9535,1.7652934549057894e-16,0.2616,2.198377479090591e-65,re_qq_smg.png
+Bandung,2583,-0.0,2.4312,0.9546,0.9116,2.2453456337813847e-36,0.2413,3.5795987731782747e-152,re_qq_bdg.png
+Jakarta,13193,0.0,2.6194,0.9471,0.8998,3.0114478914687e-49,0.1883,0.0,re_qq_jkt.png

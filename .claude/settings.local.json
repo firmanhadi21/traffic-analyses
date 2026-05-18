@@ -3,7 +3,21 @@
     "allow": [
       "Bash(source:*)",
       "Bash(python:*)",
-      "Bash(python3:*)"
+      "Bash(python3:*)",
+      "Bash(/Users/firmanhadi/GitHub/traffic-analyses/.venv/bin/python -m pip install statsmodels)",
+      "Bash(./.venv/bin/python revision2_analyses.py smg)",
+      "Bash(awk '{print $2, $3\"%CPU\", $10\"min\"}')",
+      "Bash(awk '{print $9, $5\"B\"}')",
+      "Bash(git -C /Users/firmanhadi/GitHub/traffic-analyses log --oneline 2f91f8d -1 --stat)",
+      "Bash(bibtex foss4g_pipeline_paper)",
+      "Bash(pdflatex -interaction=batchmode foss4g_pipeline_paper.tex)",
+      "Bash(perl -i -pe 's/\\\\\\\\citep\\\\{/\\\\\\\\cite{/g; s/\\\\\\\\citet\\\\{/\\\\\\\\cite{/g' foss4g_pipeline_paper.tex)",
+      "Bash(BIBINPUTS=.:: BSTINPUTS=.:: bibtex foss4g_pipeline_paper)",
+      "Bash(/Users/firmanhadi/GitHub/traffic-analyses/.venv/bin/python -c \"import trafficpipeline; print\\('OK'\\)\")",
+      "Bash(.venv/bin/python -m pip install -e .)",
+      "Bash(.venv/bin/python -c \"from trafficpipeline import multilevel, geostatistics, markov, h3_robustness; print\\('OK', multilevel.__name__\\)\")",
+      "Bash(.venv/bin/traffic-pipeline --help)",
+      "Bash(.venv/bin/python benchmark_stage3.py)"
     ]
   }
 }

@@ -103,11 +103,16 @@ def build_lisa_matrix(
 ) -> tuple[np.ndarray, list[gpd.GeoDataFrame]]:
     """Build (n_segments × n_periods) integer matrix of LISA codes.
 
-    Returns ``(y, gdfs)`` where y[i, t] ∈ {0..4} encodes LISA_STATES.
+    Aligns segments across periods by stable identifier so that Markov
+    transitions are computed on the same physical segments throughout.
+    Segments missing in any period are dropped.
+
+    Returns ``(y, gdfs)`` where y[i, t] ∈ {0..4} encodes LISA_STATES and
+    each gdf is the aligned (filtered + sorted) view for that period.
     """
     base = Path(base_dir)
     folder = base / CITIES[city_code]["traffic_output_dir"]
-    gdfs: list[gpd.GeoDataFrame] = []
+    raw_gdfs: list[gpd.GeoDataFrame] = []
 
     for period in TIME_PERIODS:
         fp = folder / f"{period}_{city_code}.gpkg"
@@ -115,7 +120,46 @@ def build_lisa_matrix(
             continue
         gdf = gpd.read_file(str(fp))
         gdf = compute_lisa(gdf, column=column, k=k)
-        gdfs.append(gdf)
+        raw_gdfs.append(gdf)
+
+    if not raw_gdfs:
+        raise FileNotFoundError(
+            f"No period GeoPackages found for city '{city_code}' in {folder}"
+        )
+
+    # Pick a stable identifier column that's consistent across periods.
+    id_col = next(
+        (c for c in ("osm_composite_id", "segment_id", "fid")
+         if all(c in g.columns for g in raw_gdfs)),
+        None,
+    )
+    if id_col is None:
+        # Last-resort fallback: align by row index, but warn loudly.
+        import warnings as _w
+        _w.warn(
+            "No stable segment ID column found across periods "
+            "(checked: osm_composite_id, segment_id, fid). "
+            "Falling back to row-index alignment; this may be incorrect "
+            "if period GeoPackages contain different segments."
+        )
+        min_n = min(len(g) for g in raw_gdfs)
+        gdfs = [g.iloc[:min_n].reset_index(drop=True) for g in raw_gdfs]
+    else:
+        # Intersect IDs across all periods, then filter + sort consistently.
+        common: set = set(raw_gdfs[0][id_col])
+        for g in raw_gdfs[1:]:
+            common &= set(g[id_col])
+        if not common:
+            raise ValueError(
+                f"No segments common to all periods for city '{city_code}'. "
+                f"Checked {len(raw_gdfs)} periods on column '{id_col}'."
+            )
+        gdfs = [
+            g[g[id_col].isin(common)]
+              .sort_values(id_col, kind="mergesort")
+              .reset_index(drop=True)
+            for g in raw_gdfs
+        ]
 
     n_seg = len(gdfs[0])
     n_per = len(gdfs)
@@ -158,8 +202,12 @@ def spatial_markov(
 ) -> dict:
     """Fit a Spatial Markov model conditioned on neighbor states.
 
-    Returns dict with ``chi2``, ``p_value``, ``dof``,
-    ``significant`` (bool).
+    Reports the maximally-significant homogeneity test across lag classes:
+    we return the *maximum* chi-squared statistic and its associated
+    p-value, dof, and significance flag at the 0.05 level.
+
+    Returns dict with ``chi2``, ``p_value``, ``dof``, ``significant``,
+    and ``per_lag`` (list of (chi2, p, dof) tuples per lag class).
     """
     from giddy.markov import Spatial_Markov
     from libpysal.weights import KNN
@@ -169,28 +217,39 @@ def spatial_markov(
 
     sm = Spatial_Markov(y, w, permutations=permutations)
 
-    chi2_val = float(sm.chi2.max()) if hasattr(sm.chi2, "max") else float(sm.chi2)
-    p_val = float(sm.chi2.min()) if hasattr(sm, "shtest") else np.nan
+    # giddy >=2.3 exposes per-lag homogeneity tests via .shtest as a
+    # list of (chi2, p_value, dof) tuples (one per spatial-lag class).
+    # Older versions sometimes returned .chi2 as a scalar or array.
+    per_lag: list[tuple[float, float, int]] = []
+    if hasattr(sm, "shtest") and sm.shtest is not None:
+        for entry in sm.shtest:
+            chi2_i = float(np.asarray(entry[0]).item())
+            p_i    = float(np.asarray(entry[1]).item())
+            dof_i  = int(np.asarray(entry[2]).item())
+            per_lag.append((chi2_i, p_i, dof_i))
 
-    # Use the summary homogeneity test
-    if hasattr(sm, "shtest"):
-        tests = sm.shtest
-        # shtest returns list of (chi2, p, dof) tuples per lag class
-        max_chi2 = max(t[0] for t in tests)
-        min_p = min(t[1] for t in tests)
-        dof = tests[0][2] if tests else 0
-        return {
-            "chi2": float(max_chi2),
-            "p_value": float(min_p),
-            "dof": int(dof),
-            "significant": float(min_p) < 0.05,
-        }
+    if per_lag:
+        # Pick the lag class with the largest chi² (most evidence against H0).
+        idx = max(range(len(per_lag)), key=lambda i: per_lag[i][0])
+        chi2_val, p_val, dof = per_lag[idx]
+    else:
+        # Fallback for older giddy: try .chi2 directly.
+        raw = getattr(sm, "chi2", None)
+        if isinstance(raw, (list, tuple)):
+            chi2_val = float(max(np.asarray(v).item() for v in raw))
+        elif raw is not None:
+            chi2_val = float(np.asarray(raw).item())
+        else:
+            chi2_val = float("nan")
+        p_val = float("nan")
+        dof = 0
 
     return {
         "chi2": chi2_val,
         "p_value": p_val,
-        "dof": 0,
-        "significant": False,
+        "dof": dof,
+        "significant": (p_val < 0.05),
+        "per_lag": per_lag,
     }
 
 
