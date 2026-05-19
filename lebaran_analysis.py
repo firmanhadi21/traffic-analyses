@@ -122,28 +122,66 @@ def resolve_column(gdf: gpd.GeoDataFrame, key: str) -> str | None:
     return None
 
 
-def load_snapshot(filepath: str, sample_rate: float = 1.0) -> pd.DataFrame | None:
-    """Load one raw snapshot and return a tidy DataFrame."""
-    try:
-        gdf = gpd.read_file(filepath, ignore_geometry=True)
-    except Exception as e:
-        print(f"  WARN: failed to read {filepath}: {e}", file=sys.stderr)
-        return None
+def load_snapshot(filepath: str, sample_rate: float = 1.0,
+                  osm_context: dict | None = None) -> pd.DataFrame | None:
+    """Load one raw snapshot and return a tidy DataFrame.
 
-    seg_col   = resolve_column(gdf, "segment_id")
-    spd_col   = resolve_column(gdf, "speed")
-    ff_col    = resolve_column(gdf, "free_flow")
-    jam_col   = resolve_column(gdf, "jam_factor")
-
-    if seg_col is None or spd_col is None:
-        print(f"  WARN: missing required columns in {filepath} "
-              f"(have {list(gdf.columns)})", file=sys.stderr)
-        return None
-
-    cols = {seg_col: "segment_id", spd_col: "speed"}
-    if ff_col:  cols[ff_col]  = "free_flow"
-    if jam_col: cols[jam_col] = "jam_factor"
-    df = gdf[list(cols.keys())].rename(columns=cols)
+    Parameters
+    ----------
+    osm_context
+        If supplied, expected keys ``wkb_cache`` and ``osm_ref_gdf`` from
+        ``trafficpipeline.aggregate``. The snapshot is OSM-matched so the
+        returned ``segment_id`` is the stable ``osm_composite_id`` and
+        rows without a match are dropped. If ``None``, the loader falls
+        back to whichever per-snapshot id column exists (HERE ``id`` etc.),
+        which may not be stable across snapshots.
+    """
+    if osm_context is not None:
+        # OSM-stable identifier path. Requires the geometry, so do not
+        # set ignore_geometry=True here.
+        try:
+            gdf = gpd.read_file(filepath)
+        except Exception as e:
+            print(f"  WARN: failed to read {filepath}: {e}", file=sys.stderr)
+            return None
+        spd_col = resolve_column(gdf, "speed")
+        ff_col  = resolve_column(gdf, "free_flow")
+        jam_col = resolve_column(gdf, "jam_factor")
+        if spd_col is None:
+            print(f"  WARN: no speed column in {filepath} "
+                  f"(have {list(gdf.columns)})", file=sys.stderr)
+            return None
+        try:
+            gdf = osm_context["assign"](gdf)
+        except Exception as e:
+            print(f"  WARN: OSM-match failed for {filepath}: {e}", file=sys.stderr)
+            return None
+        gdf = gdf.dropna(subset=["osm_composite_id"])
+        if len(gdf) == 0:
+            return None
+        cols = {"osm_composite_id": "segment_id", spd_col: "speed"}
+        if ff_col:  cols[ff_col]  = "free_flow"
+        if jam_col: cols[jam_col] = "jam_factor"
+        df = pd.DataFrame(gdf[list(cols.keys())]).rename(columns=cols)
+    else:
+        # Fallback: ignore geometry, use whichever id column we find.
+        try:
+            gdf = gpd.read_file(filepath, ignore_geometry=True)
+        except Exception as e:
+            print(f"  WARN: failed to read {filepath}: {e}", file=sys.stderr)
+            return None
+        seg_col = resolve_column(gdf, "segment_id")
+        spd_col = resolve_column(gdf, "speed")
+        ff_col  = resolve_column(gdf, "free_flow")
+        jam_col = resolve_column(gdf, "jam_factor")
+        if seg_col is None or spd_col is None:
+            print(f"  WARN: missing required columns in {filepath} "
+                  f"(have {list(gdf.columns)})", file=sys.stderr)
+            return None
+        cols = {seg_col: "segment_id", spd_col: "speed"}
+        if ff_col:  cols[ff_col]  = "free_flow"
+        if jam_col: cols[jam_col] = "jam_factor"
+        df = gdf[list(cols.keys())].rename(columns=cols)
 
     ts = parse_timestamp(filepath)
     if ts is None:
@@ -166,9 +204,61 @@ def in_window(ts: datetime, start: str, end: str) -> bool:
 # Main analysis
 # ---------------------------------------------------------------------------
 
+def build_osm_context(city: str, base_dir: Path) -> dict | None:
+    """Load the OSM mapping + WKB cache so that load_snapshot can assign
+    a stable ``osm_composite_id`` to every segment in a raw snapshot."""
+    try:
+        from trafficpipeline.aggregate import (
+            _load_osm_mapping, _build_wkb_cache, _assign_osm_ids,
+        )
+    except ImportError as e:
+        print(f"  NOTE: trafficpipeline.aggregate not importable ({e}); "
+              "falling back to non-OSM segment identifier.", file=sys.stderr)
+        return None
+    try:
+        osm_ref_gdf, wkt_hash_mapping, create_geom_hash = _load_osm_mapping(
+            city, base_dir,
+        )
+    except FileNotFoundError as e:
+        print(f"  NOTE: OSM reference for city '{city}' not found ({e}); "
+              "falling back to non-OSM segment identifier.", file=sys.stderr)
+        return None
+
+    # WKB cache wants a first raw snapshot to seed; we will rebuild it
+    # lazily on the first snapshot we read.
+    return {
+        "osm_ref_gdf": osm_ref_gdf,
+        "wkt_hash_mapping": wkt_hash_mapping,
+        "create_geom_hash": create_geom_hash,
+        "wkb_cache": {},
+        "assign": lambda gdf: _assign_osm_ids(
+            gdf, _seeded_cache(gdf, osm_ref_gdf, wkt_hash_mapping,
+                               create_geom_hash, _CACHE_HOLDER),
+            osm_ref_gdf,
+        ),
+    }
+
+
+_CACHE_HOLDER: dict = {"cache": None}
+
+
+def _seeded_cache(gdf, osm_ref_gdf, wkt_hash_mapping, create_geom_hash, holder):
+    """Build the WKB cache once (on the first snapshot) and reuse it
+    for every subsequent snapshot. Mirrors aggregate_city behaviour."""
+    if holder["cache"] is None:
+        from trafficpipeline.aggregate import _build_wkb_cache
+        holder["cache"] = _build_wkb_cache(
+            gdf, osm_ref_gdf, wkt_hash_mapping, create_geom_hash,
+        )
+        print(f"  WKB→OSM cache built: {len(holder['cache']):,} entries",
+              file=sys.stderr)
+    return holder["cache"]
+
+
 def collect_panel(raw_dir: Path, lebaran_start: str, lebaran_end: str,
                   baseline_start: str, baseline_end: str,
-                  sample_rate: float) -> pd.DataFrame:
+                  sample_rate: float,
+                  osm_context: dict | None = None) -> pd.DataFrame:
     """Walk raw_dir, load snapshots inside the windows, return a long panel."""
     pattern = str(raw_dir / "*.gpkg")
     files = sorted(glob.glob(pattern))
@@ -194,10 +284,16 @@ def collect_panel(raw_dir: Path, lebaran_start: str, lebaran_end: str,
     for i, fp in enumerate(keep):
         if (i + 1) % 200 == 0:
             print(f"  Loaded {i+1}/{len(keep)} snapshots")
-        df = load_snapshot(fp, sample_rate=sample_rate)
+        df = load_snapshot(fp, sample_rate=sample_rate, osm_context=osm_context)
         if df is not None and len(df):
             frames.append(df)
 
+    if not frames:
+        raise RuntimeError("No snapshots produced any rows. If you see "
+                           "WKB→OSM cache messages but zero matches, the OSM "
+                           "reference may be stale; rerun "
+                           "`traffic-pipeline aggregate --city jkt` to refresh "
+                           "the cache.")
     panel = pd.concat(frames, ignore_index=True)
     print(f"  Total observations: {len(panel):,} "
           f"({panel['segment_id'].nunique():,} segments)")
@@ -388,6 +484,12 @@ def main():
     p.add_argument("--raw-dir", required=True, type=Path,
                    help="Directory of raw city_traffic_YYYYMMDD_HHMMSS.gpkg snapshots")
     p.add_argument("--output-dir", default="lebaran_results", type=Path)
+    p.add_argument("--city", default="jkt",
+                   help="City code for OSM-stable segment matching "
+                        "(jkt/bdg/smg). Set to 'none' to skip OSM matching "
+                        "and fall back to the snapshot's native id column.")
+    p.add_argument("--base-dir", default=".", type=Path,
+                   help="Project root containing osm_reference/ (default '.').")
     p.add_argument("--lebaran-start", default=LEBARAN_START)
     p.add_argument("--lebaran-end",   default=LEBARAN_END)
     p.add_argument("--baseline-start", default=BASELINE_START)
@@ -403,9 +505,17 @@ def main():
     print(f"LEBARAN NATURAL EXPERIMENT  ({args.lebaran_start} ↔ {args.baseline_start})")
     print("=" * 70)
 
+    if args.city.lower() == "none":
+        osm_context = None
+        print("  OSM matching: DISABLED (using raw snapshot id column)")
+    else:
+        print(f"  Loading OSM context for city '{args.city}' …")
+        osm_context = build_osm_context(args.city, args.base_dir)
+
     panel = collect_panel(
         args.raw_dir, args.lebaran_start, args.lebaran_end,
         args.baseline_start, args.baseline_end, args.sample_rate,
+        osm_context=osm_context,
     )
     panel = annotate(panel, args.lebaran_start, args.lebaran_end)
 
