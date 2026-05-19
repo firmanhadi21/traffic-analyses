@@ -1,38 +1,42 @@
 #!/usr/bin/env python3
 """
-Lebaran Natural Experiment — Jakarta congestion before/during/after Eid al-Fitr.
+Lebaran Natural Experiment — Jakarta congestion before/during Eid al-Fitr.
 
 Tests the demand-synchronization hypothesis using the annual mudik exodus as
-a treatment that removes demand while road supply is held constant.
+a treatment that removes demand while the road network is held physically
+constant. Uses both Lebaran 2025 and Lebaran 2026 as treatments, with a
+year fixed effect to net out structural change between the two years.
 
-Design (within-segment DiD):
-    speed_{s,t} = alpha_s + beta_period[t] + gamma · Lebaran[t]
-                                + delta · (Lebaran × Peak)[t] + eps_{s,t}
+Design (two-window within-segment DiD):
+    speed_{s,d,h} = α_s + γ_year + β_period[h]
+                  + δ · Lebaran[d] + θ · (Lebaran × Peak)[d,h] + ε
 where
-    alpha_s     segment random intercept (absorbs FFS, road class, location)
-    beta_period 8 time-period fixed effects (or 24 hours if --hourly)
-    gamma       average speed change during the Lebaran window
-    delta       extra speed gain at evening peak hours when demand drops
-                (THIS is the test: if demand synchronization dominates, delta > 0)
+    α_s         segment random intercept (absorbs FFS, road class, location)
+    γ_year      year fixed effect (2025 vs 2026; absorbs network changes)
+    β_period    8 time-period fixed effects
+    δ           average speed change in the Lebaran windows
+    θ           extra speed gain at evening peak when synchronized demand
+                is removed (THIS is the headline test for the demand-
+                synchronization mechanism)
 
-Lebaran 2026 (Eid al-Fitr 1447 AH): approximately 20-21 March 2026 in Indonesia.
-Mudik exodus typically starts ~5-7 days before. The script defaults to:
-    Lebaran window:  10-23 March 2026
-    Baseline window: 1 Jan - 28 Feb 2026 (regular working/school weeks)
-Both windows are configurable via --lebaran-start, --lebaran-end,
---baseline-start, --baseline-end.
+Default windows (override on CLI):
+    2025: baseline 2025-03-01 → 2025-03-23,  Lebaran 2025-03-24 → 2025-04-06
+    2026: baseline 2026-01-01 → 2026-03-13,  Lebaran 2026-03-14 → 2026-03-23
+Eid al-Fitr is approximately:
+    2025: 30–31 March    1446 AH
+    2026: 20–21 March    1447 AH
 
 USAGE (on office desktop with raw data):
-    # Adjust --raw-dir to point at the directory of city_traffic_*.gpkg files.
-    python lebaran_analysis.py --raw-dir /path/to/jakarta_raw \\
-                               --output-dir ./lebaran_results
+    python lebaran_analysis.py --raw-dir traffic_data_jkt \\
+                               --city jkt \\
+                               --output-dir lebaran_results
 
 Outputs:
-    lebaran_results/lebaran_did_estimates.csv     coefficient table
-    lebaran_results/lebaran_speed_by_week.csv     weekly mean speed by hour
-    lebaran_results/lebaran_speed_by_week.png     time-series plot
-    lebaran_results/lebaran_pre_post_box.png      pre/during/post box plot
-    lebaran_results/lebaran_summary.txt           human-readable summary
+    lebaran_did_estimates.csv   one-row coefficient table
+    lebaran_speed_by_week.csv   weekly hour-of-day mean speed
+    lebaran_speed_by_week.png   hour × week heatmap
+    lebaran_pre_post_box.png    box plot of evening-peak speed by year × window
+    lebaran_summary.txt         human-readable summary
 
 REQUIREMENTS:
     pip install geopandas pandas numpy statsmodels matplotlib pyarrow
@@ -42,6 +46,8 @@ Notes:
   current_speed), free_flow_speed, plus the timestamp from the filename.
 - If your raw GPKGs use different column names, edit COLUMN_ALIASES below.
 - Set --sample-rate to 0.1 for a 10% segment sample if memory is tight.
+- Pass --city none to bypass OSM matching and use the snapshot's native id
+  column (faster, but only safe if the id is stable across snapshots).
 """
 from __future__ import annotations
 
@@ -76,14 +82,27 @@ COLUMN_ALIASES = {
 #   Example: jkt_traffic_20260315_073012.gpkg
 FILENAME_PATTERN = r"_traffic_(\d{8})_(\d{6})\.gpkg$"
 
-# Default windows (override on CLI)
-LEBARAN_START = "2026-03-10"
-LEBARAN_END   = "2026-03-23"
-BASELINE_START = "2026-01-01"
-BASELINE_END   = "2026-02-28"
+# Default windows (override on CLI).
+# Two-window DiD: pool both years; Lebaran is the "treatment" in each.
+# Eid al-Fitr dates (subject to moon-sighting confirmation):
+#   2025: approximately Sunday 30 March – Monday 31 March
+#   2026: approximately Friday 20 March – Saturday 21 March
+# Mudik exodus typically starts ~5–7 days before Eid and return ~5 days after.
 
-# Eid al-Fitr 2026 (approximate; actual date depends on moon sighting)
-EID_DATE = "2026-03-20"
+# 2025 windows
+LEBARAN_2025_START   = "2025-03-24"
+LEBARAN_2025_END     = "2025-04-06"
+BASELINE_2025_START  = "2025-03-01"   # earliest plausible start of collection
+BASELINE_2025_END    = "2025-03-23"
+
+# 2026 windows
+LEBARAN_2026_START   = "2026-03-14"
+LEBARAN_2026_END     = "2026-03-23"   # data cutoff
+BASELINE_2026_START  = "2026-01-01"
+BASELINE_2026_END    = "2026-03-13"
+
+EID_2025 = "2025-03-30"
+EID_2026 = "2026-03-21"
 
 # Peak hours (Jakarta evening rush)
 PEAK_HOURS = list(range(16, 19))  # 16:00, 17:00, 18:00 = evening peak
@@ -200,6 +219,19 @@ def in_window(ts: datetime, start: str, end: str) -> bool:
     return s <= ts < e
 
 
+def classify_window(ts: datetime, windows: dict) -> tuple[int | None, int]:
+    """Return (year_int, lebaran_int) if ts falls inside one of the four
+    named windows in ``windows``; ``year`` is None if not in any window.
+
+    ``windows`` keys: 'b2025', 'l2025', 'b2026', 'l2026'.
+    """
+    if in_window(ts, *windows["b2025"]): return (2025, 0)
+    if in_window(ts, *windows["l2025"]): return (2025, 1)
+    if in_window(ts, *windows["b2026"]): return (2026, 0)
+    if in_window(ts, *windows["l2026"]): return (2026, 1)
+    return (None, 0)
+
+
 # ---------------------------------------------------------------------------
 # Main analysis
 # ---------------------------------------------------------------------------
@@ -255,38 +287,58 @@ def _seeded_cache(gdf, osm_ref_gdf, wkt_hash_mapping, create_geom_hash, holder):
     return holder["cache"]
 
 
-def collect_panel(raw_dir: Path, lebaran_start: str, lebaran_end: str,
-                  baseline_start: str, baseline_end: str,
-                  sample_rate: float,
+def collect_panel(raw_dir: Path, windows: dict, sample_rate: float,
                   osm_context: dict | None = None) -> pd.DataFrame:
-    """Walk raw_dir, load snapshots inside the windows, return a long panel."""
+    """Walk raw_dir, load snapshots that fall inside any of the four
+    named windows, return a long panel with year + lebaran columns set."""
     pattern = str(raw_dir / "*.gpkg")
     files = sorted(glob.glob(pattern))
     print(f"Found {len(files):,} files matching {pattern}")
     if not files:
         raise FileNotFoundError(f"No .gpkg files in {raw_dir}")
 
-    keep = []
+    keep: list[tuple[str, int, int]] = []
     for fp in files:
         ts = parse_timestamp(fp)
         if ts is None:
             continue
-        if in_window(ts, lebaran_start, lebaran_end) or \
-           in_window(ts, baseline_start, baseline_end):
-            keep.append(fp)
+        year, leb = classify_window(ts, windows)
+        if year is not None:
+            keep.append((fp, year, leb))
 
-    print(f"  {len(keep):,} files fall in the Lebaran or baseline windows")
+    # Per-window counts for the user.
+    counts = {
+        "b2025": sum(1 for _, y, l in keep if y == 2025 and l == 0),
+        "l2025": sum(1 for _, y, l in keep if y == 2025 and l == 1),
+        "b2026": sum(1 for _, y, l in keep if y == 2026 and l == 0),
+        "l2026": sum(1 for _, y, l in keep if y == 2026 and l == 1),
+    }
+    print(f"  Snapshots per window: "
+          f"b2025={counts['b2025']:,}, l2025={counts['l2025']:,}, "
+          f"b2026={counts['b2026']:,}, l2026={counts['l2026']:,}")
     if not keep:
-        raise ValueError("No files in selected windows. Check --lebaran-start "
-                         "and --baseline-start match your data range.")
+        raise ValueError(
+            "No files in any of the four windows. Check the dates against "
+            "your data range (earliest and latest snapshots)."
+        )
+    # Warn loudly if a window is empty — DiD needs all four for the FE to be
+    # identified.
+    empty = [k for k, v in counts.items() if v == 0]
+    if empty:
+        print(f"  WARNING: window(s) {empty} have zero snapshots. The "
+              "year-FE DiD may be under-identified. Adjust the window dates "
+              "via CLI flags.", file=sys.stderr)
 
     frames = []
-    for i, fp in enumerate(keep):
+    for i, (fp, year, leb) in enumerate(keep):
         if (i + 1) % 200 == 0:
             print(f"  Loaded {i+1}/{len(keep)} snapshots")
         df = load_snapshot(fp, sample_rate=sample_rate, osm_context=osm_context)
-        if df is not None and len(df):
-            frames.append(df)
+        if df is None or len(df) == 0:
+            continue
+        df["year"] = year
+        df["lebaran"] = leb
+        frames.append(df)
 
     if not frames:
         raise RuntimeError("No snapshots produced any rows. If you see "
@@ -296,63 +348,86 @@ def collect_panel(raw_dir: Path, lebaran_start: str, lebaran_end: str,
                            "the cache.")
     panel = pd.concat(frames, ignore_index=True)
     print(f"  Total observations: {len(panel):,} "
-          f"({panel['segment_id'].nunique():,} segments)")
+          f"({panel['segment_id'].nunique():,} segments across both years)")
     return panel
 
 
-def annotate(panel: pd.DataFrame, lebaran_start: str, lebaran_end: str) -> pd.DataFrame:
-    """Add lebaran / period / peak / hour columns."""
+def annotate(panel: pd.DataFrame) -> pd.DataFrame:
+    """Add period / peak / hour / date / weekday columns.
+
+    ``year`` and ``lebaran`` are populated upstream in ``collect_panel`` from
+    the window definitions.
+    """
     panel = panel.copy()
     panel["hour"] = panel["timestamp"].dt.hour
     panel["date"] = panel["timestamp"].dt.date
     panel["weekday"] = panel["timestamp"].dt.dayofweek  # 0=Mon, 6=Sun
     panel["period"] = panel["hour"].apply(hour_to_period)
     panel["peak"] = panel["hour"].isin(PEAK_HOURS).astype(int)
-
-    s = datetime.strptime(lebaran_start, "%Y-%m-%d").date()
-    e = datetime.strptime(lebaran_end, "%Y-%m-%d").date()
-    panel["lebaran"] = panel["date"].between(s, e).astype(int)
-
     return panel
 
 
-def fit_did(panel: pd.DataFrame) -> dict:
-    """Fit the within-segment DiD model and return coefficients."""
+def fit_did(panel: pd.DataFrame) -> tuple[dict, object]:
+    """Fit the two-window within-segment DiD model with a year fixed effect.
+
+    Specification (random intercept on segment_id):
+        speed ~ C(period) + C(year) + lebaran + lebaran:peak
+
+    Returns (estimates_dict, fitted_model).
+    """
     import statsmodels.formula.api as smf
 
-    # Drop missing speed
     df = panel.dropna(subset=["speed"]).copy()
-    # Speed sanity (HERE returns m/s in some endpoints; convert to km/h if needed)
+    # HERE Traffic v7 returns m/s on some endpoints; convert to km/h heuristically.
     if df["speed"].max() < 50 and df["speed"].median() < 15:
         print("  NOTE: speed appears to be in m/s, converting to km/h")
         df["speed"] = df["speed"] * 3.6
 
-    print(f"  Fitting DiD on {len(df):,} obs / {df['segment_id'].nunique():,} segments...")
+    # Ensure year is treated categorically (2025 vs 2026 dummy).
+    df["year"] = df["year"].astype(int)
 
-    # Model 1: main + interaction with peak
-    model = smf.mixedlm(
-        "speed ~ C(period) + lebaran + lebaran:peak",
-        data=df, groups=df["segment_id"],
-    ).fit(reml=True)
+    print(f"  Fitting two-window DiD on {len(df):,} obs / "
+          f"{df['segment_id'].nunique():,} segments...")
+    by_year = df.groupby("year").size()
+    print(f"  Records by year: " +
+          ", ".join(f"{y}={n:,}" for y, n in by_year.items()))
+
+    formula = "speed ~ C(period) + C(year) + lebaran + lebaran:peak"
+    model = smf.mixedlm(formula, data=df, groups=df["segment_id"]).fit(reml=True)
 
     fe = model.fe_params
     pv = model.pvalues
+
+    # Identify the year-FE parameter name (statsmodels labels it like
+    # 'C(year)[T.2026]' for the non-reference year).
+    year_key = next(
+        (k for k in fe.index if k.startswith("C(year)[T.")),
+        None,
+    )
+
     out = {
-        "n_obs": len(df),
-        "n_segments": int(df["segment_id"].nunique()),
-        "beta_lebaran": float(fe.get("lebaran", np.nan)),
-        "p_lebaran":    float(pv.get("lebaran", np.nan)),
-        "beta_lebaran_peak": float(fe.get("lebaran:peak", np.nan)),
-        "p_lebaran_peak":    float(pv.get("lebaran:peak", np.nan)),
-        "var_segment": float(model.cov_re.iloc[0, 0]),
-        "var_resid":   float(model.scale),
+        "n_obs":               len(df),
+        "n_segments":          int(df["segment_id"].nunique()),
+        "n_obs_2025":          int(by_year.get(2025, 0)),
+        "n_obs_2026":          int(by_year.get(2026, 0)),
+        "beta_lebaran":        float(fe.get("lebaran", np.nan)),
+        "p_lebaran":           float(pv.get("lebaran", np.nan)),
+        "beta_lebaran_peak":   float(fe.get("lebaran:peak", np.nan)),
+        "p_lebaran_peak":      float(pv.get("lebaran:peak", np.nan)),
+        "beta_year":           float(fe[year_key]) if year_key else np.nan,
+        "p_year":              float(pv[year_key]) if year_key else np.nan,
+        "year_key":            year_key or "",
+        "var_segment":         float(model.cov_re.iloc[0, 0]),
+        "var_resid":           float(model.scale),
+        "formula":             formula,
     }
     print(f"  beta_lebaran       = {out['beta_lebaran']:+.3f} km/h "
           f"(p={out['p_lebaran']:.2e})")
     print(f"  beta_lebaran×peak  = {out['beta_lebaran_peak']:+.3f} km/h "
           f"(p={out['p_lebaran_peak']:.2e})")
-
-    # Pre/During/Post split for descriptive comparison
+    if year_key:
+        print(f"  beta_year ({year_key}) = {out['beta_year']:+.3f} km/h "
+              f"(p={out['p_year']:.2e})")
     return out, model
 
 
@@ -406,21 +481,33 @@ def plot_speed_by_week(weekly: pd.DataFrame, lebaran_start: str, lebaran_end: st
     plt.close()
 
 
-def plot_pre_post_box(panel: pd.DataFrame, lebaran_start: str, lebaran_end: str,
-                      out_dir: Path):
-    """Box plot of evening-peak speed: baseline vs lebaran."""
+def plot_pre_post_box(panel: pd.DataFrame, out_dir: Path):
+    """Box plot of evening-peak speed: four groups (baseline × Lebaran × year)."""
     df = panel.dropna(subset=["speed"]).copy()
-    peak = df[df["peak"] == 1]
-    peak["group"] = peak["lebaran"].map({0: "Baseline", 1: "Lebaran window"})
+    peak = df[df["peak"] == 1].copy()
+    peak["group"] = (
+        peak["year"].astype(str)
+        + " " + peak["lebaran"].map({0: "baseline", 1: "Lebaran"})
+    )
 
-    fig, ax = plt.subplots(figsize=(8, 6))
-    data = [peak[peak["lebaran"] == 0]["speed"].sample(min(50000, (peak["lebaran"]==0).sum()), random_state=0),
-            peak[peak["lebaran"] == 1]["speed"].sample(min(50000, (peak["lebaran"]==1).sum()), random_state=0)]
-    ax.boxplot(data, labels=["Baseline\n(Jan-Feb 2026)", "Lebaran window\n(10-23 Mar 2026)"],
-               showfliers=False)
+    order = ["2025 baseline", "2025 Lebaran", "2026 baseline", "2026 Lebaran"]
+    data = []
+    for g in order:
+        s = peak[peak["group"] == g]["speed"]
+        if len(s) == 0:
+            data.append(np.array([]))
+        else:
+            data.append(s.sample(min(50000, len(s)), random_state=0).values)
+
+    fig, ax = plt.subplots(figsize=(9, 6))
+    bp = ax.boxplot(data, labels=order, showfliers=False, patch_artist=True)
+    palette = ["#cccccc", "#e74c3c", "#cccccc", "#e74c3c"]
+    for patch, c in zip(bp["boxes"], palette):
+        patch.set_facecolor(c); patch.set_alpha(0.65)
     ax.set_ylabel("Evening-peak speed (km/h)")
-    ax.set_title("Jakarta evening-peak speed: baseline vs Lebaran\n"
-                 "(if demand-sync dominates, Lebaran box should sit higher)")
+    ax.set_title("Jakarta evening-peak speed by year × Lebaran window\n"
+                 "(if demand-sync dominates, the red Lebaran boxes sit "
+                 "higher than the grey baseline boxes in each year)")
     ax.grid(axis="y", alpha=0.3)
     plt.tight_layout()
     plt.savefig(out_dir / "lebaran_pre_post_box.png", dpi=150, bbox_inches="tight")
@@ -431,18 +518,27 @@ def write_summary(estimates: dict, out_dir: Path, args):
     txt = f"""LEBARAN NATURAL EXPERIMENT — JAKARTA
 ====================================
 
-Data window
-  Baseline:  {args.baseline_start} to {args.baseline_end}
-  Lebaran :  {args.lebaran_start} to {args.lebaran_end}
-  Eid date :  {args.eid_date}
+Design
+  Two-window difference-in-differences (Lebaran 2025 + Lebaran 2026)
+  with within-segment random intercepts and a year fixed effect.
+  Formula: {estimates['formula']}
+
+Windows
+  Baseline 2025: {args.baseline_2025_start} → {args.baseline_2025_end}
+  Lebaran  2025: {args.lebaran_2025_start} → {args.lebaran_2025_end}   (Eid {args.eid_2025})
+  Baseline 2026: {args.baseline_2026_start} → {args.baseline_2026_end}
+  Lebaran  2026: {args.lebaran_2026_start} → {args.lebaran_2026_end}   (Eid {args.eid_2026})
 
 Sample
-  Observations: {estimates['n_obs']:,}
-  Segments    : {estimates['n_segments']:,}
+  Observations    : {estimates['n_obs']:,}
+  Segments        : {estimates['n_segments']:,}
+  Obs in 2025     : {estimates['n_obs_2025']:,}
+  Obs in 2026     : {estimates['n_obs_2026']:,}
 
-DiD estimates (within-segment, time-period fixed effects)
+DiD estimates (within-segment, time-period fixed effects, year FE)
   beta_lebaran      = {estimates['beta_lebaran']:+.3f} km/h   (p = {estimates['p_lebaran']:.3g})
-    Interpretation : Average speed change in the Lebaran window across ALL hours.
+    Interpretation : Average speed change in the Lebaran windows across ALL hours,
+                     after netting out the year fixed effect and time-of-day.
     Sign expected  : POSITIVE if demand removal raises speeds.
 
   beta_lebaran×peak = {estimates['beta_lebaran_peak']:+.3f} km/h   (p = {estimates['p_lebaran_peak']:.3g})
@@ -456,20 +552,29 @@ Variance components
   Within-segment residual  : {estimates['var_resid']:.2f}
   ICC                      : {estimates['var_segment'] / (estimates['var_segment'] + estimates['var_resid']):.1%}
 
+Year fixed effect
+  beta_{estimates['year_key']:<24} = {estimates['beta_year']:+.3f} km/h   (p = {estimates['p_year']:.3g})
+    Interpretation : Average speed change in 2026 vs 2025 (positive = faster,
+                     negative = slower). Captures structural changes (network
+                     growth, new transit) and any drift between the two years.
+
 Interpretation for the TRIP manuscript R1.3 response
   - If beta_lebaran>0 AND beta_lebaran×peak>0 (both significant), this is direct
     causal evidence that demand-driven peaks generate the observed congestion.
   - The size of beta_lebaran×peak (in km/h) is the headline number: if peak-hour
     speed gains under Lebaran are >> off-peak speed gains, demand synchronization
     is the operative mechanism.
-  - Caveats: N=1 event, partial demand removal (not everyone leaves Jakarta),
-    intercity highways may behave differently (toll arteries during mudik).
+  - The two-Lebaran design adds replication: the effect is estimated across two
+    independent annual events, with the year FE controlling for any structural
+    change in network capacity or demand level between 2025 and 2026.
+  - Caveats: partial demand removal (not everyone leaves Jakarta); intercity
+    toll arteries may behave differently from urban roads during mudik.
 
 Outputs:
   lebaran_did_estimates.csv      one-row coefficient table
   lebaran_speed_by_week.csv      weekly hour-of-day mean speed
   lebaran_speed_by_week.png      hour × week heatmap
-  lebaran_pre_post_box.png       baseline vs lebaran peak-speed box plot
+  lebaran_pre_post_box.png       year × Lebaran peak-speed box plot
 """
     (out_dir / "lebaran_summary.txt").write_text(txt)
     print("\n" + txt)
@@ -490,11 +595,18 @@ def main():
                         "and fall back to the snapshot's native id column.")
     p.add_argument("--base-dir", default=".", type=Path,
                    help="Project root containing osm_reference/ (default '.').")
-    p.add_argument("--lebaran-start", default=LEBARAN_START)
-    p.add_argument("--lebaran-end",   default=LEBARAN_END)
-    p.add_argument("--baseline-start", default=BASELINE_START)
-    p.add_argument("--baseline-end",   default=BASELINE_END)
-    p.add_argument("--eid-date", default=EID_DATE)
+    # 2025 windows
+    p.add_argument("--lebaran-2025-start",  default=LEBARAN_2025_START)
+    p.add_argument("--lebaran-2025-end",    default=LEBARAN_2025_END)
+    p.add_argument("--baseline-2025-start", default=BASELINE_2025_START)
+    p.add_argument("--baseline-2025-end",   default=BASELINE_2025_END)
+    p.add_argument("--eid-2025",            default=EID_2025)
+    # 2026 windows
+    p.add_argument("--lebaran-2026-start",  default=LEBARAN_2026_START)
+    p.add_argument("--lebaran-2026-end",    default=LEBARAN_2026_END)
+    p.add_argument("--baseline-2026-start", default=BASELINE_2026_START)
+    p.add_argument("--baseline-2026-end",   default=BASELINE_2026_END)
+    p.add_argument("--eid-2026",            default=EID_2026)
     p.add_argument("--sample-rate", type=float, default=1.0,
                    help="Random sample fraction per snapshot (default 1.0)")
     args = p.parse_args()
@@ -502,8 +614,21 @@ def main():
     args.output_dir.mkdir(exist_ok=True, parents=True)
 
     print("=" * 70)
-    print(f"LEBARAN NATURAL EXPERIMENT  ({args.lebaran_start} ↔ {args.baseline_start})")
+    print("LEBARAN NATURAL EXPERIMENT — two-window DiD (2025 + 2026)")
+    print(f"  2025: baseline {args.baseline_2025_start}→{args.baseline_2025_end}"
+          f", Lebaran {args.lebaran_2025_start}→{args.lebaran_2025_end}"
+          f"  (Eid {args.eid_2025})")
+    print(f"  2026: baseline {args.baseline_2026_start}→{args.baseline_2026_end}"
+          f", Lebaran {args.lebaran_2026_start}→{args.lebaran_2026_end}"
+          f"  (Eid {args.eid_2026})")
     print("=" * 70)
+
+    windows = {
+        "b2025": (args.baseline_2025_start, args.baseline_2025_end),
+        "l2025": (args.lebaran_2025_start,  args.lebaran_2025_end),
+        "b2026": (args.baseline_2026_start, args.baseline_2026_end),
+        "l2026": (args.lebaran_2026_start,  args.lebaran_2026_end),
+    }
 
     if args.city.lower() == "none":
         osm_context = None
@@ -513,16 +638,19 @@ def main():
         osm_context = build_osm_context(args.city, args.base_dir)
 
     panel = collect_panel(
-        args.raw_dir, args.lebaran_start, args.lebaran_end,
-        args.baseline_start, args.baseline_end, args.sample_rate,
-        osm_context=osm_context,
+        args.raw_dir, windows, args.sample_rate, osm_context=osm_context,
     )
-    panel = annotate(panel, args.lebaran_start, args.lebaran_end)
+    panel = annotate(panel)
 
     print("\nDescriptive: weekly mean speed by hour-of-day...")
-    weekly = descriptive_tables(panel, args.lebaran_start, args.lebaran_end, args.output_dir)
-    plot_speed_by_week(weekly, args.lebaran_start, args.lebaran_end, args.output_dir)
-    plot_pre_post_box(panel, args.lebaran_start, args.lebaran_end, args.output_dir)
+    # Use the 2026 window for the heatmap highlight (more recent + cutoff-anchored).
+    weekly = descriptive_tables(
+        panel, args.lebaran_2026_start, args.lebaran_2026_end, args.output_dir,
+    )
+    plot_speed_by_week(
+        weekly, args.lebaran_2026_start, args.lebaran_2026_end, args.output_dir,
+    )
+    plot_pre_post_box(panel, args.output_dir)
 
     print("\nFitting DiD mixed model...")
     estimates, model = fit_did(panel)
