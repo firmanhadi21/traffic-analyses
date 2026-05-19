@@ -1,0 +1,24 @@
+                  Mixed Linear Model Regression Results
+=========================================================================
+Model:                MixedLM      Dependent Variable:     speed         
+No. Observations:     17588166     Method:                 REML          
+No. Groups:           12142        Scale:                  40.8601       
+Min. group size:      1            Log-Likelihood:         -57627635.5484
+Max. group size:      31416        Converged:              Yes           
+Mean group size:      1448.5                                             
+-------------------------------------------------------------------------
+                             Coef.  Std.Err.    z     P>|z| [0.025 0.975]
+-------------------------------------------------------------------------
+Intercept                    18.443    0.087  211.334 0.000 18.272 18.614
+C(period)[T.early_morning]    5.360    0.006  884.261 0.000  5.348  5.372
+C(period)[T.evening_offpeak]  0.353    0.007   52.024 0.000  0.339  0.366
+C(period)[T.evening_peak]    -0.746    0.007 -104.474 0.000 -0.760 -0.732
+C(period)[T.late_night]       2.596    0.007  348.924 0.000  2.582  2.611
+C(period)[T.lunch_hours]      0.554    0.007   74.281 0.000  0.539  0.569
+C(period)[T.morning_offpeak]  0.787    0.007  116.063 0.000  0.774  0.800
+C(period)[T.morning_peak]     2.618    0.007  384.924 0.000  2.605  2.631
+C(year)[T.2026]               1.044    0.003  303.549 0.000  1.037  1.050
+lebaran                       1.726    0.004  399.285 0.000  1.718  1.735
+lebaran:peak                  0.886    0.011   77.833 0.000  0.864  0.908
+Group Var                    89.701    0.183                             
+=========================================================================

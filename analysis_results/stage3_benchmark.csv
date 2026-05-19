@@ -1,5 +1,5 @@
 module,seconds
-geostatistics (all cities),3.2208697500173002
-markov (all cities),49.52946670795791
-multilevel (all cities),28.207235791021958
-h3-robustness (all cities),0.820441999938339
+geostatistics (all cities),4.333128459
+markov (all cities),74.27584791700001
+multilevel (all cities),45.313960834
+h3-robustness (all cities),1.396280125000004

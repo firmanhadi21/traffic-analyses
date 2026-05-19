@@ -1,0 +1,2 @@
+n_obs,n_segments,n_obs_2025,n_obs_2026,beta_lebaran,p_lebaran,beta_lebaran_peak,p_lebaran_peak,beta_year,p_year,year_key,var_segment,var_resid,formula
+17588166,12142,6076614,11511552,1.726056896227631,0.0,0.8861832134675127,0.0,1.0435152199599247,0.0,C(year)[T.2026],89.70102517737693,40.86006694001357,speed ~ C(period) + C(year) + lebaran + lebaran:peak
