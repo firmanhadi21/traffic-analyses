@@ -216,6 +216,17 @@ def run_analysis(
     results: dict[str, dict] = {}
     for code, panel in panels.items():
         name = CITIES[code]["name"]
+        if len(panel) == 0:
+            print(f"  {name}: panel is empty (no rows with speed_mean). "
+                  "Re-run `traffic-pipeline aggregate --city "
+                  f"{code} --columns jam_factor,speed,free_flow` to produce "
+                  "the columns the multilevel model needs. Skipping.")
+            continue
+        if "speed_mean" not in panel.columns or panel["speed_mean"].isna().all():
+            print(f"  {name}: aggregated GeoPackages have no speed_mean column. "
+                  "Re-run aggregate with --columns jam_factor,speed,free_flow. "
+                  "Skipping.")
+            continue
         print(f"  Fitting multilevel models: {name} …")
         res = fit_multilevel_models(panel)
         results[code] = res

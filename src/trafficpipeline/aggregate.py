@@ -185,18 +185,29 @@ def _assign_osm_ids(gdf, wkb_cache, osm_ref_gdf):
 
 def _read_snapshot_osm(
     filepath: str | Path,
-    column: str,
+    columns: str | list[str] | tuple[str, ...],
     wkb_cache: dict,
     osm_ref_gdf: gpd.GeoDataFrame,
     skip_reasons: dict | None = None,
 ) -> pd.DataFrame | None:
-    """Read snapshot, assign OSM IDs, return osm_composite_id + traffic column.
+    """Read snapshot, assign OSM IDs, return osm_composite_id + requested column(s).
+
+    Parameters
+    ----------
+    columns
+        A single column name or a list of column names to extract. The
+        snapshot is dropped if ANY of the listed columns is missing.
 
     When ``skip_reasons`` (a dict) is supplied, increments the appropriate
     counter (``missing_column``, ``read_error``, ``no_osm_match``,
     ``empty_after_dropna``) and records the first offending filename per
     reason in ``skip_reasons[<reason>+'_first']``.
     """
+    if isinstance(columns, str):
+        cols = [columns]
+    else:
+        cols = list(columns)
+
     def _note(reason: str, detail: str | None = None) -> None:
         if skip_reasons is None:
             return
@@ -211,10 +222,11 @@ def _read_snapshot_osm(
         _note("read_error", f"{type(e).__name__}: {e}")
         return None
 
-    if column not in gdf.columns:
+    missing = [c for c in cols if c not in gdf.columns]
+    if missing:
         _note(
             "missing_column",
-            f"expected '{column}', got {sorted(gdf.columns)[:8]}",
+            f"missing {missing}; have {sorted(gdf.columns)[:8]}",
         )
         return None
 
@@ -236,7 +248,7 @@ def _read_snapshot_osm(
         )
         return None
 
-    return matched[["osm_composite_id", column]].copy()
+    return matched[["osm_composite_id"] + cols].copy()
 
 
 # ---------------------------------------------------------------------------
@@ -246,7 +258,9 @@ def _read_snapshot_osm(
 
 def aggregate_city(
     city_code: str,
-    traffic_column: str = "jam_factor",
+    traffic_column: str | list[str] | tuple[str, ...] = (
+        "jam_factor", "speed", "free_flow",
+    ),
     *,
     data_dir: str | Path | None = None,
     output_dir: str | Path | None = None,
@@ -284,6 +298,13 @@ def aggregate_city(
     dst = Path(output_dir) if output_dir else traffic_output_path(city_code)
     dst.mkdir(parents=True, exist_ok=True)
 
+    # Normalise traffic_column → list[str] (preserves backward compat
+    # for callers passing a single string).
+    if isinstance(traffic_column, str):
+        traffic_columns: list[str] = [traffic_column]
+    else:
+        traffic_columns = list(traffic_column)
+
     gpkg_files = sorted(glob.glob(str(src / "*.gpkg")))
     if not gpkg_files:
         raise FileNotFoundError(f"No .gpkg files in {src}")
@@ -291,6 +312,7 @@ def aggregate_city(
     if verbose:
         print(f"[{city['name']}] Found {len(gpkg_files)} snapshots")
         print(f"  Range: {os.path.basename(gpkg_files[0])} → {os.path.basename(gpkg_files[-1])}")
+        print(f"  Aggregating columns: {traffic_columns}")
 
     # Load OSM mapping and reference geometry
     if verbose:
@@ -316,7 +338,7 @@ def aggregate_city(
         if verbose and i % 500 == 0:
             print(f"  Reading {i}/{len(gpkg_files)} …")
         df = _read_snapshot_osm(
-            fp, traffic_column, wkb_cache, osm_ref_gdf, skip_reasons=skip_reasons,
+            fp, traffic_columns, wkb_cache, osm_ref_gdf, skip_reasons=skip_reasons,
         )
         if df is None:
             continue
@@ -327,7 +349,7 @@ def aggregate_city(
                 bad_timestamp_first = os.path.basename(str(fp))
             continue
         df["timestamp"] = ts
-        frames.append(df[["osm_composite_id", traffic_column, "timestamp"]])
+        frames.append(df[["osm_composite_id", *traffic_columns, "timestamp"]])
 
     if verbose and (skip_reasons or n_bad_timestamp):
         print(f"  Skipped snapshots:")
@@ -373,24 +395,27 @@ def aggregate_city(
     # Reference geometry for output
     osm_geom = osm_ref_gdf.set_index('osm_composite_id')[['geometry']]
 
-    # Aggregate per time period
+    # Aggregate per time period (one combined GeoPackage per period,
+    # with mean/std/count/min/max columns for every traffic column).
     results: dict[str, gpd.GeoDataFrame] = {}
     for period in sorted(combined["time_period"].unique()):
         subset = combined[combined["time_period"] == period]
+
+        # Compute mean/std/count/min/max for each requested column.
+        agg_spec = {col: ["mean", "std", "count", "min", "max"]
+                    for col in traffic_columns}
         stats = (
-            subset.groupby("osm_composite_id")[traffic_column]
-            .agg(["mean", "std", "count", "min", "max"])
-            .round(4)
-            .reset_index()
+            subset.groupby("osm_composite_id")
+                  .agg(agg_spec)
+                  .round(4)
+                  .reset_index()
         )
-        stats.columns = [
-            "osm_composite_id",
-            f"{traffic_column}_mean",
-            f"{traffic_column}_std",
-            f"{traffic_column}_count",
-            f"{traffic_column}_min",
-            f"{traffic_column}_max",
-        ]
+        # Flatten MultiIndex columns: ('jam_factor', 'mean') → 'jam_factor_mean'
+        flat_cols = ["osm_composite_id"]
+        for col in traffic_columns:
+            flat_cols.extend(f"{col}_{stat}" for stat in
+                             ["mean", "std", "count", "min", "max"])
+        stats.columns = flat_cols
 
         # Join with OSM geometry
         gdf = stats.merge(osm_geom, left_on='osm_composite_id', right_index=True, how='left')
@@ -402,10 +427,12 @@ def aggregate_city(
         results[period] = gdf
 
         if verbose:
-            means = stats[f"{traffic_column}_mean"]
+            primary = traffic_columns[0]
+            means = stats[f"{primary}_mean"]
+            extra = f" + {len(traffic_columns)-1} more cols" if len(traffic_columns) > 1 else ""
             print(
                 f"  {period}: {len(subset):,} records → "
-                f"mean={means.mean():.4f}, "
+                f"{primary}_mean={means.mean():.4f}{extra}, "
                 f"segments={len(gdf)}  ✓ saved"
             )
 
@@ -416,7 +443,9 @@ def aggregate_city(
 
 
 def aggregate_all(
-    traffic_column: str = "jam_factor",
+    traffic_column: str | list[str] | tuple[str, ...] = (
+        "jam_factor", "speed", "free_flow",
+    ),
     *,
     verbose: bool = True,
 ) -> dict[str, dict[str, gpd.GeoDataFrame]]:

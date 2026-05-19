@@ -30,27 +30,31 @@ def main(ctx: click.Context, base_dir: str) -> None:
 @main.command()
 @click.option("--city", type=click.Choice(["smg", "bdg", "jkt"]),
               help="City code (omit for all cities).")
-@click.option("--column", default="jam_factor", show_default=True,
-              help="Traffic column to aggregate (column name in the raw GeoPackages).")
+@click.option("--column", "--columns", "columns",
+              default="jam_factor,speed,free_flow", show_default=True,
+              help="Comma-separated traffic columns to aggregate. Downstream "
+                   "modules (multilevel, h3-robustness) expect jam_factor + "
+                   "speed + free_flow to all be present.")
 @click.option("--verbose", is_flag=True, help="Print per-file progress.")
 @click.pass_context
-def aggregate(ctx: click.Context, city: str | None, column: str, verbose: bool) -> None:
+def aggregate(ctx: click.Context, city: str | None, columns: str, verbose: bool) -> None:
     """Aggregate raw GeoPackage snapshots into time-period files."""
     from trafficpipeline.aggregate import aggregate_all, aggregate_city
 
+    col_list = [c.strip() for c in columns.split(",") if c.strip()]
     base = ctx.obj["base_dir"]
     if city:
         from trafficpipeline.config import CITIES
         info = CITIES[city]
         aggregate_city(
             city,
-            traffic_column=column,
+            traffic_column=col_list,
             data_dir=str(Path(base) / info["traffic_data_dir"]),
             output_dir=str(Path(base) / info["traffic_output_dir"]),
             verbose=verbose,
         )
     else:
-        aggregate_all(traffic_column=column, verbose=verbose)
+        aggregate_all(traffic_column=col_list, verbose=verbose)
 
 
 # ── collect ────────────────────────────────────────────────────
