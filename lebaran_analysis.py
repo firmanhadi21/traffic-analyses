@@ -367,45 +367,43 @@ def annotate(panel: pd.DataFrame) -> pd.DataFrame:
     return panel
 
 
-def fit_did(panel: pd.DataFrame) -> tuple[dict, object]:
-    """Fit the two-window within-segment DiD model with a year fixed effect.
+def _fit_one_did(panel: pd.DataFrame, dv: str, units: str) -> tuple[dict, object]:
+    """Fit one two-window DiD for a single dependent variable.
 
     Specification (random intercept on segment_id):
-        speed ~ C(period) + C(year) + lebaran + lebaran:peak
-
-    Returns (estimates_dict, fitted_model).
+        <dv> ~ C(period) + C(year) + lebaran + lebaran:peak
     """
     import statsmodels.formula.api as smf
 
-    df = panel.dropna(subset=["speed"]).copy()
-    # HERE Traffic v7 returns m/s on some endpoints; convert to km/h heuristically.
-    if df["speed"].max() < 50 and df["speed"].median() < 15:
-        print("  NOTE: speed appears to be in m/s, converting to km/h")
-        df["speed"] = df["speed"] * 3.6
-
-    # Ensure year is treated categorically (2025 vs 2026 dummy).
+    if dv not in panel.columns:
+        raise KeyError(f"Panel does not contain '{dv}'. "
+                       f"Available: {sorted(panel.columns)}")
+    df = panel.dropna(subset=[dv]).copy()
     df["year"] = df["year"].astype(int)
 
-    print(f"  Fitting two-window DiD on {len(df):,} obs / "
-          f"{df['segment_id'].nunique():,} segments...")
-    by_year = df.groupby("year").size()
-    print(f"  Records by year: " +
-          ", ".join(f"{y}={n:,}" for y, n in by_year.items()))
+    # Speed-only heuristic: HERE sometimes returns m/s.
+    if dv == "speed" and df[dv].max() < 50 and df[dv].median() < 15:
+        print("  NOTE: speed appears to be in m/s, converting to km/h")
+        df[dv] = df[dv] * 3.6
 
-    formula = "speed ~ C(period) + C(year) + lebaran + lebaran:peak"
+    by_year = df.groupby("year").size()
+    print(f"  [{dv}] Fitting two-window DiD on {len(df):,} obs / "
+          f"{df['segment_id'].nunique():,} segments "
+          f"(2025={by_year.get(2025,0):,}, 2026={by_year.get(2026,0):,})...")
+
+    formula = f"{dv} ~ C(period) + C(year) + lebaran + lebaran:peak"
     model = smf.mixedlm(formula, data=df, groups=df["segment_id"]).fit(reml=True)
 
     fe = model.fe_params
     pv = model.pvalues
-
-    # Identify the year-FE parameter name (statsmodels labels it like
-    # 'C(year)[T.2026]' for the non-reference year).
     year_key = next(
         (k for k in fe.index if k.startswith("C(year)[T.")),
         None,
     )
 
     out = {
+        "dependent_variable":  dv,
+        "units":               units,
         "n_obs":               len(df),
         "n_segments":          int(df["segment_id"].nunique()),
         "n_obs_2025":          int(by_year.get(2025, 0)),
@@ -421,14 +419,41 @@ def fit_did(panel: pd.DataFrame) -> tuple[dict, object]:
         "var_resid":           float(model.scale),
         "formula":             formula,
     }
-    print(f"  beta_lebaran       = {out['beta_lebaran']:+.3f} km/h "
+    print(f"    beta_lebaran       = {out['beta_lebaran']:+.4f} {units} "
           f"(p={out['p_lebaran']:.2e})")
-    print(f"  beta_lebaran×peak  = {out['beta_lebaran_peak']:+.3f} km/h "
+    print(f"    beta_lebaran×peak  = {out['beta_lebaran_peak']:+.4f} {units} "
           f"(p={out['p_lebaran_peak']:.2e})")
     if year_key:
-        print(f"  beta_year ({year_key}) = {out['beta_year']:+.3f} km/h "
+        print(f"    beta_year ({year_key}) = {out['beta_year']:+.4f} {units} "
               f"(p={out['p_year']:.2e})")
     return out, model
+
+
+def fit_did(panel: pd.DataFrame) -> tuple[list[dict], dict[str, object]]:
+    """Fit the two-window within-segment DiD for every available dependent
+    variable (speed and, when present, jam_factor).
+
+    Returns ``(estimates_list, models_dict)`` where ``estimates_list`` has one
+    dict per DV (suitable for CSV) and ``models_dict`` maps DV → fitted model.
+    """
+    estimates: list[dict] = []
+    models: dict[str, object] = {}
+
+    # Speed is always present (required).
+    speed_est, speed_model = _fit_one_did(panel, "speed", units="km/h")
+    estimates.append(speed_est)
+    models["speed"] = speed_model
+
+    # Jam factor (0–10 scale) — fit if collected.
+    if "jam_factor" in panel.columns and panel["jam_factor"].notna().any():
+        jam_est, jam_model = _fit_one_did(panel, "jam_factor", units="JF")
+        estimates.append(jam_est)
+        models["jam_factor"] = jam_model
+    else:
+        print("  [jam_factor] not in panel — skipped (re-run with the "
+              "jam_factor column to include).")
+
+    return estimates, models
 
 
 def descriptive_tables(panel: pd.DataFrame, lebaran_start: str, lebaran_end: str,
@@ -514,14 +539,43 @@ def plot_pre_post_box(panel: pd.DataFrame, out_dir: Path):
     plt.close()
 
 
-def write_summary(estimates: dict, out_dir: Path, args):
-    txt = f"""LEBARAN NATURAL EXPERIMENT — JAKARTA
+def _format_one_dv(est: dict) -> str:
+    units = est["units"]
+    sign_for_demand_sync = (
+        "POSITIVE if demand removal raises speeds (speed model)"
+        if est["dependent_variable"] == "speed"
+        else "NEGATIVE if demand removal eases congestion (jam-factor model)"
+    )
+    return f"""--- Dependent variable: {est['dependent_variable']} ({units}) ---
+  Formula: {est['formula']}
+  Sample : {est['n_obs']:,} obs / {est['n_segments']:,} segments
+           (2025={est['n_obs_2025']:,}, 2026={est['n_obs_2026']:,})
+
+  beta_lebaran      = {est['beta_lebaran']:+.4f} {units}   (p = {est['p_lebaran']:.3g})
+      Sign expected : {sign_for_demand_sync}
+
+  beta_lebaran×peak = {est['beta_lebaran_peak']:+.4f} {units}   (p = {est['p_lebaran_peak']:.3g})
+      EXTRA peak-hour Lebaran effect on top of the average.
+
+  Total peak-hour effect = beta_lebaran + beta_lebaran×peak
+                         = {est['beta_lebaran'] + est['beta_lebaran_peak']:+.4f} {units}
+
+  beta_{est['year_key']:<22} = {est['beta_year']:+.4f} {units}   (p = {est['p_year']:.3g})
+
+  Variance components
+    Between-segment variance : {est['var_segment']:.4f}
+    Within-segment residual  : {est['var_resid']:.4f}
+    ICC                      : {est['var_segment'] / (est['var_segment'] + est['var_resid']):.1%}
+"""
+
+
+def write_summary(estimates: list[dict], out_dir: Path, args):
+    header = f"""LEBARAN NATURAL EXPERIMENT — JAKARTA
 ====================================
 
 Design
   Two-window difference-in-differences (Lebaran 2025 + Lebaran 2026)
   with within-segment random intercepts and a year fixed effect.
-  Formula: {estimates['formula']}
 
 Windows
   Baseline 2025: {args.baseline_2025_start} → {args.baseline_2025_end}
@@ -529,53 +583,31 @@ Windows
   Baseline 2026: {args.baseline_2026_start} → {args.baseline_2026_end}
   Lebaran  2026: {args.lebaran_2026_start} → {args.lebaran_2026_end}   (Eid {args.eid_2026})
 
-Sample
-  Observations    : {estimates['n_obs']:,}
-  Segments        : {estimates['n_segments']:,}
-  Obs in 2025     : {estimates['n_obs_2025']:,}
-  Obs in 2026     : {estimates['n_obs_2026']:,}
-
-DiD estimates (within-segment, time-period fixed effects, year FE)
-  beta_lebaran      = {estimates['beta_lebaran']:+.3f} km/h   (p = {estimates['p_lebaran']:.3g})
-    Interpretation : Average speed change in the Lebaran windows across ALL hours,
-                     after netting out the year fixed effect and time-of-day.
-    Sign expected  : POSITIVE if demand removal raises speeds.
-
-  beta_lebaran×peak = {estimates['beta_lebaran_peak']:+.3f} km/h   (p = {estimates['p_lebaran_peak']:.3g})
-    Interpretation : EXTRA speed gain during evening peak (16:00-18:59) on top
-                     of the average Lebaran effect.
-    Sign expected  : POSITIVE and LARGE if demand synchronization dominates
-                     — peak hours benefit most when synchronized demand is gone.
-
-Variance components
-  Between-segment variance : {estimates['var_segment']:.2f}
-  Within-segment residual  : {estimates['var_resid']:.2f}
-  ICC                      : {estimates['var_segment'] / (estimates['var_segment'] + estimates['var_resid']):.1%}
-
-Year fixed effect
-  beta_{estimates['year_key']:<24} = {estimates['beta_year']:+.3f} km/h   (p = {estimates['p_year']:.3g})
-    Interpretation : Average speed change in 2026 vs 2025 (positive = faster,
-                     negative = slower). Captures structural changes (network
-                     growth, new transit) and any drift between the two years.
-
+"""
+    body = "\n".join(_format_one_dv(e) for e in estimates)
+    footer = """
 Interpretation for the TRIP manuscript R1.3 response
-  - If beta_lebaran>0 AND beta_lebaran×peak>0 (both significant), this is direct
-    causal evidence that demand-driven peaks generate the observed congestion.
-  - The size of beta_lebaran×peak (in km/h) is the headline number: if peak-hour
-    speed gains under Lebaran are >> off-peak speed gains, demand synchronization
-    is the operative mechanism.
-  - The two-Lebaran design adds replication: the effect is estimated across two
-    independent annual events, with the year FE controlling for any structural
-    change in network capacity or demand level between 2025 and 2026.
-  - Caveats: partial demand removal (not everyone leaves Jakarta); intercity
-    toll arteries may behave differently from urban roads during mudik.
+  - speed model: positive beta_lebaran AND positive beta_lebaran×peak
+    indicate that removing synchronized demand raises speeds, with the
+    gain disproportionately at peak hours.
+  - jam_factor model: negative beta_lebaran AND negative beta_lebaran×peak
+    are the same finding viewed through the congestion index; the
+    jam-factor effect is directly comparable across countries because
+    the HERE index is normalised to free-flow speed per segment.
+  - Two-Lebaran design replicates the effect across independent annual
+    events; the year FE controls for any 2025→2026 structural drift.
+  - Caveats: partial demand removal (not everyone leaves Jakarta);
+    intercity toll arteries may behave differently from urban roads.
 
 Outputs:
-  lebaran_did_estimates.csv      one-row coefficient table
-  lebaran_speed_by_week.csv      weekly hour-of-day mean speed
-  lebaran_speed_by_week.png      hour × week heatmap
-  lebaran_pre_post_box.png       year × Lebaran peak-speed box plot
+  lebaran_did_estimates.csv            multi-row coefficient table (one per DV)
+  lebaran_did_model_summary.txt        full statsmodels report for speed
+  lebaran_did_model_summary_jam_factor.txt   (if jam_factor was fitted)
+  lebaran_speed_by_week.csv            weekly hour-of-day mean speed
+  lebaran_speed_by_week.png            hour × week heatmap
+  lebaran_pre_post_box.png             year × Lebaran peak-speed box plot
 """
+    txt = header + body + footer
     (out_dir / "lebaran_summary.txt").write_text(txt)
     print("\n" + txt)
 
@@ -652,11 +684,18 @@ def main():
     )
     plot_pre_post_box(panel, args.output_dir)
 
-    print("\nFitting DiD mixed model...")
-    estimates, model = fit_did(panel)
+    print("\nFitting DiD mixed model(s)...")
+    estimates, models = fit_did(panel)
 
-    pd.DataFrame([estimates]).to_csv(args.output_dir / "lebaran_did_estimates.csv", index=False)
-    (args.output_dir / "lebaran_did_model_summary.txt").write_text(str(model.summary()))
+    # One row per dependent variable (speed, jam_factor).
+    pd.DataFrame(estimates).to_csv(
+        args.output_dir / "lebaran_did_estimates.csv", index=False,
+    )
+    for dv, mdl in models.items():
+        suffix = "" if dv == "speed" else f"_{dv}"
+        (args.output_dir / f"lebaran_did_model_summary{suffix}.txt").write_text(
+            str(mdl.summary())
+        )
 
     write_summary(estimates, args.output_dir, args)
     print(f"\nAll outputs written to {args.output_dir.absolute()}")
