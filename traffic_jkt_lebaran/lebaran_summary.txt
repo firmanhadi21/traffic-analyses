@@ -4,7 +4,6 @@ LEBARAN NATURAL EXPERIMENT — JAKARTA
 Design
   Two-window difference-in-differences (Lebaran 2025 + Lebaran 2026)
   with within-segment random intercepts and a year fixed effect.
-  Formula: speed ~ C(period) + C(year) + lebaran + lebaran:peak
 
 Windows
   Baseline 2025: 2025-03-01 → 2025-03-23
@@ -12,49 +11,65 @@ Windows
   Baseline 2026: 2026-01-01 → 2026-03-13
   Lebaran  2026: 2026-03-14 → 2026-03-23   (Eid 2026-03-21)
 
-Sample
-  Observations    : 17,588,166
-  Segments        : 12,142
-  Obs in 2025     : 6,076,614
-  Obs in 2026     : 11,511,552
+--- Dependent variable: speed (km/h) ---
+  Formula: speed ~ C(period) + C(year) + lebaran + lebaran:peak
+  Sample : 17,588,166 obs / 12,142 segments
+           (2025=6,076,614, 2026=11,511,552)
 
-DiD estimates (within-segment, time-period fixed effects, year FE)
-  beta_lebaran      = +1.726 km/h   (p = 0)
-    Interpretation : Average speed change in the Lebaran windows across ALL hours,
-                     after netting out the year fixed effect and time-of-day.
-    Sign expected  : POSITIVE if demand removal raises speeds.
+  beta_lebaran      = +1.7261 km/h   (p = 0)
+      Sign expected : POSITIVE if demand removal raises speeds (speed model)
 
-  beta_lebaran×peak = +0.886 km/h   (p = 0)
-    Interpretation : EXTRA speed gain during evening peak (16:00-18:59) on top
-                     of the average Lebaran effect.
-    Sign expected  : POSITIVE and LARGE if demand synchronization dominates
-                     — peak hours benefit most when synchronized demand is gone.
+  beta_lebaran×peak = +0.8862 km/h   (p = 0)
+      EXTRA peak-hour Lebaran effect on top of the average.
 
-Variance components
-  Between-segment variance : 89.70
-  Within-segment residual  : 40.86
-  ICC                      : 68.7%
+  Total peak-hour effect = beta_lebaran + beta_lebaran×peak
+                         = +2.6122 km/h
 
-Year fixed effect
-  beta_C(year)[T.2026]          = +1.044 km/h   (p = 0)
-    Interpretation : Average speed change in 2026 vs 2025 (positive = faster,
-                     negative = slower). Captures structural changes (network
-                     growth, new transit) and any drift between the two years.
+  beta_C(year)[T.2026]        = +1.0435 km/h   (p = 0)
+
+  Variance components
+    Between-segment variance : 89.7010
+    Within-segment residual  : 40.8601
+    ICC                      : 68.7%
+
+--- Dependent variable: jam_factor (JF) ---
+  Formula: jam_factor ~ C(period) + C(year) + lebaran + lebaran:peak
+  Sample : 17,615,128 obs / 12,142 segments
+           (2025=6,094,562, 2026=11,520,566)
+
+  beta_lebaran      = -0.3620 JF   (p = 0)
+      Sign expected : NEGATIVE if demand removal eases congestion (jam-factor model)
+
+  beta_lebaran×peak = -0.3817 JF   (p = 0)
+      EXTRA peak-hour Lebaran effect on top of the average.
+
+  Total peak-hour effect = beta_lebaran + beta_lebaran×peak
+                         = -0.7437 JF
+
+  beta_C(year)[T.2026]        = +0.2860 JF   (p = 0)
+
+  Variance components
+    Between-segment variance : 5.9570
+    Within-segment residual  : 1.8568
+    ICC                      : 76.2%
 
 Interpretation for the TRIP manuscript R1.3 response
-  - If beta_lebaran>0 AND beta_lebaran×peak>0 (both significant), this is direct
-    causal evidence that demand-driven peaks generate the observed congestion.
-  - The size of beta_lebaran×peak (in km/h) is the headline number: if peak-hour
-    speed gains under Lebaran are >> off-peak speed gains, demand synchronization
-    is the operative mechanism.
-  - The two-Lebaran design adds replication: the effect is estimated across two
-    independent annual events, with the year FE controlling for any structural
-    change in network capacity or demand level between 2025 and 2026.
-  - Caveats: partial demand removal (not everyone leaves Jakarta); intercity
-    toll arteries may behave differently from urban roads during mudik.
+  - speed model: positive beta_lebaran AND positive beta_lebaran×peak
+    indicate that removing synchronized demand raises speeds, with the
+    gain disproportionately at peak hours.
+  - jam_factor model: negative beta_lebaran AND negative beta_lebaran×peak
+    are the same finding viewed through the congestion index; the
+    jam-factor effect is directly comparable across countries because
+    the HERE index is normalised to free-flow speed per segment.
+  - Two-Lebaran design replicates the effect across independent annual
+    events; the year FE controls for any 2025→2026 structural drift.
+  - Caveats: partial demand removal (not everyone leaves Jakarta);
+    intercity toll arteries may behave differently from urban roads.
 
 Outputs:
-  lebaran_did_estimates.csv      one-row coefficient table
-  lebaran_speed_by_week.csv      weekly hour-of-day mean speed
-  lebaran_speed_by_week.png      hour × week heatmap
-  lebaran_pre_post_box.png       year × Lebaran peak-speed box plot
+  lebaran_did_estimates.csv            multi-row coefficient table (one per DV)
+  lebaran_did_model_summary.txt        full statsmodels report for speed
+  lebaran_did_model_summary_jam_factor.txt   (if jam_factor was fitted)
+  lebaran_speed_by_week.csv            weekly hour-of-day mean speed
+  lebaran_speed_by_week.png            hour × week heatmap
+  lebaran_pre_post_box.png             year × Lebaran peak-speed box plot
