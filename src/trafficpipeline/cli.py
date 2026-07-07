@@ -362,6 +362,20 @@ def speed_validation(ctx: click.Context, figures_dir: str, output_dir: str) -> N
     )
 
 
+# ── positive-control ─────────────────────────────────────────
+
+@main.command(name="positive-control")
+@click.option("--output-dir", default="analysis_results", show_default=True)
+@click.pass_context
+def positive_control(ctx: click.Context, output_dir: str) -> None:
+    """Run the positive-control check: free-flow speed vs current speed R^2."""
+    from trafficpipeline.positive_control import run_analysis
+    run_analysis(
+        base_dir=ctx.obj["base_dir"],
+        output_dir=output_dir,
+    )
+
+
 # ── h3-robustness ────────────────────────────────────────────
 
 @main.command(name="h3-robustness")

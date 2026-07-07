@@ -258,6 +258,28 @@ traffic-pipeline speed-validation [OPTIONS]
 
 ---
 
+## `positive-control`
+
+Run the positive-control check: Pearson R² between free-flow speed (a
+road-design characteristic) and current speed, per city, at segment level and
+pooled-panel level. Recovering this known spatial signal demonstrates the
+pipeline can detect spatial structure where it exists, so a null
+centrality–congestion result is not a methodological artifact.
+
+```bash
+traffic-pipeline positive-control [OPTIONS]
+```
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `--output-dir` | PATH | `analysis_results` | Directory for CSV results |
+
+### Outputs
+
+- `positive_control_r2.csv` — per-city segment-level and pooled-panel R²
+
+---
+
 ## `h3-robustness`
 
 Run H3 hexagonal aggregation at multiple spatial resolutions to test whether
