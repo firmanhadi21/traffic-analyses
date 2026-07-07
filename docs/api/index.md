@@ -16,6 +16,7 @@ The `trafficpipeline` package exposes the following modules:
 | [`markov`](markov.md) | LISA Markov & Spatial Markov transition analysis |
 | [`speed_validation`](speed_validation.md) | Speed-based validation across congestion metrics |
 | [`h3_robustness`](h3_robustness.md) | H3 hexagonal aggregation for MAUP robustness |
+| [`positive_control`](positive_control.md) | Positive control: free-flow vs current speed R² |
 
 ## Importing
 
@@ -33,4 +34,5 @@ from trafficpipeline.multilevel import fit_multilevel_models
 from trafficpipeline.markov import compute_lisa, classic_markov, spatial_markov
 from trafficpipeline.speed_validation import anova_all_metrics
 from trafficpipeline.h3_robustness import h3_aggregate, resolution_sweep
+from trafficpipeline.positive_control import compute_positive_control
 ```

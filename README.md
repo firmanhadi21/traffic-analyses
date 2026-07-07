@@ -64,6 +64,7 @@ traffic-analyses/
 │   ├── multilevel.py            # Multilevel variance decomposition (mixed-effects)
 │   ├── markov.py                # LISA Markov & Spatial Markov transition analysis
 │   ├── speed_validation.py      # Speed-based validation across congestion metrics
+│   ├── positive_control.py      # Positive control: free-flow vs current speed R²
 │   ├── h3_robustness.py         # H3 hexagonal aggregation for MAUP robustness
 │   ├── collector.py             # Multi-provider traffic data collector
 │   ├── geocoding.py             # City name geocoding via OSM Nominatim
@@ -257,6 +258,9 @@ traffic-pipeline speed-validation
 
 # 10. H3 hexagonal aggregation for MAUP robustness testing
 traffic-pipeline h3-robustness
+
+# 11. Positive control: free-flow speed vs current speed R²
+traffic-pipeline positive-control
 ```
 
 All commands accept `--base-dir` to point at the project root:
@@ -318,6 +322,7 @@ traffic-pipeline multilevel       # Multilevel variance decomposition
 traffic-pipeline markov           # LISA Markov transition analysis
 traffic-pipeline speed-validation # Speed-based metric validation
 traffic-pipeline h3-robustness    # H3 hexagonal MAUP robustness
+traffic-pipeline positive-control # Positive control: FFS vs speed R²
 ```
 
 Results are written to `figures/` (PNG) and `analysis_results/` (CSV).

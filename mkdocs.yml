@@ -94,6 +94,7 @@ nav:
       - markov: api/markov.md
       - speed_validation: api/speed_validation.md
       - h3_robustness: api/h3_robustness.md
+      - positive_control: api/positive_control.md
   - Data Format: data-format.md
   - Adding a City: adding-a-city.md
 

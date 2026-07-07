@@ -44,6 +44,7 @@ traffic-pipeline multilevel       # Multilevel variance decomposition
 traffic-pipeline markov           # LISA Markov transition analysis
 traffic-pipeline speed-validation # Speed-based metric validation
 traffic-pipeline h3-robustness    # H3 hexagonal MAUP robustness
+traffic-pipeline positive-control # Positive control: FFS vs speed R²
 ```
 
 Results are written to `figures/` (PNG) and `analysis_results/` (CSV).
