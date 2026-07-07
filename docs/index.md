@@ -12,9 +12,9 @@ cities: **Semarang**, **Bandung**, and **Jakarta**.
 
 ## Features
 
-- **Ten-stage analysis pipeline**: aggregate → EDA → geostatistics → bottleneck → POI → synthesis → multilevel → markov → speed-validation → h3-robustness
+- **Eleven-stage analysis pipeline**: aggregate → EDA → geostatistics → bottleneck → POI → synthesis → multilevel → markov → speed-validation → h3-robustness → positive-control
 - **CLI and Python API**: Use `traffic-pipeline` from the terminal or import modules directly
-- **264 million observations** across 18,748 road segments over 13 months (Mar 2025–Mar 2026)
+- **316 million observations** across 18,877 road segments over 12 months (Mar 2025–Mar 2026)
 - **OSM-based segment matching**: Stable `osm_composite_id` replaces legacy FID approach
 - **Reproducible**: Zenodo-archived dataset + installable package + CI
 
