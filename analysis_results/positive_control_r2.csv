@@ -1,0 +1,4 @@
+city,n_segments,n_panel_obs,r2_segment_level,p_segment_level,r2_pooled_panel,p_pooled_panel
+bdg,2918,19190,0.5473,0.0,0.516,0.0
+jkt,14914,98893,0.5375,0.0,0.5183,0.0
+smg,1047,7064,0.6618,2.849218474201137e-248,0.6014,0.0
